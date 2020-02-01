@@ -98,34 +98,6 @@ section splitting_lemma
 
   theorem right_split_of_direct_sum (r : direct_sum_ses R A B C) : right_split_ses R A B C :=
   ⟨r.to_ses, comp (r.b : (A × C) →ₗ[R] B) (inr R A C), by { ext c, simp, }⟩
-  /-noncomputable theorem right_split_implies_direct_sum (r : right_split_ses R A B C) : direct_sum_ses R A B C :=
-  ⟨⟨r.i, r.p, r.inj, r.exact, r.surj⟩, begin
-    fapply linear_equiv.of_bijective, exact copair r.i r.s,
-    rw ker_eq_bot', intros ac m0,
-    have a : (ac.fst, ac.snd) = ac := by apply prod.mk.eta,
-    rw ←a at m0, rw copair_apply at m0,
-    have b : ac.snd = 0 :=
-    begin
-      have m1 := congr_arg r.p m0, simp at m1,
-      have in_ker : r.i ac.fst ∈ ker r.p := by 
-        { rw r.exact, rw mem_range, exact exists.intro ac.fst rfl, },
-      simp at in_ker, rw in_ker at m1, simp at m1,
-      rw ←comp_apply at m1, rw r.split at m1, simp at m1,
-      assumption,
-    end, rw b at m0, simp at m0,
-    rw ←mem_ker at m0, rw r.inj at m0, simp at m0,
-    rw ←a, rw b, rw m0,
-    have z : ((0 : A × C).fst, (0 : A × C).snd) = (0 : A × C) := by apply prod.mk.eta,
-    rw ←z, rw prod.fst_zero, rw prod.snd_zero,
-    ext, rw mem_range, split, intro, simp,
-    intro, rename x b,
-    have in_ker : b - r.s (r.p b) ∈ ker r.p :=
-      by { simp, rw ←comp_apply, rw r.split, simp, },
-    rw r.exact at in_ker, rw mem_range at in_ker,
-    cases in_ker with a ha,
-    fapply exists.intro, exact (a, r.p b),
-    simp, safe,
-  end⟩-/
 end splitting_lemma
 
 section projective
@@ -137,8 +109,6 @@ section projective
   class projective (R : Type) (P : Type) [ring R] [add_comm_group P] [module R P] :=
   (projectivity : Π {N : Type} {M : Type} [add_comm_group N] [add_comm_group M] [module R N] [module R M]
     (f : N →ₗ[R] M) (g : P →ₗ[R] M) (s : range f = ⊤), mlift f g)
-
-
 
   variables [ring R] [add_comm_group P] [module R P] [Pr : projective R P]
   variables [add_comm_group N] [add_comm_group M] [module R N] [module R M]
@@ -156,93 +126,4 @@ section
   theorem projective_implies_right_split [projective R C]
     (h : ses R A B C) : right_split_ses R A B C :=
     let p := projectivity (h.p) id h.surj in ⟨h, p.h, p.comm⟩
-
-    /-begin
-    unfold is_ses at h,
-    cases h with ex out, cases out with inj sur,
-    have u := projectivity g (linear_map.id : C →ₗ[R] C) sur,
-    cases u with h hh,
-    unfold split_right,
-    fapply exists.intro,
-    exact h, symmetry, assumption,
-  end-/ 
 end
-
-
-
-
-
---set_option pp.universes true
-
-section exact
-  variables [ring R] [add_comm_group A] [add_comm_group B] [add_comm_group C]
-  variables [module R A] [module R B] [module R C]
-
-  def exact_at (f : A →ₗ[R] B) (g : B →ₗ[R] C) : Prop := ker g = range f
-  @[simp] lemma exact_iff (f : A →ₗ[R] B) (g : B →ₗ[R] C) : exact_at f g ↔ ker g = range f
-  := by refl
-end exact
-
-section exact
-  variables [ring R] [add_comm_group A] [add_comm_group B] [add_comm_group C]
-  variables [module R A] [module R B] [module R C]
-
-  def is_ses (f : A →ₗ[R] B) (g : B →ₗ[R] C) : Prop :=
-    exact_at f g ∧ ker f = ⊥ ∧ range g = ⊤
-
-  def split_right (f : A →ₗ[R] B) (g : B →ₗ[R] C) : Prop :=
-    ∃ (s : C →ₗ[R] B), comp g s = (id : C →ₗ[R] C)
-
-  
-end exact
-
-
-
-section mult
-    variable [ring R]
-
-    def f : R → R → R := λ n x, x * n
-    lemma f_eq (n : R) (x : R) : f n x = x * n := rfl
-    def mult_is_linear (n : R) : is_linear_map R (f n) :=
-    by { constructor; simp [f_eq]; intros, rw right_distrib, rw mul_assoc, }
-end mult
-
-section integral
-  variables [integral_domain R]
-
-  def mult (n : R) : R →ₗ[R] R := is_linear_map.mk' (f n) (mult_is_linear n)
-  lemma mult_eq (n : R) : mult n = is_linear_map.mk' (f n) (mult_is_linear n)
-  := rfl
-
-  lemma mult_has_trivial_kernel (n : R) (h : n ≠ 0) : ker (mult n) = ⊥ :=
-  begin
-    ext, rw mem_ker, rw mult_eq, simp, rw f_eq,
-    rw mul_eq_zero_iff_eq_zero_or_eq_zero, split,
-    intro H, cases H, exact H, contradiction, intros, left, exact a,
-  end
-
-  def nR (n : R) : submodule R R := submodule.span R { n }
-  lemma nR_eq (n : R) : nR n = submodule.span R { n } := rfl
-  def myproj (n : R) : R →ₗ[R] (nR n).quotient := submodule.mkq (nR n)
-  lemma proj_eq (n : R) : myproj n = submodule.mkq (nR n) := rfl
-
-  theorem mult_is_ses (n : R) (h : n ≠ 0) : is_ses (mult n) (myproj n) :=
-  begin
-    constructor, simp, ext, simp, rw mult_eq, simp, simp [f_eq],
-    rw proj_eq, simp, rw nR_eq, split,
-    intros, refine submodule.span_induction a _ _ _ _,
-    intros, simp at H, fapply exists.intro, exact 1, ring, symmetry,
-    exact H, fapply exists.intro, exact 0, ring, intros,
-    cases a_1 with y1 yp, cases a_2 with y2 y2p, fapply exists.intro,
-    exact y1 + y2, rw [right_distrib, yp, y2p], intros,
-    cases a_2 with y yp, rw ←yp, simp, rw ←mul_assoc,
-    fapply exists.intro, exact a_1 * y, refl, intro,
-    cases a with y hy, rw ←hy, rw ←smul_eq_mul,
-    refine submodule.smul_mem _ _ _,
-    unfold_projs, unfold_coes,
-    rw ←set.singleton_subset_iff,
-    exact submodule.subset_span,
-    split, exact mult_has_trivial_kernel _ h,
-    ext, rw proj_eq, simp, 
-  end
-end integral
