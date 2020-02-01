@@ -78,11 +78,9 @@ section splitting_lemma
   let i := r.i, p := r.p, s := r.s in ⟨r.to_ses, linear_equiv.of_bijective (copair i s)
   begin
     apply ker_eq_bot'.mpr,
-    rintro ⟨a, c⟩,
-    rw copair_apply,
-    intro h,
-    have c₀ : c = 0, by { have h₁ := congr_arg p h, simp at h₁, exact h₁ },
-    have a₀ : a = 0, by { rw c₀ at h, rw [map_zero, add_zero, ←map_zero i] at h, exact (ker_eq_bot.mp r.inj) h, },
+    rintros ⟨a, c⟩ h,
+    have c₀ : c = 0, by { convert congr_arg p h; simp },
+    have a₀ : a = 0, by { apply ker_eq_bot'.mp r.inj a, convert h, simp [c₀], },
     simpa [c₀, a₀],
   end
   begin
@@ -90,8 +88,7 @@ section splitting_lemma
     intro b,
     have h : p (b - s (p b)) = 0, by simp,
     cases ses_pull h with a h₁,
-    simp only [prod.exists, copair_apply],
-    exact ⟨a, p b, by { rw h₁, simp, }⟩
+    exact ⟨⟨a, p b⟩, by simp [h₁]⟩
   end,
   by { ext ⟨a, c⟩, rw [comp_apply, linear_equiv.coe_apply, linear_equiv.of_bijective_apply], simp, },
   by { ext a, rw [comp_apply, linear_equiv.coe_apply, linear_equiv.of_bijective_apply], simp, }⟩
