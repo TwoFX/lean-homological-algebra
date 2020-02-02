@@ -1,4 +1,5 @@
 import linear_algebra.basic
+import linear_algebra.basis
 import linear_algebra.direct_sum_module
 open linear_map
 
@@ -96,6 +97,15 @@ section ses
   end
 end ses
 
+section ses
+  variables {R : Type} {A : Type} {B : Type} {C : Type}
+  variables [ring R] [add_comm_group A] [add_comm_group B] [add_comm_group C]
+  variables [module R A] [module R B] [module R C]
+
+  def of_surj (f : A →ₗ[R] B) (h : range f = ⊤) : ses R (ker f) A B :=
+  ⟨(ker f).subtype, f, submodule.ker_subtype (ker f), (submodule.range_subtype (ker f)).symm, h⟩
+end ses
+
 variables {R : Type} {A : Type} {B : Type} {C : Type} {P : Type} {N : Type} {M : Type}
 
 section splitting_lemma
@@ -175,15 +185,18 @@ section splitting_lemma
   ⟨l.to_ses, l.t, r.s, d.b, r.splitr, l.splitl, d.commr, d.comml⟩
 end splitting_lemma
 
+section free
+  class free (R : Type) (M : Type) [ring R] [add_comm_group M] [module R M] :=
+  (ι : Type)
+  (v : ι → M)
+  (bas : is_basis R v)
+end free
+
 section projective
-  structure mlift {R A B C : Type} [ring R] [add_comm_group A] [add_comm_group B] [add_comm_group C]
-    [module R A] [module R B] [module R C] (f : A →ₗ[R] B) (g : C →ₗ[R] B) :=
-    (h : C →ₗ[R] A)
-    (comm : comp f h = g)
 
   class projective (R : Type) (P : Type) [ring R] [add_comm_group P] [module R P] :=
   (projectivity : Π {N : Type} {M : Type} [add_comm_group N] [add_comm_group M] [module R N] [module R M]
-    (f : N →ₗ[R] M) (g : P →ₗ[R] M) (s : range f = ⊤), mlift f g)
+    (f : N →ₗ[R] M) (g : P →ₗ[R] M) (s : range f = ⊤), ∃ (h : P →ₗ[R] N), comp f h = g)
 
   variables [ring R] [add_comm_group P] [module R P] [Pr : projective R P]
   variables [add_comm_group N] [add_comm_group M] [module R N] [module R M]
@@ -191,14 +204,40 @@ section projective
 
   include Pr f g s
 
-  theorem projectivity : mlift f g := projective.projectivity f g s
+  theorem projectivity : ∃ (h : P →ₗ[R] N), comp f h = g := projective.projectivity f g s
 end projective
+
+set_option pp.proofs true
+
+section free
+  variables [ring R] [add_comm_group P] [module R P]
+  theorem from_free [h : free R P] : (projective R P) :=
+  ⟨begin
+    introsI,
+    exact ⟨begin
+      refine is_basis.constr h.bas _,
+      intro i,
+      have u := range_eq_top.1 s (g (@free.v R P _ _ _ h i)),
+      exact classical.some u,
+    end,
+    begin
+      apply is_basis.ext h.bas _,
+      intro i,
+      rw [comp_apply, is_basis.constr_apply],
+      simp only [finsupp_sum, map_smul],
+      rw [is_basis.repr_eq_single],
+      rw finsupp.sum_single_index; simp,
+      rw classical.some_spec (range_eq_top.1 s (g (@free.v R P _ _ _ h i))),
+    end⟩
+  end⟩
+end free
+
 
 section
   variables [ring R] [add_comm_group A] [add_comm_group B] [add_comm_group C]
   variables [module R A] [module R B] [module R C] 
 
-  theorem projective_implies_right_split [projective R C]
+  noncomputable theorem projective_implies_right_split [projective R C]
     (h : ses R A B C) : right_split_ses R A B C :=
-    let p := projectivity (h.p) id h.surj in ⟨h, p.h, p.comm⟩
+    let p := classical.indefinite_description _ (projectivity h.p id h.surj) in ⟨h, p.1, p.2⟩
 end
