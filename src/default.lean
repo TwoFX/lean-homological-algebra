@@ -1,7 +1,13 @@
 import linear_algebra.basic
 import linear_algebra.basis
 import linear_algebra.direct_sum_module
+import linear_algebra.finsupp_vector_space
+import tactic.simp_rw
+import tactic.tidy
+import data.finsupp
 open linear_map
+
+noncomputable theory
 
 --universes u v w x y z a
 --variables {R : Type u} {A : Type v} {B : Type w} {C : Type x} { P : Type y} { N : Type z } { M : Type a }
@@ -106,7 +112,7 @@ section ses
   ⟨(ker f).subtype, f, submodule.ker_subtype (ker f), (submodule.range_subtype (ker f)).symm, h⟩
 end ses
 
-variables {R : Type} {A : Type} {B : Type} {C : Type} {P : Type} {N : Type} {M : Type}
+variables {R : Type} {A : Type} {B : Type} {C : Type} {P : Type} {N : Type} {M : Type} {F : Type}
 
 section splitting_lemma
   variables [ring R] [add_comm_group A] [add_comm_group B] [add_comm_group C]
@@ -214,22 +220,96 @@ section free
   theorem from_free [h : free R P] : (projective R P) :=
   ⟨begin
     introsI,
-    exact ⟨begin
-      refine is_basis.constr h.bas _,
-      intro i,
-      have u := range_eq_top.1 s (g (@free.v R P _ _ _ h i)),
-      exact classical.some u,
-    end,
+    exact ⟨is_basis.constr h.bas $ λ i,
+      classical.some (range_eq_top.1 s (g (@free.v R P _ _ _ h i))),
+    is_basis.ext h.bas $ λ i,
     begin
-      apply is_basis.ext h.bas _,
-      intro i,
-      rw [comp_apply, is_basis.constr_apply],
-      simp only [finsupp_sum, map_smul],
-      rw [is_basis.repr_eq_single],
-      rw finsupp.sum_single_index; simp,
-      rw classical.some_spec (range_eq_top.1 s (g (@free.v R P _ _ _ h i))),
+      simp_rw [comp_apply, is_basis.constr_apply, linear_map.finsupp_sum, map_smul,
+        is_basis.repr_eq_single],
+      rw finsupp.sum_single_index,
+      { rw [one_smul, classical.some_spec (range_eq_top.1 s (g (@free.v R P _ _ _ h i)))], },
+      { rw zero_smul, },
     end⟩
   end⟩
+
+  variables [ring R] [add_comm_group P] [module R P]
+  variables [add_comm_group M] [module R M]
+
+  lemma my_basis : @is_basis M R (M →₀ R) (λ m₁, finsupp.single m₁ 1) _ _ _ :=
+  begin
+    split,
+    { apply linear_independent_iff'.2,
+      intros,
+      simp only [mul_one, smul_eq_mul, finsupp.smul_single] at a,
+      have b : finset.sum s (λ (x : M), finsupp.single x (g x)) i = 0,
+        by rw [a, finsupp.zero_apply],
+      have u := @finset.sum_hom _ _ _ _ _ s (λ y, finsupp.single y (g y)) (λ f : M →₀ R, f i)  _,
+      simp only [] at u,
+      rw b at u,
+      suffices : finset.sum s (λ (x : M), ((λ (y : M), finsupp.single y (g y)) x) i) = g i, by finish,
+      convert @finset.sum_eq_single _ _ _ s (λ (x : M), ((λ (y : M), finsupp.single y (g y)) x) i) i _ _,
+      { simp, },
+      { intros, unfold_coes,
+        suffices : (finsupp.single b_1 (g b_1) : M →₀ R) i = 0, by assumption,
+        rw finsupp.single_eq_of_ne a_1, },
+      { intros, contradiction, }, },
+    { ext,
+      split, intro, trivial,
+      intro,
+      rw submodule.mem_span,
+      intros p h,
+      have h₁ : x = finset.sum x.support (λ m, finsupp.single m (x m)) :=
+      begin
+        ext m₁,
+        have u := @finset.sum_hom _ _ _ _ _ x.support (λ (a : M), finsupp.single a (x a)) (λ f : M →₀ R, f m₁)  _,
+        apply eq.symm,
+        simp only [] at u,
+        rw ←u,
+        convert @finset.sum_eq_single _ _ _ x.support (λ (a : M), (finsupp.single a (x a) : M →₀ R) m₁) m₁ _ _,
+        { simp, },
+        { intros, simp only [], rw finsupp.single_eq_of_ne a_1, },
+        { intro, simp only [], rw finsupp.not_mem_support_iff.1 a_1, simp, }
+      end,
+      rw h₁,
+      haveI := classical.dec,
+      refine finset.induction_on x.support (by simp) _,
+      intros,
+      rw finset.sum_insert a_2,
+      have : finsupp.single a_1 (x a_1) ∈ p :=
+      begin
+        suffices : finsupp.single a_1 (1 : R) ∈ p,
+        begin
+          have := submodule.smul_mem p (x a_1) this,
+          rw [finsupp.smul_single _ _ _, smul_eq_mul, mul_one] at this,
+          assumption,
+        end,
+        have a := @set.mem_range_self _ _ (λ (m₁ : M), finsupp.single m₁ (1 : R)) a_1,
+        simp only [] at a,
+        exact h a,
+      end,
+      exact submodule.add_mem p this a_3,
+    },
+  end
+
+  def onto_M : (M →₀ R) →ₗ M := is_basis.constr my_basis id
+
+  lemma is_onto : (is_basis.constr my_basis id : (M →₀ R) →ₗ M).range = ⊤ :=
+  by rw [@constr_range _ _ _ _ _ _ _ _ _ _ ⟨(0 : M)⟩ my_basis _, set.range_id, submodule.span_univ]
+
+  /-begin
+    rw [range_eq_top, function.surjective],
+    intro m,
+    exact ⟨finsupp.single m 1, begin
+      rw [is_basis.constr_apply, is_basis.repr_eq_single, finsupp.sum],
+      haveI := classical.dec,
+      by_cases (1 : R) ≠ 0,
+      { rw finsupp.support_single_ne_zero h, simp, },
+      { rw not_not at h,
+        rw h,
+        simp only [id.def, finset.sum_empty, finsupp.single_zero, finsupp.support_zero],
+        exact (semimodule.eq_zero_of_zero_eq_one m h.symm).symm, },
+    end⟩
+  end-/
 end free
 
 
