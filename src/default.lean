@@ -296,20 +296,6 @@ section free
   lemma is_onto : (is_basis.constr my_basis id : (M →₀ R) →ₗ M).range = ⊤ :=
   by rw [@constr_range _ _ _ _ _ _ _ _ _ _ ⟨(0 : M)⟩ my_basis _, set.range_id, submodule.span_univ]
 
-  /-begin
-    rw [range_eq_top, function.surjective],
-    intro m,
-    exact ⟨finsupp.single m 1, begin
-      rw [is_basis.constr_apply, is_basis.repr_eq_single, finsupp.sum],
-      haveI := classical.dec,
-      by_cases (1 : R) ≠ 0,
-      { rw finsupp.support_single_ne_zero h, simp, },
-      { rw not_not at h,
-        rw h,
-        simp only [id.def, finset.sum_empty, finsupp.single_zero, finsupp.support_zero],
-        exact (semimodule.eq_zero_of_zero_eq_one m h.symm).symm, },
-    end⟩
-  end-/
 end free
 
 
