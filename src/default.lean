@@ -291,8 +291,6 @@ section free
     },
   end
 
-  def onto_M : (M →₀ R) →ₗ M := is_basis.constr my_basis id
-
   lemma is_onto : (is_basis.constr my_basis id : (M →₀ R) →ₗ M).range = ⊤ :=
   by rw [@constr_range _ _ _ _ _ _ _ _ _ _ ⟨(0 : M)⟩ my_basis _, set.range_id, submodule.span_univ]
 
