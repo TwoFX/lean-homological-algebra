@@ -50,7 +50,7 @@ begin
   end,
   begin
     rw [zero_comp, ←fork_comm' s'],
-    convert (comp_zero (limits.fork.ι s')).symm,
+    convert (comp_zero _ (limits.fork.ι s')).symm,
   end
 end,
 λ _ m _, zero.to_zero m⟩
