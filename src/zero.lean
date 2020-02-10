@@ -76,18 +76,6 @@ limits.unique_to_terminal P
 instance unique_from_zero (P : C) : unique (_0 C ⟶ P) :=
 by { rw zero.eq_initial, exact limits.unique_from_initial P }
 
-lemma zero.from_dual (P : C) : eq_to_hom (zero.autodual) ≫ (zero.from P).op = zero.to (op P) :=
-begin
-  rw (limits.unique_from_zero (op P)).uniq (zero.to (op P)),
-  rw (limits.unique_from_zero (op P)).uniq (eq_to_hom (zero.autodual) ≫ (zero.from P).op)
-end
-
-lemma zero.to_dual (P : C) : (zero.to P).op ≫ eq_to_hom (zero.autodual).symm = zero.from (op P) :=
-begin
-  rw (limits.unique_to_zero (op P)).uniq (zero.from (op P)),
-  rw (limits.unique_to_zero (op P)).uniq ((zero.to P).op ≫ eq_to_hom (zero.autodual).symm),
-end
-
 /- Borceux 2, Def. 1.1.2 -/
 abbreviation zero_mor (P : C) (Q : C) : P ⟶ Q :=
 (zero.from P) ≫ (zero.to Q)
@@ -101,6 +89,12 @@ lemma zero.to_zero {P : C} (f : P ⟶ _0 C) : f = ∅ :=
 by rw [(limits.unique_to_zero P).uniq f, (limits.unique_to_zero P).uniq ∅]
 
 lemma zero.factor (P Q : C) : ∅ = (zero.from P) ≫ (zero.to Q) := rfl
+
+lemma zero.from_dual (P : C) : eq_to_hom (zero.autodual) ≫ (zero.from P).op = zero.to (op P) :=
+by rw [zero.from_zero (zero.to (op P)), zero.from_zero (eq_to_hom (zero.autodual) ≫ (zero.from P).op)]
+
+lemma zero.to_dual (P : C) : (zero.to P).op ≫ eq_to_hom (zero.autodual).symm = zero.from (op P) :=
+by rw [zero.to_zero (zero.from (op P)), zero.to_zero ((zero.to P).op ≫ eq_to_hom (zero.autodual).symm)]
 
 lemma zero.mor_autodual {P Q : C} : (∅ : P ⟶ Q).op = ∅ :=
 by { rw [zero.factor, zero.factor, op_comp, ←zero.from_dual, ←zero.to_dual], simp }
