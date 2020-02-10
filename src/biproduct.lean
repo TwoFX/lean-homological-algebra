@@ -53,6 +53,8 @@ structure biproduct (X Y : C) :=
 (van₂ : s₁ ≫ p₂ = 0)
 (total : p₁ ≫ s₁ + p₂ ≫ s₂ = 𝟙 P)
 
+notation X ` ⊕c `:20 Y:20 := (biproduct X Y).P
+
 lemma biproduct.from_prod (X Y : C) [has_limit.{v} (pair X Y)] : biproduct.{v} X Y :=
 { P := X ⨯ Y,
   p₁ := @category_theory.limits.prod.fst _ _ X Y _,
