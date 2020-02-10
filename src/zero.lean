@@ -124,9 +124,13 @@ begin
   rw [←category.assoc', zero.to_zero (f ≫ zero.from Q), zero.to_zero (zero.from P)]
 end
 
-/- Borceux 2, Prop 1.1.6 -/
+/- Borceux 2, Prop. 1.1.6 -/
 lemma zero_comp' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [mono g] (h : f ≫ g = 0) : f = 0 :=
-by { rw [←zero_comp P g, cancel_mono g] at h, exact h }
+by { rw [←zero_comp P g, cancel_mono] at h, exact h }
+
+/- Dual of Borceux 2, Prop. 1.1.6 -/
+lemma comp_zero' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [epi f] (h : f ≫ g = 0) : g = 0 :=
+by { rw [←comp_zero R f, cancel_epi] at h, exact h }
 
 end 
 end category_theory.limits
