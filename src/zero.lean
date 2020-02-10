@@ -92,44 +92,44 @@ end
 abbreviation zero_mor (P : C) (Q : C) : P ⟶ Q :=
 (zero.from P) ≫ (zero.to Q)
 
-instance {P Q : C} : has_zero (P ⟶ Q) := ⟨zero_mor P Q⟩
+instance {P Q : C} : has_emptyc (P ⟶ Q) := ⟨zero_mor P Q⟩
 
-lemma zero.from_zero {P : C} (f : _0 C ⟶ P) : f = 0 :=
-by rw [(limits.unique_from_zero P).uniq f, (limits.unique_from_zero P).uniq 0]
+lemma zero.from_zero {P : C} (f : _0 C ⟶ P) : f = ∅ :=
+by rw [(limits.unique_from_zero P).uniq f, (limits.unique_from_zero P).uniq ∅]
 
-lemma zero.to_zero {P : C} (f : P ⟶ _0 C) : f = 0 :=
-by rw [(limits.unique_to_zero P).uniq f, (limits.unique_to_zero P).uniq 0]
+lemma zero.to_zero {P : C} (f : P ⟶ _0 C) : f = ∅ :=
+by rw [(limits.unique_to_zero P).uniq f, (limits.unique_to_zero P).uniq ∅]
 
-lemma zero.mor_autodual {P Q : C} : (0 : P ⟶ Q).op = 0 :=
+lemma zero.mor_autodual {P Q : C} : (∅ : P ⟶ Q).op = ∅ :=
 begin
-  unfold has_zero.zero,
+  unfold has_emptyc.emptyc,
   delta zero_mor,
   rw [op_comp, ←zero.from_dual, ←zero.to_dual],
   simp
 end
 
 /- Borceux 2, Prop. 1.1.4 -/
-lemma zero_comp (P : C) {Q R : C} (g : Q ⟶ R) : (0 : P ⟶ Q) ≫ g = 0 :=
+lemma zero_comp (P : C) {Q R : C} (g : Q ⟶ R) : (∅ : P ⟶ Q) ≫ g = ∅ :=
 begin
-  unfold has_zero.zero,
+  unfold has_emptyc.emptyc,
   delta zero_mor,
   rw [category.assoc', zero.from_zero (zero.to Q ≫ g), zero.from_zero (zero.to R)]
 end
 
 /- Borceux 2, Prop. 1.1.4 -/
-lemma comp_zero {P Q : C} (R : C) (f : P ⟶ Q) : f ≫ (0 : Q ⟶ R) = 0 :=
+lemma comp_zero {P Q : C} (R : C) (f : P ⟶ Q) : f ≫ (∅ : Q ⟶ R) = ∅ :=
 begin
-  unfold has_zero.zero,
+  unfold has_emptyc.emptyc,
   delta zero_mor,
   rw [←category.assoc', zero.to_zero (f ≫ zero.from Q), zero.to_zero (zero.from P)]
 end
 
 /- Borceux 2, Prop. 1.1.6 -/
-lemma zero_comp' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [mono g] (h : f ≫ g = 0) : f = 0 :=
+lemma zero_comp' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [mono g] (h : f ≫ g = ∅) : f = ∅ :=
 by { rw [←zero_comp P g, cancel_mono] at h, exact h }
 
 /- Dual of Borceux 2, Prop. 1.1.6 -/
-lemma comp_zero' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [epi f] (h : f ≫ g = 0) : g = 0 :=
+lemma comp_zero' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [epi f] (h : f ≫ g = ∅) : g = ∅ :=
 by { rw [←comp_zero R f, cancel_epi] at h, exact h }
 
 end 

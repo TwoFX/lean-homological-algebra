@@ -12,7 +12,7 @@ include 𝒞
 section
 variables {C} {P Q : C} (f : P ⟶ Q) [has_zero_object.{v} C]
 
-class has_kernel extends has_limit (parallel_pair f 0)
+class has_kernel extends has_limit (parallel_pair f ∅)
 
 end
 
@@ -20,10 +20,10 @@ section
 variables {C} {P Q : C} (f : P ⟶ Q) [has_zero_object.{v} C] [has_kernel f]
 
 /- Borceux 2, Def. 1.1.5 -/
-abbreviation ker := equalizer f 0
-abbreviation ker.ι := equalizer.ι f 0
+abbreviation ker := equalizer f ∅
+abbreviation ker.ι := equalizer.ι f ∅
 
-lemma ker_comp : (ker.ι f) ≫ f = 0 :=
+lemma ker_comp : (ker.ι f) ≫ f = ∅ :=
 by rw [equalizer.condition, comp_zero]
 
 end
@@ -43,12 +43,12 @@ variable [has_zero_object.{v} C]
 
 /- Borceux 2, Prop. 1.1.7 -/
 def ker_eq_zero [mono f] : has_kernel f :=
-{ cone := fork.of_ι (0 : _0 C ⟶ P) (by rw [zero_comp, zero_comp]),
+{ cone := fork.of_ι (∅ : _0 C ⟶ P) (by rw [zero_comp, zero_comp]),
   is_limit :=
-  ⟨λ s, 0,
+  ⟨λ s, ∅,
   begin
     intros s j,
-    let s' : fork f 0 := s,
+    let s' : fork f ∅ := s,
     have : s = s', by refl,
     rw this,
     cases j,
@@ -68,7 +68,7 @@ def ker_eq_zero [mono f] : has_kernel f :=
   λ _ m _, zero.to_zero m⟩}
 
 /- Borceux 2, Prop. 1.1.8 -/
-def ker_eq_id : has_kernel (0 : P ⟶ Q) :=
+def ker_eq_id : has_kernel (∅ : P ⟶ Q) :=
 { cone := fork.of_ι (𝟙 P) (by simp), 
   is_limit :=
   { lift := λ s, s.π.app limits.walking_parallel_pair.zero,
