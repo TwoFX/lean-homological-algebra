@@ -54,7 +54,7 @@ def ker_eq_zero [mono f] : has_kernel f :=
     cases j,
     begin
       rw zero_comp,
-      refine (@zero_comp' _ _ _ _ _ _ _ _ _ f _ _).symm,
+      refine (@zero_comp' _ _ _ _ _ _ _ f _ _).symm,
       have : (s'.π).app limits.walking_parallel_pair.zero = fork.ι s', by refl,
       rw this,
       rw fork.condition,
@@ -82,9 +82,9 @@ def ker_eq_id : has_kernel (∅ : P ⟶ Q) :=
       begin
         simp only [category.id_comp, fork.of_ι_app_one],
         rw ←fork_comm,
-        rw @comp_zero _ _ _ _ _ _ P Q (limits.fork.ι.{v u} s),
+        rw @comp_zero _ _ _ _ P Q (limits.fork.ι.{v u} s),
         rw ←category.assoc,
-        rw @comp_zero _ _ _ _ _ _ P Q ((s.π).app limits.walking_parallel_pair.zero ≫ 𝟙 P)
+        rw @comp_zero _ _ _ _ P Q ((s.π).app limits.walking_parallel_pair.zero ≫ 𝟙 P)
       end
     end,
     uniq' := λ s m h,

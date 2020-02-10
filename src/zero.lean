@@ -8,10 +8,10 @@ open opposite
 
 namespace category_theory.limits
 
-variables (C : Type u) [𝒞 : category.{v} C] [has_terminal.{v} C] [has_initial.{v} C]
+variables (C : Type u) [𝒞 : category.{v} C]
 include 𝒞
 
-class has_zero_object :=
+class has_zero_object extends has_terminal.{v} C, has_initial.{v} C :=
 (terminal_eq_initial' : (⊤_ C) = ⊥_ C . obviously)
 
 restate_axiom has_zero_object.terminal_eq_initial'
@@ -21,7 +21,7 @@ abbreviation zero [has_zero_object.{v} C] : C := ⊤_ C
 notation `_0` C:60 := zero C
 --instance [has_zero_object.{v} C] : has_zero C := ⟨⊤_ C⟩
 
-instance op_initial : has_initial.{v} Cᵒᵖ := { has_colimits_of_shape := 
+instance op_initial [has_terminal.{v} C] : has_initial.{v} Cᵒᵖ := { has_colimits_of_shape := 
 { has_colimit := λ F, { cocone := { X := op (⊤_ C),
   ι := { app := by obviously,
   naturality' := by obviously } },
@@ -33,7 +33,7 @@ instance op_initial : has_initial.{v} Cᵒᵖ := { has_colimits_of_shape :=
     rw [h (limits.terminal.from (unop (s.X))), h (has_hom.hom.unop m)]
   end }}}}
 
-instance op_terminal : has_terminal.{v} Cᵒᵖ := { has_limits_of_shape :=
+instance op_terminal [has_initial.{v} C] : has_terminal.{v} Cᵒᵖ := { has_limits_of_shape :=
 { has_limit := λ F, { cone := { X := op (⊥_ C),
   π := { app := by obviously,
   naturality' := by obviously } },
@@ -45,8 +45,8 @@ instance op_terminal : has_terminal.{v} Cᵒᵖ := { has_limits_of_shape :=
     rw [h (limits.initial.to (unop (s.X))), h (has_hom.hom.unop m)]
   end }}}}
 
-lemma terminal_is_initial : (⊥_ Cᵒᵖ) = op (⊤_ C) := rfl
-lemma initial_is_terminal : (⊤_ Cᵒᵖ) = op (⊥_ C) := rfl
+lemma terminal_is_initial [has_terminal.{v} C] : (⊥_ Cᵒᵖ) = op (⊤_ C) := rfl
+lemma initial_is_terminal [has_initial.{v} C] : (⊤_ Cᵒᵖ) = op (⊥_ C) := rfl
 
 instance op_zero [has_zero_object.{v} C] : has_zero_object.{v} Cᵒᵖ :=
 ⟨begin
@@ -100,29 +100,18 @@ by rw [(limits.unique_from_zero P).uniq f, (limits.unique_from_zero P).uniq ∅]
 lemma zero.to_zero {P : C} (f : P ⟶ _0 C) : f = ∅ :=
 by rw [(limits.unique_to_zero P).uniq f, (limits.unique_to_zero P).uniq ∅]
 
+lemma zero.factor (P Q : C) : ∅ = (zero.from P) ≫ (zero.to Q) := rfl
+
 lemma zero.mor_autodual {P Q : C} : (∅ : P ⟶ Q).op = ∅ :=
-begin
-  unfold has_emptyc.emptyc,
-  delta zero_mor,
-  rw [op_comp, ←zero.from_dual, ←zero.to_dual],
-  simp
-end
+by { rw [zero.factor, zero.factor, op_comp, ←zero.from_dual, ←zero.to_dual], simp }
 
 /- Borceux 2, Prop. 1.1.4 -/
 lemma zero_comp (P : C) {Q R : C} (g : Q ⟶ R) : (∅ : P ⟶ Q) ≫ g = ∅ :=
-begin
-  unfold has_emptyc.emptyc,
-  delta zero_mor,
-  rw [category.assoc', zero.from_zero (zero.to Q ≫ g), zero.from_zero (zero.to R)]
-end
+by rw [zero.factor, zero.factor, category.assoc', zero.from_zero (zero.to Q ≫ g), zero.from_zero (zero.to R)]
 
 /- Borceux 2, Prop. 1.1.4 -/
 lemma comp_zero {P Q : C} (R : C) (f : P ⟶ Q) : f ≫ (∅ : Q ⟶ R) = ∅ :=
-begin
-  unfold has_emptyc.emptyc,
-  delta zero_mor,
-  rw [←category.assoc', zero.to_zero (f ≫ zero.from Q), zero.to_zero (zero.from P)]
-end
+by rw [zero.factor, zero.factor, ←category.assoc', zero.to_zero (f ≫ zero.from Q), zero.to_zero (zero.from P)]
 
 /- Borceux 2, Prop. 1.1.6 -/
 lemma zero_comp' {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} [mono g] (h : f ≫ g = ∅) : f = ∅ :=
