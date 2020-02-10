@@ -13,10 +13,20 @@ section
 variables {C} {P Q : C} (f : P ⟶ Q) [has_zero_object.{v} C]
 
 class has_kernel extends has_limit (parallel_pair f ∅)
-
+class has_cokernel extends has_colimit (parallel_pair f ∅)
 end
 
 section
+variables [has_zero_object.{v} C]
+
+class has_kernels :=
+(has_all_kernels : ∀ {P Q : C} (f : P ⟶ Q), has_kernel.{v} f)
+
+class has_cokernels :=
+(has_all_cokernels : ∀ {P Q : C} (f : P ⟶ Q), has_cokernel.{v} f)
+end
+
+section kernel
 variables {C} {P Q : C} (f : P ⟶ Q) [has_zero_object.{v} C] [has_kernel f]
 
 /- Borceux 2, Def. 1.1.5 -/
@@ -26,7 +36,18 @@ abbreviation ker.ι := equalizer.ι f ∅
 lemma ker_comp : (ker.ι f) ≫ f = ∅ :=
 by rw [equalizer.condition, comp_zero]
 
-end
+end kernel
+
+section cokernel
+variables {C} {P Q : C} (f : P ⟶ Q) [has_zero_object.{v} C] [has_cokernel f]
+
+abbreviation coker := coequalizer f ∅
+abbreviation coker.π := coequalizer.π f ∅
+
+lemma comp_coker : f ≫ (coker.π f) = ∅ :=
+by rw [coequalizer.condition, zero_comp]
+
+end cokernel
 
 section kernel
 variables {C} {P Q : C} (f : P ⟶ Q)
@@ -67,6 +88,7 @@ def ker_eq_zero [mono f] : has_kernel f :=
   end,
   λ _ m _, zero.to_zero m⟩}
 
+variables (P Q)
 /- Borceux 2, Prop. 1.1.8 -/
 def ker_eq_id : has_kernel (∅ : P ⟶ Q) :=
 { cone := fork.of_ι (𝟙 P) (by simp), 
