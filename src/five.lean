@@ -17,8 +17,10 @@ variables (fg : f.range = g.ker) (gh : g.range = h.ker)
 variables (fg' : f'.range = g'.ker) (gh' : g'.range = h'.ker)
 variables (comm₁ : f' ∘ α = β ∘ f) (comm₂ : g' ∘ β = γ ∘ g) (comm₃ : h' ∘ γ = δ ∘ h)
 
-include fg gh fg' gh' comm₁ comm₂ comm₃
+include gh fg' comm₁ comm₂ comm₃
 
+section
+include gh'
 lemma four (hα : α.range = ⊤) (hγ : γ.range = ⊤) (hδ : δ.ker = ⊥) : β.range = ⊤ :=
 begin
   apply range_eq_top.2,
@@ -54,7 +56,10 @@ begin
   use b - f a,
   simp [ha'],
 end
+end
 
+section
+include fg
 lemma four' (hα : α.range = ⊤) (hβ : β.ker = ⊥) (hδ : δ.ker = ⊥) : γ.ker = ⊥ :=
 begin
   apply ker_eq_bot'.2,
@@ -96,7 +101,26 @@ begin
   assumption,
 end
 
-#check eq.rec
+lemma nfour' (hα : α.range = ⊤) (hβ : β.ker = ⊥) (hδ : δ.ker = ⊥) : γ.ker = ⊥ :=
+ker_eq_bot'.2 $ assume (c : C) (hc : γ c = 0),
+  have hhc : c ∈ h.ker, from mem_ker.2 $ ker_eq_bot'.1 hδ (h c) $ 
+    have h' (γ c) = 0, from hc.symm ▸ map_zero h',
+    show (δ ∘ h) c = 0, from comm₃ ▸ this,
+  match (gh.symm ▸ hhc : c ∈ g.range) with ⟨(b : B), ⟨_, (hb : g b = c)⟩⟩ :=
+    have hgb' : β b ∈ g'.ker, from mem_ker.2 $
+      have γ (g b) = 0, from hb.symm ▸ hc,
+      show (g' ∘ β) b = 0, from comm₂.symm ▸ this,    
+    match (fg'.symm ▸ hgb' : β b ∈ f'.range) with ⟨(a' : A'), ⟨_, (ha' : f' a' = β b)⟩⟩ :=
+      match range_eq_top.1 hα a' with ⟨(a : A), (ha : α a = a')⟩ :=
+        have hb₀ : b ∈ f.range, from ⟨a, ⟨trivial, ker_eq_bot.1 hβ $
+          suffices β (f a) = f' (α a), from eq.trans this (ha.symm ▸ ha'),
+          show (β ∘ f) a = (f' ∘ α) a, from congr_fun comm₁.symm a⟩⟩,
+        show c = 0, from hb ▸ (mem_ker.1 $ fg ▸ hb₀)
+      end
+    end
+  end
+
+end
 
 end four
 
@@ -117,7 +141,7 @@ variables (comm₁ : f' ∘ α = β ∘ f) (comm₂ : g' ∘ β = γ ∘ g) (com
 
 noncomputable def five (hα : α.range = ⊤) (hε : ε.ker = ⊥) : C ≃ₗ[R] C' :=
 linear_equiv.of_bijective γ
-(four' fg gh fg' gh' comm₁ comm₂ comm₃ hα (linear_equiv.ker β) (linear_equiv.ker δ))
-(four gh hi gh' hi' comm₂ comm₃ comm₄ (linear_equiv.range β) (linear_equiv.range δ) hε)
+(four' fg gh fg' comm₁ comm₂ comm₃ hα (linear_equiv.ker β) (linear_equiv.ker δ))
+(four hi gh' hi' comm₂ comm₃ comm₄ (linear_equiv.range β) (linear_equiv.range δ) hε)
 
 end five

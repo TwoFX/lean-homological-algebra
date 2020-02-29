@@ -14,26 +14,7 @@ lemma product.unique {X Y P : C} [l : has_limit.{v} (pair X Y)] {f g : P ⟶ X �
     (h₁ : f ≫ (@category_theory.limits.prod.fst _ _ X Y _) = g ≫ (@category_theory.limits.prod.fst _ _ X Y _))
     (h₂ : f ≫ (@category_theory.limits.prod.snd _ _ X Y _) = g ≫ (@category_theory.limits.prod.snd _ _ X Y _)) :
     f = g :=
-begin
-  let fan := binary_fan.mk (f ≫ (@category_theory.limits.prod.fst _ _ X Y _)) (f ≫ (@category_theory.limits.prod.snd _ _ X Y _)),
-  have hf : f = l.is_limit.lift fan :=
-  begin
-    refine l.is_limit.uniq fan f _,
-    intro j,
-    cases j,
-    { rw binary_fan.mk_π_app_left, refl, },
-    { rw binary_fan.mk_π_app_right, refl, }
-  end,
-  have hg : g = l.is_limit.lift fan :=
-  begin
-    refine l.is_limit.uniq fan g _,
-    intro j,
-    cases j,
-    { rw binary_fan.mk_π_app_left, rw h₁, refl, },
-    { rw binary_fan.mk_π_app_right, rw h₂, refl, }
-  end,
-  rw [hf, hg],
-end
+by ext j; cases j; assumption
 
 end
 

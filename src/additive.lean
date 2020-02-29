@@ -1,9 +1,8 @@
-import category_theory.category algebra.group.hom data.opposite category_theory.opposites zero
+import category_theory.category algebra.group.hom data.opposite category_theory.opposites
 
 universes v u
 
 open category_theory
-open category_theory.limits
 open opposite
 
 namespace category_theory.additive
@@ -54,9 +53,6 @@ by rw [hom_right_apply, add_monoid_hom.map_zero]
 
 lemma zero_comp (P : C) {Q R : C} (g : Q ⟶ R) : (0 : P ⟶ Q) ≫ g = 0 :=
 by rw [hom_left_apply, add_monoid_hom.map_zero]
-
-lemma zero_eq_zero [has_zero_object.{v} C] {P Q : C} : (∅ : P ⟶ Q) = 0 :=
-by rw [zero.factor, zero.to_zero (zero.from P), ←zero.to_zero (0 : P ⟶ _0 C), zero_comp]
 
 instance op_preadd : @preadditive_category.{v} Cᵒᵖ :=
 { hom := category.opposite.hom,
