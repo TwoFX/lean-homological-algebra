@@ -1,6 +1,7 @@
 import linear_algebra.basic
 import tactic.tidy
 import diagram_chase
+import algebra.punit_instances
 
 open linear_map
 
@@ -171,7 +172,6 @@ ker_eq_bot'.2 $ assume (c : C) (hc : γ c = 0), show c = 0, from
 lemma nnnfour' (hα : range α = ⊤) (hβ : ker β = ⊥) (hδ : ker δ = ⊥) : ker γ = ⊥ :=
 ker_eq_bot'.2 $ λ c hc,
 begin
-  find_eq (δ ∘ h),
   have h₀ : h' 0 = 0, from map_zero _,
   have h₁ : h' (γ c) = h' 0, from congr_arg h' hc,
   have h₂ : h' (γ c) = 0, from eq.trans h₁ h₀,
@@ -199,6 +199,21 @@ begin
   have h₂₄ : g (f a) = 0, from exact_apply fg a,
   have h₂₅ : c = 0, from eq.trans h₂₃ h₂₄,
   exact h₂₅,
+end
+
+set_option profiler true
+
+lemma nnnnfour' (hα : range α = ⊤) (hβ : ker β = ⊥) (hδ : ker δ = ⊥) : ker γ = ⊥ :=
+ker_eq_bot'.2 $ λ c hc,
+begin
+  have β_inj : function.injective β := ker_eq_bot.1 hβ,
+  have δ_inj : function.injective δ := ker_eq_bot.1 hδ,
+  have h0 := map_zero h',
+  have d0 := map_zero δ,
+  --have sα := range_eq_top.1 hα,
+  chase c [hc] using [g, β, f'] with b b' a' only 0 = 0,
+  skip,
+
 end
 
 end
