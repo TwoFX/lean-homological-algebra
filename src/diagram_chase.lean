@@ -2,6 +2,18 @@ import data.list
 import tactic.tidy
 import linear_algebra
 
+section
+variables {R : Type*} [ring R]
+variables {A : Type*} {B : Type*} {C : Type*}
+variables [add_comm_group A] [add_comm_group B] [add_comm_group C]
+variables [module R A] [module R B] [module R C]
+variables {f : A →ₗ[R] B} {g : B →ₗ[R] C} 
+
+lemma exact_apply (fg : linear_map.range f = linear_map.ker g) (a : A) : g (f a) = 0 :=
+linear_map.mem_ker.1 $ fg ▸ submodule.mem_map_of_mem trivial
+
+end
+
 namespace tactic
 
 meta def rb (e : Prop) [decidable e] : tactic bool :=
@@ -11,7 +23,15 @@ if e then return tt else return ff
     This is terrible. There has to be a better way to do this. -/
 meta def can_apply (a : expr) : tactic (list expr) :=
 local_context >>= list.mfilter (λ f, (do
-  b ← i_to_expr_strict ``(%%f %%a),
+  b ← mk_app `coe_fn [f],
+  T ← infer_type b,
+  u ← mk_mvar,
+  v ← mk_mvar,
+  e ← i_to_expr ``(%%u → %%v),
+  unify T e,
+  U ← infer_type a,
+  unify u U,
+  --c ← i_to_expr_strict ``(%%f %%a),
   return tt) <|> return ff)
 
 meta def domain (f : expr) : tactic expr :=
@@ -52,6 +72,14 @@ do
     n ← get_unused_name "h",
     tactic.interactive.«have» n none ``(congr_fun %%e %%a)) es,
   tactic.interactive.simp none tt [simp_arg_type.expr ``(function.comp_apply)] [] interactive.loc.wildcard <|> skip,
+  ctx ← local_context,
+  list.mmap' (λ f, (do
+    n ← get_unused_name "h",
+    `(linear_map.range %%h = linear_map.ker %%g) ← infer_type f,
+    b ← mk_app `exact_apply [f, a],
+    c ← i_to_expr ``(%%g (%%h %%a) = 0),
+    tactic.assertv n c b,
+    skip) <|> skip) ctx,
   skip
 
 meta def find_first {α : Sort*} (m : α → tactic bool) (l : list α) : tactic (option α) :=
@@ -174,7 +202,10 @@ do
   match maps with
   | [] := do
     n ← get_unused_name "h",
-    comm_solve n fin
+    comm_solve n fin,
+    h ← get_local n,
+    introduce_hypothesis h,
+    tactic.cc
   | (f' :: fs) := do
     f ← i_to_expr ``((%%f').to_fun),
     dom ← domain f,

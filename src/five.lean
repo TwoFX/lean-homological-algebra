@@ -20,9 +20,6 @@ variables (fg : f.range = g.ker) (gh : g.range = h.ker)
 variables (fg' : f'.range = g'.ker) (gh' : g'.range = h'.ker)
 variables (comm₁ : f' ∘ α = β ∘ f) (comm₂ : g' ∘ β = γ ∘ g) (comm₃ : h' ∘ γ = δ ∘ h)
 
-lemma exact_apply (a : A) : g (f a) = 0 :=
-mem_ker.1 $ fg ▸ submodule.mem_map_of_mem trivial
-
 include gh fg' comm₁ comm₂ comm₃
 
 section
@@ -210,11 +207,10 @@ begin
   have δ_inj : function.injective δ := ker_eq_bot.1 hδ,
   have h0 := map_zero h',
   have d0 := map_zero δ,
-  --have sα := range_eq_top.1 hα,
-  chase c [hc] using [g, β, f'] with b b' a' only 0 = 0,
-  skip,
-
+  have sα := range_eq_top.1 hα,
+  chase c [hc] using [g, β, f', α] with b b' a' a only f a = b,
 end
+#print nnnnfour'
 
 end
 
