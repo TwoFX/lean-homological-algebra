@@ -199,17 +199,11 @@ begin
 end
 
 set_option profiler true
+--set_option trace.app_builder true
 
 lemma nnnnfour' (hα : range α = ⊤) (hβ : ker β = ⊥) (hδ : ker δ = ⊥) : ker γ = ⊥ :=
-ker_eq_bot'.2 $ λ c hc,
-begin
-  have β_inj : function.injective β := ker_eq_bot.1 hβ,
-  have δ_inj : function.injective δ := ker_eq_bot.1 hδ,
-  have h0 := map_zero h',
-  have d0 := map_zero δ,
-  have sα := range_eq_top.1 hα,
-  chase c [hc] using [g, β, f', α] with b b' a' a only f a = b,
-end
+ker_eq_bot'.2 $ λ c hc, by chase c [hc] using [g, β, f', α] with b b' a' a only f a = b
+
 #print nnnnfour'
 
 end

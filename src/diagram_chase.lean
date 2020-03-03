@@ -53,7 +53,10 @@ local_context >>= list.mfilter (λ e, do
 meta def introduce_map (f : expr) : tactic unit :=
 do
   n ← get_unused_name "h",
-  tactic.interactive.«have» n none ``(linear_map.map_zero %%f)
+  tactic.interactive.«have» n none ``(linear_map.map_zero %%f) <|> skip
+
+meta def introduce_maps : tactic unit :=
+local_context >>= list.mmap' introduce_map
 
 meta def introduce_hypothesis (h : expr) : tactic unit :=
 do
@@ -99,6 +102,43 @@ do
     unify T U,
     return tt) <|> return ff) ctx
 
+meta def find_injective (f : expr) : tactic (option expr) :=
+do
+  i ← find_uni ``(function.injective %%f),
+  match i with
+  | some e := return (some e)
+  | none := do
+    k ← find_uni ``(linear_map.ker %%f = ⊥),
+    match k with
+    | some e := do
+      n ← get_unused_name "h",
+      inj ← i_to_expr_strict ``(function.injective (coe_fn %%f)),
+      --ap ← mk_app `linear_map.ker_eq_bot.mp [f], TODO: Why does this not work?
+      ap ← i_to_expr ``(linear_map.ker_eq_bot.1 %%e),
+      r ← tactic.assertv n inj ap,
+      return (some r)
+    | none := return none
+    end
+  end
+
+meta def find_surjective (f : expr) : tactic (option expr) :=
+do
+  i ← find_uni ``(function.surjective %%f),
+  match i with
+  | some e := return (some e)
+  | none := do
+    k ← find_uni ``(linear_map.range %%f = ⊤),
+    match k with
+    | some e := do
+      n ← get_unused_name "h",
+      sur ← i_to_expr_strict ``(function.surjective (coe_fn %%f)),
+      ap ← i_to_expr ``(linear_map.range_eq_top.1 %%e),
+      r ← tactic.assertv n sur ap,
+      return (some r)
+    | none := return none
+    end
+  end
+
 meta def find_exact (f : expr) : tactic (option expr) :=
 do
   ctx ←local_context,
@@ -118,7 +158,7 @@ do
   `(%%l = %%r) ← infer_type g,
   A ← infer_type l,
   funs ← can_apply l,
-  inj_funs ← list.mmap (λ f, do i ← find_uni ``(function.injective %%f), return (f, i)) funs,
+  inj_funs ← list.mmap (λ f, do i ← find_injective f, return (f, i)) funs,
   inj_funs' ← list.mfilter (λ (h : expr × (option expr)),
     match h with
     | (_, none) := return ff
@@ -155,7 +195,7 @@ do
 meta def pullback (t : expr) (f' : pexpr) (mid : name) : tactic (expr × expr) :=
 do
   f ← i_to_expr f',
-  s' ← find_uni ``(function.surjective %%f),
+  s' ← find_surjective f,
   match s' with
   | some s := do
     i_to_expr ``(exists.elim (%%s %%t)) >>= apply,
@@ -230,7 +270,7 @@ open interactive.types (texpr with_ident_list pexpr_list)
 /- dc [←g, β, ←f', ←α] with b a' a using λ (b : B) (a' : A') (a : A), f b = a -/
 meta def chase (s : parse lean.parser.pexpr) (hyps : parse pexpr_list) (maps : parse (tk "using" *> pexpr_list))
   (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit :=
-tactic.chase s hyps maps ids fin
+tactic.introduce_maps >> tactic.chase s hyps maps ids fin
 
 end interactive
 end tactic
