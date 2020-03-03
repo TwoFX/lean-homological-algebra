@@ -92,21 +92,25 @@ meta def introduce_maps (c : cad) : tactic unit :=
 local_context >>= list.mmap' (introduce_map c)
 
 /-- Generates local hypotheses for all commutativity lemmas that apply to `a`. -/
-meta def introduce_element (a : expr) : tactic unit :=
+meta def introduce_element (a : expr) (c : cad) : tactic unit :=
 do
   A ← infer_type a,
   es ← eqs_with_domain A,
   list.mmap' (λ e, do
     n ← get_unused_name "h",
-    tactic.interactive.«have» n none ``(ccongr %%e %%a)) es,
+    tactic.interactive.«have» n none ``(ccongr %%e %%a),
+    h ← get_local n,
+    introduce_hypothesis h c) es,
   --tactic.interactive.simp none tt [simp_arg_type.expr ``(function.comp_apply)] [] interactive.loc.wildcard <|> skip,
   ctx ← local_context,
   list.mmap' (λ f, (do
     n ← get_unused_name "h",
     `(linear_map.range %%h = linear_map.ker %%g) ← infer_type f,
     b ← mk_app `exact_apply [f, a],
-    c ← i_to_expr ``(%%g (%%h %%a) = 0),
-    tactic.assertv n c b,
+    c' ← i_to_expr ``(%%g (%%h %%a) = 0),
+    tactic.assertv n c' b,
+    h ← get_local n,
+    introduce_hypothesis h c,
     skip) <|> skip) ctx,
   skip
 
@@ -136,7 +140,7 @@ do
     k ← find_uni ``(linear_map.ker %%f = ⊥),
     match k with
     | some e := do
-      n ← get_unused_name "h",
+      n ← mk_fresh_name,
       inj ← i_to_expr_strict ``(function.injective (coe_fn %%f)),
       --ap ← mk_app `linear_map.ker_eq_bot.mp [f], TODO: Why does this not work?
       ap ← i_to_expr ``(linear_map.ker_eq_bot.1 %%e),
@@ -155,7 +159,7 @@ do
     k ← find_uni ``(linear_map.range %%f = ⊤),
     match k with
     | some e := do
-      n ← get_unused_name "h",
+      n ← mk_fresh_name,
       sur ← i_to_expr_strict ``(function.surjective (coe_fn %%f)),
       ap ← i_to_expr ``(linear_map.range_eq_top.1 %%e),
       r ← tactic.assertv n sur ap,
@@ -236,10 +240,10 @@ do
       n ← get_unused_name "h",
       comm_solve n ``(%%p %%t = 0) c,
       hn ← get_local n,
-      m ← get_unused_name "h",
+      m ← mk_fresh_name,
       tactic.interactive.«have» m none ``(linear_map.mem_ker.2 %%hn),
       hm ← get_local m,
-      o ← get_unused_name "h",
+      o ← mk_fresh_name,
       tactic.interactive.«have» o ``(%%t ∈ linear_map.range %%f) ``((%%h).symm ▸ %%hm),
       ho ← get_local o,
       i_to_expr ``(exists.elim %%ho) >>= apply,
@@ -260,7 +264,7 @@ meta def chase (c : cad) : pexpr → list pexpr → list pexpr → list name →
 λ s hyps maps ids fin,
 do
   t ← i_to_expr s,
-  introduce_element t,
+  introduce_element t c,
   --hyps.mmap' (λ h, introduce_hypothesis <$> i_to_expr_strict h),
   hyps.mmap' (λ h', do h ← i_to_expr_strict h', introduce_hypothesis h c),
   match maps with

@@ -204,8 +204,6 @@ end
 lemma nnnnfour' (hα : range α = ⊤) (hβ : ker β = ⊥) (hδ : ker δ = ⊥) : ker γ = ⊥ :=
 ker_eq_bot'.2 $ λ c hc, by chase c [hc] using [g, β, f', α] with b b' a' a only f a = b
 
-#print nnnnfour'
-
 end
 
 section
@@ -215,7 +213,7 @@ lemma nfour (hα : α.range = ⊤) (hγ : γ.range = ⊤) (hδ : δ.ker = ⊥) :
 range_eq_top.2 $ λ b',
 begin
   chase' b' [] using [g', γ, g] with c' c b only g' (β b) = g' b',
-  have hb' : g' (β b - b') = 0 := by rw [map_sub, h_36, sub_self c'],
+  have hb' : g' (β b - b') = 0 := by rw [map_sub, h_35, sub_self c'],
   chase' (β b - b') [] using [f', α, f] with a' a bb only β bb = β b - b',
   exact ⟨b - bb, by simp [h_74]⟩,
 end
