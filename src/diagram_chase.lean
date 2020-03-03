@@ -1,6 +1,7 @@
 import data.list
 import tactic.tidy
 import linear_algebra
+import transitivity
 
 section
 variables {R : Type*} [ring R]
@@ -19,20 +20,31 @@ namespace tactic
 meta def rb (e : Prop) [decidable e] : tactic bool :=
 if e then return tt else return ff
 
+meta def resolve : tactic unit :=
+tactic.transitivity'
+
+meta def cad := list (expr × expr)
+
+meta def can_apply_data : tactic cad :=
+local_context >>= list.mfoldl (λ (s : list (expr × expr)) (f : expr), (do
+    b ← mk_app `coe_fn [f],
+    return ((b, f)::s)
+    ) <|> return s) []
+
 /-- Returns "functions" in the local context to which a can be applied.
     This is terrible. There has to be a better way to do this. -/
-meta def can_apply (a : expr) : tactic (list expr) :=
-local_context >>= list.mfilter (λ f, (do
-  b ← mk_app `coe_fn [f],
-  T ← infer_type b,
-  u ← mk_mvar,
-  v ← mk_mvar,
-  e ← i_to_expr ``(%%u → %%v),
-  unify T e,
-  U ← infer_type a,
-  unify u U,
-  --c ← i_to_expr_strict ``(%%f %%a),
-  return tt) <|> return ff)
+meta def can_apply (a : expr) (c : cad) : tactic (list expr) :=
+list.mfoldl (λ (s : list expr) (d : expr × expr),  (do
+  match d with (b, f) := do
+    T ← infer_type b,
+    u ← mk_mvar,
+    v ← mk_mvar,
+    e ← i_to_expr ``(%%u → %%v),
+    unify T e,
+    U ← infer_type a,
+    unify u U,
+    return (f::s)
+  end) <|> return s) [] c
 
 meta def domain (f : expr) : tactic expr :=
 do
@@ -50,21 +62,24 @@ local_context >>= list.mfilter (λ e, do
   `(%%X → %%Y) ← infer_type l | return ff,
   rb (X = A))
 
-meta def introduce_map (f : expr) : tactic unit :=
-do
-  n ← get_unused_name "h",
-  tactic.interactive.«have» n none ``(linear_map.map_zero %%f) <|> skip
-
-meta def introduce_maps : tactic unit :=
-local_context >>= list.mmap' introduce_map
-
-meta def introduce_hypothesis (h : expr) : tactic unit :=
+meta def introduce_hypothesis (h : expr) (c : cad) : tactic unit :=
 do
   `(%%l = %%r) ← infer_type h,
-  funs ← can_apply l,
+  funs ← can_apply l c,
   list.mmap' (λ f, do
     n ← get_unused_name "h",
     tactic.interactive.«have» n ``(%%f %%l = %%f %%r) ``(congr_arg %%f %%h)) funs
+  
+
+meta def introduce_map (c : cad) (f : expr) : tactic unit :=
+(do
+  n ← get_unused_name "h",
+  tactic.interactive.«have» n none ``(linear_map.map_zero %%f),
+  h ← get_local n,
+  introduce_hypothesis h c) <|> skip
+
+meta def introduce_maps (c : cad) : tactic unit :=
+local_context >>= list.mmap' (introduce_map c)
 
 /-- Generates local hypotheses for all commutativity lemmas that apply to `a`. -/
 meta def introduce_element (a : expr) : tactic unit :=
@@ -152,12 +167,12 @@ do
   `(linear_map.range %%f = linear_map.ker %%g) ← infer_type e,
   return g
 
-meta def injective_apply : tactic unit :=
+meta def injective_apply (c : cad) : tactic unit :=
 do
   g::gs ← get_goals,
   `(%%l = %%r) ← infer_type g,
   A ← infer_type l,
-  funs ← can_apply l,
+  funs ← can_apply l c,
   inj_funs ← list.mmap (λ f, do i ← find_injective f, return (f, i)) funs,
   inj_funs' ← list.mfilter (λ (h : expr × (option expr)),
     match h with
@@ -170,16 +185,16 @@ do
   end
 
 /-- Solves the top goal by commutativity -/
-meta def comm_dispatch : tactic unit :=
-injective_apply >> tactic.cc
+meta def comm_dispatch (c : cad) : tactic unit :=
+injective_apply c >> injective_apply c >> resolve
 
 /-- Proves `g` by commutativity and introduces the hypothesis `n : g` -/
-meta def comm_solve (n : name) (g : pexpr) : tactic unit :=
+meta def comm_solve (n : name) (g : pexpr) (c : cad) : tactic unit :=
 do
   tactic.interactive.«have» n g none,
   g::gs ← get_goals,
   set_goals [g],
-  comm_dispatch,
+  comm_dispatch c,
   done,
   set_goals gs
 
@@ -192,7 +207,7 @@ do
   r ← get_local n,
   return (q, r)
 
-meta def pullback (t : expr) (f' : pexpr) (mid : name) : tactic (expr × expr) :=
+meta def pullback (t : expr) (f' : pexpr) (mid : name) (c : cad) : tactic (expr × expr) :=
 do
   f ← i_to_expr f',
   s' ← find_surjective f,
@@ -209,7 +224,7 @@ do
     | some h := do
       p ← get_tk h,
       n ← get_unused_name "h",
-      comm_solve n ``(%%p %%t = 0),
+      comm_solve n ``(%%p %%t = 0) c,
       hn ← get_local n,
       m ← get_unused_name "h",
       tactic.interactive.«have» m none ``(linear_map.mem_ker.2 %%hn),
@@ -231,20 +246,19 @@ do
     end
   end
 
---meta def chase (s : pexpr) (hyps : list pexpr) (maps : list pexpr) (ids : list name)
---  (fin : pexpr) : tactic unit :=
-meta def chase : pexpr → list pexpr → list pexpr → list name → pexpr → tactic unit :=
+meta def chase (c : cad) : pexpr → list pexpr → list pexpr → list name → pexpr → tactic unit :=
 λ s hyps maps ids fin,
 do
   t ← i_to_expr s,
   introduce_element t,
-  hyps.mmap' (λ h', do h ← i_to_expr_strict h', introduce_hypothesis h),
+  --hyps.mmap' (λ h, introduce_hypothesis <$> i_to_expr_strict h),
+  hyps.mmap' (λ h', do h ← i_to_expr_strict h', introduce_hypothesis h c),
   match maps with
   | [] := do
     n ← get_unused_name "h",
-    comm_solve n fin,
+    comm_solve n fin c,
     h ← get_local n,
-    introduce_hypothesis h
+    introduce_hypothesis h c
   | (f' :: fs) := do
     f ← i_to_expr ``((%%f').to_fun),
     dom ← domain f,
@@ -255,7 +269,7 @@ do
       chase (pexpr.of_expr q) [(pexpr.of_expr r)] fs ids.tail fin
     ) $
     ite (cod = t') (do
-      (c, d) ← pullback t f' ids.head, 
+      (c, d) ← pullback t f' ids.head c, 
       chase (pexpr.of_expr c) [(pexpr.of_expr d)] fs ids.tail fin) $
     tactic.fail "Cannot chase along this function"
   end
@@ -268,12 +282,14 @@ open interactive.types (texpr with_ident_list pexpr_list)
 
 /- dc [←g, β, ←f', ←α] with b a' a using λ (b : B) (a' : A') (a : A), f b = a -/
 meta def chase' (s : parse lean.parser.pexpr) (hyps : parse pexpr_list) (maps : parse (tk "using" *> pexpr_list))
-  (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit :=
-tactic.introduce_maps >> tactic.chase s hyps maps ids fin
+  (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit := do
+c ← can_apply_data,
+tactic.introduce_maps c >> tactic.chase c s hyps maps ids fin
 
 meta def chase (s : parse lean.parser.pexpr) (hyps : parse pexpr_list) (maps : parse (tk "using" *> pexpr_list))
-  (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit  :=
-tactic.introduce_maps >> tactic.chase s hyps maps ids fin >> tactic.cc
+  (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit := do
+c ← can_apply_data,
+tactic.introduce_maps c >> tactic.chase c s hyps maps ids fin >> comm_dispatch c
 
 end interactive
 end tactic
