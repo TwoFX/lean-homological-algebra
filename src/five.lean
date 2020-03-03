@@ -5,6 +5,8 @@ import algebra.punit_instances
 
 open linear_map
 
+set_option profiler true
+
 section four
 variables {R : Type*} [ring R]
 variables {A : Type*} {B : Type*} {C : Type*} {D : Type*}
@@ -198,7 +200,6 @@ begin
   exact h₂₅,
 end
 
-set_option profiler true
 
 lemma nnnnfour' (hα : range α = ⊤) (hβ : ker β = ⊥) (hδ : ker δ = ⊥) : ker γ = ⊥ :=
 ker_eq_bot'.2 $ λ c hc, by chase c [hc] using [g, β, f', α] with b b' a' a only f a = b
@@ -209,8 +210,6 @@ end
 
 section
 include gh'
-
-set_option profiler true
 
 lemma nfour (hα : α.range = ⊤) (hγ : γ.range = ⊤) (hδ : δ.ker = ⊥) : β.range = ⊤ :=
 range_eq_top.2 $ λ b',

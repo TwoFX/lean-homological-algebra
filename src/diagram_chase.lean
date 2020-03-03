@@ -4,6 +4,16 @@ import linear_algebra
 import transitivity
 
 section
+variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
+variables {f : α → β} {g : α → γ} {h : β → δ} {i : γ → δ }
+variables (comm : h ∘ f = i ∘ g)
+
+lemma ccongr (a : α) : h (f a) = i (g a) :=
+show (h ∘ f) a = (i ∘ g) a, from congr_fun comm a
+
+end
+
+section
 variables {R : Type*} [ring R]
 variables {A : Type*} {B : Type*} {C : Type*}
 variables [add_comm_group A] [add_comm_group B] [add_comm_group C]
@@ -88,8 +98,8 @@ do
   es ← eqs_with_domain A,
   list.mmap' (λ e, do
     n ← get_unused_name "h",
-    tactic.interactive.«have» n none ``(congr_fun %%e %%a)) es,
-  tactic.interactive.simp none tt [simp_arg_type.expr ``(function.comp_apply)] [] interactive.loc.wildcard <|> skip,
+    tactic.interactive.«have» n none ``(ccongr %%e %%a)) es,
+  --tactic.interactive.simp none tt [simp_arg_type.expr ``(function.comp_apply)] [] interactive.loc.wildcard <|> skip,
   ctx ← local_context,
   list.mmap' (λ f, (do
     n ← get_unused_name "h",
