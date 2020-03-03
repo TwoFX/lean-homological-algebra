@@ -244,8 +244,7 @@ do
     n ← get_unused_name "h",
     comm_solve n fin,
     h ← get_local n,
-    introduce_hypothesis h,
-    tactic.cc
+    introduce_hypothesis h
   | (f' :: fs) := do
     f ← i_to_expr ``((%%f').to_fun),
     dom ← domain f,
@@ -268,9 +267,13 @@ open lean.parser (tk)
 open interactive.types (texpr with_ident_list pexpr_list)
 
 /- dc [←g, β, ←f', ←α] with b a' a using λ (b : B) (a' : A') (a : A), f b = a -/
-meta def chase (s : parse lean.parser.pexpr) (hyps : parse pexpr_list) (maps : parse (tk "using" *> pexpr_list))
+meta def chase' (s : parse lean.parser.pexpr) (hyps : parse pexpr_list) (maps : parse (tk "using" *> pexpr_list))
   (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit :=
 tactic.introduce_maps >> tactic.chase s hyps maps ids fin
+
+meta def chase (s : parse lean.parser.pexpr) (hyps : parse pexpr_list) (maps : parse (tk "using" *> pexpr_list))
+  (ids : parse with_ident_list) (fin : parse (tk "only" *> texpr)) : tactic unit  :=
+tactic.introduce_maps >> tactic.chase s hyps maps ids fin >> tactic.cc
 
 end interactive
 end tactic
