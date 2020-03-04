@@ -1,3 +1,28 @@
+/-
+  Todo:
+  * Add limited subtraction support (cf. Borceux 2, 1.9.4(5))
+    * this should cover both the other four lemma and the nine lemma
+  * Comments & cleanup
+  * Make the code more idiomatic
+  * Figure out how to properly pass cad
+  * Generic support for pseudoelements
+  * Depth parameter
+  * Figure out why the commented out lines do not work
+  * Think about how to define maps (e.g. connecting homomorphism for LES in homology)
+  * Prove more diagram lemmas
+  * Make a parameter to disable `introduce_maps` (or maybe some even stronger deduplication?)
+  * Write the chapter in the thesis
+  * Make the `only` parameter optional
+  * Enable giving a name to the hypothesis proved by `only`
+  * Maybe change the keywords for the parameters
+  * Check whether transitivity can be made to support chaining defeqs, so that
+    we do not have to normalize using ccongr
+  * Choose some name if the with clause contains too few names
+
+  Many of these might require rewriting the whole thing
+
+-/
+
 import data.list
 import tactic.tidy
 import linear_algebra
@@ -265,7 +290,7 @@ meta def chase (c : cad) : pexpr → list pexpr → list pexpr → list name →
 do
   t ← i_to_expr s,
   introduce_element t c,
-  --hyps.mmap' (λ h, introduce_hypothesis <$> i_to_expr_strict h),
+  --hyps.mmap' (λ h, introduce_hypothesis <$> i_to_expr_strict h), Why does this not work?
   hyps.mmap' (λ h', do h ← i_to_expr_strict h', introduce_hypothesis h c),
   match maps with
   | [] := do

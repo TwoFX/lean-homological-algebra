@@ -55,6 +55,8 @@ include hα₂ hβ₂ hγ₂
 include hα hβ hγ
 include hf₂ hf₃ hg₂ hg₃ fg₂ fg₃
 
+set_option profiler true
+
 lemma nine₂ : range f₁ = ker g₁ :=
 begin
   apply le_antisymm,
@@ -78,9 +80,11 @@ begin
   chase' c [] using [γ₁, g₂, β₂, f₃, α₂, f₂] with c' b' b'' a'' a' bb only β₂ b' = β₂ bb,
   have hbbb := mem_ker.1 (sub_mem_ker_iff.2 h_48),
   have hbb : g₂ bb = 0, by transitivity',
-  have hbx : g₂ (b' - bb) = g₂ b', by simp [hbb],
+  have hbx : g₂ (b' - bb) = g₂ b', by rw [map_sub, hbb, sub_zero],
   chase' (b' - bb) [hbbb] using [β₁] with b only g₁ b = c,
   exact ⟨b, h_86⟩,
 end
+
+#print nine₃
 
 end part_two
