@@ -3,7 +3,6 @@ import category_theory.limits.shapes.pullbacks
 import category_theory.limits.shapes.kernels
 import additive
 import biproduct
-import to_mathlib
 
 open category_theory
 open category_theory.additive
