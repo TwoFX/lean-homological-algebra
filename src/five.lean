@@ -5,8 +5,6 @@ import algebra.punit_instances
 
 open linear_map
 
-set_option profiler true
-
 section four
 variables {R : Type*} [ring R]
 variables {A : Type*} {B : Type*} {C : Type*} {D : Type*}
@@ -59,7 +57,7 @@ begin
   rw comm₁ at ha',
   rw function.comp_apply at ha',
   use b - f a,
-  simp [ha'],
+  simp [sub_eq_add_neg, ha'],
 end
 end
 
@@ -215,14 +213,10 @@ begin
   chase' b' [] using [g', γ, g] with c' c b only g' (β b) = g' b',
   have hb' : g' (β b - b') = 0 := by rw [map_sub, h_35, sub_self c'],
   chase' (β b - b') [] using [f', α, f] with a' a bb only β bb = β b - b',
-  exact ⟨b - bb, by simp [h_74]⟩,
+  exact ⟨b - bb, by simp [sub_eq_add_neg, h_74]⟩,
 end
 
-#print nfour
 end
---#print nnnnfour'
-
-
 
 end four
 

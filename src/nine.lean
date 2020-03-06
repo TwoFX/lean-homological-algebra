@@ -11,8 +11,6 @@ variables {f : A →ₗ[R] B} {g : A' →ₗ[R] B'} {α : A →ₗ[R] A'} {β : 
 variables (comm : g ∘ α = β ∘ f)
 include comm
 
-set_option profiler true
-
 lemma nine₁ (hg : ker g = ⊥) (hα : ker α = ⊥) (hβ : ker β = ⊥) : ker f = ⊥ :=
 ker_eq_bot'.2 $ λ a ha, by chase a [ha] using [α] with a' only 0 = 0
 
@@ -55,8 +53,6 @@ include hα₂ hβ₂ hγ₂
 include hα hβ hγ
 include hf₂ hf₃ hg₂ hg₃ fg₂ fg₃
 
-set_option profiler true
-
 lemma nine₂ : range f₁ = ker g₁ :=
 begin
   apply le_antisymm,
@@ -84,7 +80,5 @@ begin
   chase' (b' - bb) [hbbb] using [β₁] with b only g₁ b = c,
   exact ⟨b, h_86⟩,
 end
-
-#print nine₃
 
 end part_two
