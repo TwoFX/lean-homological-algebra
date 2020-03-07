@@ -64,8 +64,8 @@ include 𝒞
 
 lemma epi_pullback {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z) [epi f] : epi (pullback.fst : pullback f g ⟶ X) :=
 cancel_zero_iff_epi.2 $ λ R e h, begin
-  have o_epi : epi (biproduct.out f g),
-  { apply @epi_of_comp_epi _ _ _ _ _ (biproduct.biproduct.s₁ X Y) _, simpa },
+  have o_epi : epi (biproduct.desc f g),
+  { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa },
   sorry,
 end
 
