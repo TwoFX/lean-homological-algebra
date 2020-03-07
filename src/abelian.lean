@@ -28,6 +28,14 @@ e ▸ eq.refl _
 lemma mono_of_comp_mono {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (m : mono (f ≫ g)) : mono f :=
 ⟨λ _ _ _ h, (cancel_mono (f ≫ g)).1 $ by simpa using congr_comp h g⟩
 
+lemma kernel_fork_app_one [has_zero_morphisms.{v} C] {P Q : C} (f : P ⟶ Q) (s : fork f 0) :
+  s.π.app walking_parallel_pair.one = 0 :=
+begin
+  rw ←cone_parallel_pair_right,
+  erw has_zero_morphisms.comp_zero,
+  refl,
+end
+
 end
 
 namespace category_theory.abelian
@@ -61,14 +69,116 @@ end
 section
 variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
+variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 
-lemma epi_pullback {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z) [epi f] : epi (pullback.fst : pullback f g ⟶ X) :=
+def pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
+pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂
+
+lemma v : pullback_to_biproduct f g ≫ biproduct.desc f (-g) = 0 :=
+begin
+  unfold pullback_to_biproduct,
+  simp,
+  apply sub_eq_zero.2,
+  exact pullback.condition,
+end
+
+def p_cone : fork (biproduct.desc f (-g)) 0 :=
+fork.of_ι (pullback_to_biproduct f g) $ by simp [v]
+
+def pullback_cone_of_fork (s : fork (biproduct.desc f (-g)) 0) : pullback_cone f g :=
+pullback_cone.mk (fork.ι s ≫ biproduct.π₁) (fork.ι s ≫ biproduct.π₂) $ begin
+  simp only [category.assoc],
+  apply sub_eq_zero.1,
+  rw ←sub_distrib_right,
+  rw sub_eq_add_neg,
+  rw ←neg_right,
+  erw fork.condition s,
+  erw has_zero_morphisms.comp_zero,
+end
+
+section 
+
+lemma blubb' (j : walking_cospan) : (pullback_cone_of_fork f g (p_cone f g)).π.app j =
+  (limit.cone (cospan f g)).π.app j :=
+begin
+  cases j,
+  { change ((pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂) ≫ biproduct.π₁) =
+      limit.π (cospan f g) walking_cospan.left,
+    simp },
+  { change ((pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂) ≫ biproduct.π₂) =
+      limit.π (cospan f g) walking_cospan.right,
+    simp },
+  change ((pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂) ≫ biproduct.π₁) ≫ f =
+      limit.π (cospan f g) walking_cospan.one,
+  simp,
+  convert limit.w (cospan f g) walking_cospan.hom.inl,
+end
+
+end
+
+
+lemma test₁ (s : fork (biproduct.desc f (-g)) 0) :
+  fork.ι s ≫ biproduct.π₁ = 
+  (pullback_cone_of_fork f g s).π.app walking_cospan.left := rfl
+
+lemma test₂ (s : fork (biproduct.desc f (-g)) 0) :
+  fork.ι s ≫ biproduct.π₂ = (pullback_cone_of_fork f g s).π.app walking_cospan.right := rfl
+
+set_option trace.check true
+
+/-- pullback_to_biproduct is a kernel of biproduct.desc f g -/
+def p_is_limit : is_limit (p_cone f g) :=
+{ lift := λ s, limit.lift (cospan f g) (pullback_cone_of_fork f g s),
+  fac' := λ s j,
+  begin
+    cases j,
+    { ext, 
+      { simp only [category.assoc], erw test₁,
+        erw blubb',
+        erw limit.lift_π,
+        refl, },
+      { simp only [category.assoc], erw test₂,
+        erw blubb',
+        erw limit.lift_π,
+        refl, } },
+    { rw kernel_fork_app_one, rw kernel_fork_app_one, erw has_zero_morphisms.comp_zero, refl, }
+  end,
+  uniq' := λ s m h,
+  begin
+    ext, rw limit.lift_π, cases j,
+    { unfold limit.π,
+      erw ←blubb',
+      conv_lhs { change m ≫ fork.ι (p_cone f g) ≫ biproduct.π₁ },
+      rw ←category.assoc,
+      erw h walking_parallel_pair.zero,
+      refl, },
+    { unfold limit.π,
+      erw ←blubb',
+      conv_lhs { change m ≫ fork.ι (p_cone f g) ≫ biproduct.π₂ },
+      rw ←category.assoc,
+      erw h walking_parallel_pair.zero,
+      refl, },
+    { unfold limit.π,
+      erw ←blubb',
+      conv_lhs { change m ≫ ((fork.ι (p_cone f g) ≫ biproduct.π₁) ≫ f) },
+      simp only [category.assoc],
+      rw ←category.assoc,
+      erw h walking_parallel_pair.zero,
+      rw ←category.assoc,
+      refl, }
+  end }
+
+/- Now we need: biproduct.desc f g is a cokernel of pullback_to_biproduct -/
+
+instance [epi f] : epi (biproduct.desc f g) :=
+by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa }
+
+
+
+lemma epi_pullback [epi f] : epi (pullback.fst : pullback f g ⟶ X) :=
 cancel_zero_iff_epi.2 $ λ R e h, begin
-  have o_epi : epi (biproduct.desc f g),
-  { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa },
   sorry,
 end
 
 end
-
 end category_theory.abelian

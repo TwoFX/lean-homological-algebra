@@ -42,6 +42,18 @@ mk' (λ g, f ≫ g) $ preadditive.distrib_right _ _ _ _ _
 def hom_left (P : C) {Q R : C} (g : Q ⟶ R) : (P ⟶ Q) →+ (P ⟶ R) :=
 mk' (λ f, f ≫ g) $ λ f f', preadditive.distrib_left _ _ _ _ _ _ _
 
+@[simp] lemma sub_distrib_left {P Q R : C} (f f' : P ⟶ Q) (g : Q ⟶ R) : (f - f') ≫ g = f ≫ g - f' ≫ g :=
+map_sub (hom_left _ _) _ _
+
+@[simp] lemma sub_distrib_right {P Q R : C} (f : P ⟶ Q) (g g' : Q ⟶ R) : f ≫ (g - g') = f ≫ g - f ≫ g' :=
+map_sub (hom_right _ _) _ _
+
+@[simp] lemma neg_left {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) : (-f) ≫ g = -(f ≫ g) :=
+map_neg (hom_left _ _) _
+
+@[simp] lemma neg_right {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) : f ≫ (-g) = -(f ≫ g) :=
+map_neg (hom_right _ _) _
+
 instance preadditive_has_zero_morphisms : has_zero_morphisms.{v} C :=
 { has_zero := infer_instance,
   comp_zero' := λ P Q f R, map_zero $ hom_right R f,
