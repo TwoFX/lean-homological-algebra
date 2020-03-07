@@ -41,18 +41,6 @@ end
 namespace category_theory.abelian
 
 section
-variables {C : Type u} [𝒞 : category.{v} C]
-include 𝒞
-
-structure image_decomposition
-  [has_zero_morphisms.{v} C] [has_finite_limits.{v} C] [has_finite_colimits.{v} C]
-  {X Y : C} (f : X ⟶ Y) :=
-(image_well_defined      : cokernel (kernel.ι f) ≅ kernel (cokernel.π f))
-(composition_is_morphism : cokernel.π (kernel.ι f) ≫ image_well_defined.hom ≫ kernel.ι (cokernel.π f) = f)
-
-end
-
-section
 variables (C : Type u) [𝒞 : category.{v} C]
 include 𝒞
 
@@ -60,7 +48,14 @@ class abelian extends preadditive.{v} C :=
 (has_zero : has_zero_object.{v} C)
 (finitely_complete : has_finite_limits.{v} C)
 (finitely_cocomplete : has_finite_colimits.{v} C)
-(has_image_decomposition : ∀ {P Q : C} (f : P ⟶ Q), image_decomposition.{v} f)
+(epi_is_cokernel_of_kernel : Π {X Y : C} {f : X ⟶ Y} [epi f] (s : fork f 0) (h : is_limit s),
+  is_colimit (cofork.of_π f (begin
+    rw fork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
+  end) : cofork (fork.ι s) 0))
+(mono_is_kernel_of_cokernel : Π {X Y : C} {f : X ⟶ Y} [mono f] (s : cofork f 0) (h : is_colimit s),
+  is_limit (fork.of_ι f (begin
+    rw cofork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
+  end) : fork (cofork.π s) 0))
 
 attribute [instance] abelian.has_zero abelian.finitely_complete abelian.finitely_cocomplete
 
