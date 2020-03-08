@@ -107,7 +107,11 @@ quotient.lift (λ (g : with_codomain P), ⟦app f g⟧) (pseudo_apply_aux f)
 
 def hom_to_fun {P Q : C} : has_coe_to_fun (P ⟶ Q) := ⟨_, pseudo_apply⟩
 
+
 local attribute [instance] hom_to_fun
+
+lemma pseudo_apply_calc {P Q : C} (f : P ⟶ Q) (a : with_codomain P) : f ⟦a⟧ = ⟦a.2 ≫ f⟧ :=
+rfl
 
 lemma comp_apply {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (a : pseudoelements P) :
   (f ≫ g) a = g (f a) :=
@@ -139,6 +143,92 @@ instance {P : C} : has_zero (pseudoelements P) := ⟨pseudo_zero⟩
 
 lemma pseudo_zero_iff {P : C} (a : with_codomain P) : (a : pseudoelements P) = 0 ↔ a.2 = 0 :=
 by rw ←pseudo_zero_aux P a; exact quotient.eq
+
+lemma apply_zero {P Q : C} (f : P ⟶ Q) : f 0 = 0 :=
+begin
+  erw pseudo_apply_calc,
+  erw has_zero_morphisms.zero_comp,
+  apply quotient.sound,
+  apply (pseudo_zero_aux _ _).2,
+  refl,
+end
+
+lemma zero_iff {P Q : C} (f : P ⟶ Q) : f = 0 ↔ ∀ (a : pseudoelements P), f a = 0 :=
+begin
+  split,
+  { intros h abar,
+    apply quotient.induction_on abar,
+    intro a,
+    apply quotient.sound,
+    apply (pseudo_zero_aux _ _).2,
+    change a.2 ≫ f = 0,
+    rw h,
+    rw has_zero_morphisms.comp_zero, },
+  { intro h,
+    rw ←category.id_comp _ f,
+    apply (pseudo_zero_iff ((𝟙 P ≫ f) : with_codomain Q)).1,
+    exact h (𝟙 P), }
+end
+
+/-- TODO: Rewrite as tfae with f(x) = 0 → x = 0 -/
+lemma mono_iff_injective {P Q : C} (f : P ⟶ Q) : mono f ↔ function.injective f :=
+begin
+  split,
+  { intros m abar abar',
+    apply quotient.induction_on₂ abar abar',
+    intros a a' ha,
+    rw pseudo_apply_calc at ha,
+    rw pseudo_apply_calc at ha,
+    obtain ⟨R, p, q, ep, eq, comm⟩ := quotient.exact ha,
+    change p ≫ (a.2 ≫ f) = q ≫ (a'.2 ≫ f) at comm,
+    apply quotient.sound,
+    rw ←category.assoc at comm,
+    rw ←category.assoc at comm,
+    resetI,
+    have comm' := (cancel_mono f).1 comm,
+    exact ⟨R, p, q, ep, eq, comm'⟩, },
+  { intro h,
+    apply additive.cancel_zero_iff_mono.2,
+    intros R g hg,
+    have hg' : f g = 0 := (pseudo_zero_iff ⟨R, g ≫ f⟩).2 hg,
+    rw ←apply_zero f at hg',
+    have hx := h hg',
+    apply (pseudo_zero_iff (g : with_codomain P)).1,
+    exact hx, }
+end
+
+set_option trace.app_builder true
+
+lemma epi_iff_surjective {P Q : C} (f : P ⟶ Q) : epi f ↔ function.surjective f :=
+begin
+  split,
+  { intros h qbar,
+    apply quotient.induction_on qbar,
+    intro q,
+    let a : pullback f q.2 ⟶ P := pullback.fst,
+    use a,
+    erw pseudo_apply_calc,
+    apply quotient.sound,
+    conv_lhs { change (a ≫ f : with_codomain Q), },
+    resetI,
+    refine ⟨pullback f q.2, 𝟙 (pullback f q.2), pullback.snd, by apply_instance, by apply_instance, _⟩,
+    rw category.id_comp,
+    erw pullback.condition,
+    refl, },
+  { intro h,
+    have ha := h (𝟙 Q),
+    cases ha with pbar hp,
+    obtain ⟨p, hpp⟩ := quotient.exists_rep pbar,
+    rw ←hpp at hp,
+    erw pseudo_apply_calc at hp,
+    obtain ⟨R, x, y, ex, ey, comm⟩ := quotient.exact hp,
+    change x ≫ p.2 ≫ f = y ≫ 𝟙 Q at comm,
+    rw ←category.assoc at comm,
+    erw category.comp_id at comm,
+    apply @epi_of_comp_epi _ _ _ _ _ (x ≫ p.snd) f,
+    rw comm,
+    exact ey, }
+end
 
 end
 
