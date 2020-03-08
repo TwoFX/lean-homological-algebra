@@ -168,11 +168,30 @@ def p_is_limit : is_limit (p_cone f g) :=
 instance [epi f] : epi (biproduct.desc f g) :=
 by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa }
 
-
-
-lemma epi_pullback [epi f] : epi (pullback.fst : pullback f g ⟶ X) :=
+lemma epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
 cancel_zero_iff_epi.2 $ λ R e h, begin
-  sorry,
+  have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
+  let u := biproduct.desc (0 : X ⟶ R) e,
+  have pu : pullback_to_biproduct f g ≫ u = 0,
+  { unfold pullback_to_biproduct, simp, exact h, },
+  let pu_cocone : cofork (pullback_to_biproduct f g) 0 := cofork.of_π u (begin
+    rw pu, rw has_zero_morphisms.zero_comp,
+  end),
+  let d : Z ⟶ R := is_colimit.desc this pu_cocone,
+  have hf : f = biproduct.ι₁ ≫ biproduct.desc f (-g),
+  { simp, },
+  have b := is_colimit.fac this pu_cocone walking_parallel_pair.one,
+  conv_rhs at b { change u },
+  conv_lhs at b { congr, change biproduct.desc f (-g) },
+  have hfd : f ≫ d = 0,
+  { rw hf, rw category.assoc, erw b, simp, },
+  have hd : d = 0 := cancel_zero_iff_epi.1 (by apply_instance) _ _ hfd,
+  have hu : u = 0,
+  { rw ←b, change biproduct.desc f (-g) ≫ d = 0, rw hd, simp, },
+  have hh : biproduct.ι₂ ≫ u = 0,
+  { rw hu, simp, },
+  rw biproduct.ι₂_desc at hh,
+  exact hh,
 end
 
 end
