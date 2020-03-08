@@ -1,4 +1,5 @@
 import additive category_theory.limits.shapes.binary_products
+import to_mathlib
 
 universes v u
 
@@ -68,6 +69,18 @@ abbreviation biproduct.π₁ {X Y : C} := biproduct_s.π₁ (has_biproducts.bipr
 abbreviation biproduct.π₂ {X Y : C} := biproduct_s.π₂ (has_biproducts.biproduct.{v} X Y)
 abbreviation biproduct.ι₁ {X Y : C} := biproduct_s.ι₁ (has_biproducts.biproduct.{v} X Y)
 abbreviation biproduct.ι₂ {X Y : C} := biproduct_s.ι₂ (has_biproducts.biproduct.{v} X Y)
+
+instance π₁_epi {X Y : C} : epi (biproduct.π₁ : biproduct X Y ⟶ X) :=
+@epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ biproduct.π₁ $ by simp; apply_instance
+
+instance π₂_epi {X Y : C} : epi (biproduct.π₂ : biproduct X Y ⟶ Y) :=
+@epi_of_comp_epi _ _ _ _ _ biproduct.ι₂ biproduct.π₂ $ by simp; apply_instance
+
+instance ι₁_mono {X Y : C} : mono (biproduct.ι₁ : X ⟶ biproduct X Y) :=
+@mono_of_comp_mono _ _ _ _ _ biproduct.ι₁ biproduct.π₁ $ by simp; apply_instance
+
+instance ι₂_mono {X Y : C} : mono (biproduct.ι₂ : Y ⟶ biproduct X Y) :=
+@mono_of_comp_mono _ _ _ _ _ biproduct.ι₂ biproduct.π₂ $ by simp; apply_instance
 
 def biproduct.lift {X Y T : C} (f : T ⟶ X) (g : T ⟶ Y) : T ⟶ biproduct X Y :=
 f ≫ biproduct.ι₁ + g ≫ biproduct.ι₂

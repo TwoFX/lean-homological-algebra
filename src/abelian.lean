@@ -3,6 +3,7 @@ import category_theory.limits.shapes.pullbacks
 import category_theory.limits.shapes.kernels
 import additive
 import biproduct
+import to_mathlib
 
 open category_theory
 open category_theory.additive
@@ -11,32 +12,7 @@ open category_theory.additive
 
 universes v u
 
-section
-variables {C : Type u} [𝒞 : category.{v} C]
-include 𝒞
 
-/-- Is this really not in mathlib? -/
-lemma epi_of_comp_epi {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (e : epi (f ≫ g)) : epi g :=
-⟨λ _ _ _ h, (cancel_epi (f ≫ g)).1 $ by simp only [h, category.assoc]⟩
-
-lemma congr_comp {P Q R : C} {f g : P ⟶ Q} (e : f = g) (h : Q ⟶ R) : f ≫ h = g ≫ h :=
-e ▸ eq.refl _
-
-lemma congr_comp' {P Q R : C} {f g : Q ⟶ R} (e : f = g) (h : P ⟶ Q) : h ≫ f = h ≫ g :=
-e ▸ eq.refl _
-
-lemma mono_of_comp_mono {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (m : mono (f ≫ g)) : mono f :=
-⟨λ _ _ _ h, (cancel_mono (f ≫ g)).1 $ by simpa using congr_comp h g⟩
-
-lemma kernel_fork_app_one [has_zero_morphisms.{v} C] {P Q : C} (f : P ⟶ Q) (s : fork f 0) :
-  s.π.app walking_parallel_pair.one = 0 :=
-begin
-  rw ←cone_parallel_pair_right,
-  erw has_zero_morphisms.comp_zero,
-  refl,
-end
-
-end
 
 namespace category_theory.abelian
 
@@ -167,7 +143,7 @@ instance desc_of_f [epi f] : epi (biproduct.desc f (-g)) :=
 by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa }
 
 /-- Aluffi IX.2.3, cf. Borceux 2, 1.7.6 -/
-lemma epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
+instance epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
 cancel_zero_iff_epi.2 $ λ R e h,
 begin
   have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
@@ -197,7 +173,7 @@ end
 instance desc_of_g [epi g] : epi (biproduct.desc f (-g)) :=
 by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₂ _, simp, apply_instance, }
 
-lemma epi_pullback' [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
+instance epi_pullback' [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
 cancel_zero_iff_epi.2 $ λ R e h,
 begin
   have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
