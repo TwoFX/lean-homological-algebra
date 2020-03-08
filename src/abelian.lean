@@ -119,8 +119,6 @@ lemma test₁ (s : fork (biproduct.desc f (-g)) 0) :
 lemma test₂ (s : fork (biproduct.desc f (-g)) 0) :
   fork.ι s ≫ biproduct.π₂ = (pullback_cone_of_fork f g s).π.app walking_cospan.right := rfl
 
-set_option trace.check true
-
 /-- pullback_to_biproduct is a kernel of biproduct.desc f g -/
 def p_is_limit : is_limit (p_cone f g) :=
 { lift := λ s, limit.lift (cospan f g) (pullback_cone_of_fork f g s),
@@ -165,11 +163,13 @@ def p_is_limit : is_limit (p_cone f g) :=
 
 /- Now we need: biproduct.desc f g is a cokernel of pullback_to_biproduct -/
 
-instance [epi f] : epi (biproduct.desc f g) :=
+instance desc_of_f [epi f] : epi (biproduct.desc f (-g)) :=
 by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa }
 
+/-- Aluffi IX.2.3, cf. Borceux 2, 1.7.6 -/
 lemma epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
-cancel_zero_iff_epi.2 $ λ R e h, begin
+cancel_zero_iff_epi.2 $ λ R e h,
+begin
   have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
   let u := biproduct.desc (0 : X ⟶ R) e,
   have pu : pullback_to_biproduct f g ≫ u = 0,
@@ -191,6 +191,36 @@ cancel_zero_iff_epi.2 $ λ R e h, begin
   have hh : biproduct.ι₂ ≫ u = 0,
   { rw hu, simp, },
   rw biproduct.ι₂_desc at hh,
+  exact hh,
+end
+
+instance desc_of_g [epi g] : epi (biproduct.desc f (-g)) :=
+by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₂ _, simp, apply_instance, }
+
+lemma epi_pullback' [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
+cancel_zero_iff_epi.2 $ λ R e h,
+begin
+  have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
+  let u := biproduct.desc e (0 : Y ⟶ R),
+  have pu : pullback_to_biproduct f g ≫ u = 0,
+  { unfold pullback_to_biproduct, simp, exact h, },
+  let pu_cocone : cofork (pullback_to_biproduct f g) 0 := cofork.of_π u (begin
+    rw pu, rw has_zero_morphisms.zero_comp,
+  end),
+  let d : Z ⟶ R := is_colimit.desc this pu_cocone,
+  have hg : -g = biproduct.ι₂ ≫ biproduct.desc f (-g),
+  { simp, },
+  have b := is_colimit.fac this pu_cocone walking_parallel_pair.one,
+  conv_rhs at b { change u },
+  conv_lhs at b { congr, change biproduct.desc f (-g) },
+  have hgd : -g ≫ d = 0,
+  { rw hg, rw category.assoc, erw b, simp, },
+  have hd : d = 0 := cancel_zero_iff_epi.1 (by apply_instance) _ _ hgd,
+  have hu : u = 0,
+  { rw ←b, change biproduct.desc f (-g) ≫ d = 0, rw hd, simp, },
+  have hh : biproduct.ι₁ ≫ u = 0,
+  { rw hu, simp, },
+  rw biproduct.ι₁_desc at hh,
   exact hh,
 end
 

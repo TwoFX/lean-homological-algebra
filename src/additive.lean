@@ -54,6 +54,12 @@ map_neg (hom_left _ _) _
 @[simp] lemma neg_right {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) : f ≫ (-g) = -(f ≫ g) :=
 map_neg (hom_right _ _) _
 
+instance {P Q : C} {f : P ⟶ Q} [epi f] : epi (-f) :=
+⟨λ R g g', by rw [neg_left, neg_left, ←neg_right, ←neg_right, cancel_epi]; exact neg_inj⟩
+
+instance {P Q : C} {f : P ⟶ Q} [mono f] : mono (-f) :=
+⟨λ R g g', by rw [neg_right, neg_right, ←neg_left, ←neg_left, cancel_mono]; exact neg_inj⟩ 
+
 instance preadditive_has_zero_morphisms : has_zero_morphisms.{v} C :=
 { has_zero := infer_instance,
   comp_zero' := λ P Q f R, map_zero $ hom_right R f,
