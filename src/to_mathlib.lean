@@ -11,6 +11,34 @@ section
 variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
 
+-- mathlib #2100
+
+instance identity_is_epi (X : C) : epi.{v} (𝟙 X) :=
+⟨λ Z g h w, by simpa using w⟩
+instance (X : C) : mono.{v} (𝟙 X) :=
+⟨λ Z g h w, by simpa using w⟩
+
+instance epi_comp {X Y Z : C} (f : X ⟶ Y) [epi f] (g : Y ⟶ Z) [epi g] : epi (f ≫ g) :=
+begin
+  split, intros Z a b w,
+  apply (cancel_epi g).1,
+  apply (cancel_epi f).1,
+  simpa using w,
+end
+instance mono_comp {X Y Z : C} (f : X ⟶ Y) [mono f] (g : Y ⟶ Z) [mono g] : mono (f ≫ g) :=
+begin
+  split, intros Z a b w,
+  apply (cancel_mono f).1,
+  apply (cancel_mono g).1,
+  simpa using w,
+end
+
+end
+
+section
+variables {C : Type u} [𝒞 : category.{v} C]
+include 𝒞
+
 /-- Is this really not in mathlib? -/
 lemma epi_of_comp_epi {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (e : epi (f ≫ g)) : epi g :=
 ⟨λ _ _ _ h, (cancel_epi (f ≫ g)).1 $ by simp only [h, category.assoc]⟩

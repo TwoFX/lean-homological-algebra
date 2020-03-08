@@ -1,5 +1,7 @@
 import category_theory.category
 import abelian
+import exact
+import to_mathlib
 
 open category_theory
 open category_theory.limits
@@ -7,30 +9,6 @@ open category_theory.limits
 universes v u
 
 namespace category_theory.abelian
-
-
-section
-variables {C : Type u} [𝒞 : category.{v} C]
-include 𝒞
-
--- mathlib #2100
-instance epi_comp {X Y Z : C} (f : X ⟶ Y) [epi f] (g : Y ⟶ Z) [epi g] : epi (f ≫ g) :=
-begin
-  split, intros Z a b w,
-  apply (cancel_epi g).1,
-  apply (cancel_epi f).1,
-  simpa using w,
-end
-instance mono_comp {X Y Z : C} (f : X ⟶ Y) [mono f] (g : Y ⟶ Z) [mono g] : mono (f ≫ g) :=
-begin
-  split, intros Z a b w,
-  apply (cancel_mono f).1,
-  apply (cancel_mono g).1,
-  simpa using w,
-end
-
-end
-
 
 section
 variables {C : Type u} [𝒞 : category.{v} C] [𝒜 : abelian.{v} C]
@@ -137,6 +115,13 @@ begin
     erw has_zero_morphisms.comp_zero, }
 end
 
+lemma zero_eq_zero {P Q R : C} : ⟦((0 : Q ⟶ P) : with_codomain P)⟧ = ⟦((0 : R ⟶ P) : with_codomain P)⟧ :=
+begin
+  apply quotient.sound,
+  apply (pseudo_zero_aux R _).2,
+  refl,
+end
+
 def pseudo_zero {P : C} : pseudoelements P := ⟦(0 : P ⟶ P)⟧
 
 instance {P : C} : has_zero (pseudoelements P) := ⟨pseudo_zero⟩
@@ -151,6 +136,15 @@ begin
   apply quotient.sound,
   apply (pseudo_zero_aux _ _).2,
   refl,
+end
+
+lemma zero_apply {P Q : C} (a : pseudoelements P) : (0 : P ⟶ Q) a = 0 :=
+begin
+  apply quotient.induction_on a,
+  intro a',
+  erw pseudo_apply_calc,
+  erw has_zero_morphisms.comp_zero,
+  exact zero_eq_zero,
 end
 
 lemma zero_iff {P Q : C} (f : P ⟶ Q) : f = 0 ↔ ∀ (a : pseudoelements P), f a = 0 :=
@@ -170,31 +164,39 @@ begin
     exact h (𝟙 P), }
 end
 
-/-- TODO: Rewrite as tfae with f(x) = 0 → x = 0 -/
-lemma mono_iff_injective {P Q : C} (f : P ⟶ Q) : mono f ↔ function.injective f :=
+lemma injective_of_mono {P Q : C} (f : P ⟶ Q) : mono f → function.injective f :=
 begin
-  split,
-  { intros m abar abar',
-    apply quotient.induction_on₂ abar abar',
-    intros a a' ha,
-    rw pseudo_apply_calc at ha,
-    rw pseudo_apply_calc at ha,
-    obtain ⟨R, p, q, ep, eq, comm⟩ := quotient.exact ha,
-    change p ≫ (a.2 ≫ f) = q ≫ (a'.2 ≫ f) at comm,
-    apply quotient.sound,
-    rw ←category.assoc at comm,
-    rw ←category.assoc at comm,
-    resetI,
-    have comm' := (cancel_mono f).1 comm,
-    exact ⟨R, p, q, ep, eq, comm'⟩, },
-  { intro h,
-    apply additive.cancel_zero_iff_mono.2,
-    intros R g hg,
-    have hg' : f g = 0 := (pseudo_zero_iff ⟨R, g ≫ f⟩).2 hg,
-    rw ←apply_zero f at hg',
-    have hx := h hg',
-    apply (pseudo_zero_iff (g : with_codomain P)).1,
-    exact hx, }
+  intros m abar abar',
+  apply quotient.induction_on₂ abar abar',
+  intros a a' ha,
+  rw pseudo_apply_calc at ha,
+  rw pseudo_apply_calc at ha,
+  obtain ⟨R, p, q, ep, eq, comm⟩ := quotient.exact ha,
+  change p ≫ (a.2 ≫ f) = q ≫ (a'.2 ≫ f) at comm,
+  apply quotient.sound,
+  rw ←category.assoc at comm,
+  rw ←category.assoc at comm,
+  resetI,
+  have comm' := (cancel_mono f).1 comm,
+  exact ⟨R, p, q, ep, eq, comm'⟩,
+end
+
+lemma zero_of_map_zero {P Q : C} (f : P ⟶ Q) : function.injective f → ∀ a, f a = 0 → a = 0 :=
+begin
+  intros h a ha,
+  rw ←apply_zero f at ha,
+  exact h ha,
+end
+
+lemma mono_of_zero_of_map_zero {P Q : C} (f : P ⟶ Q) : (∀ a, f a = 0 → a = 0) → mono f :=
+begin
+  intro h,
+  apply additive.cancel_zero_iff_mono.2,
+  intros R g hg,
+  have hg' : f g = 0 := (pseudo_zero_iff ⟨R, g ≫ f⟩).2 hg,
+  have hx := h _ hg',
+  apply (pseudo_zero_iff (g : with_codomain P)).1,
+  exact hx,
 end
 
 set_option trace.app_builder true
@@ -229,6 +231,109 @@ begin
     rw comm,
     exact ey, }
 end
+
+lemma exact_char {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) :
+  exact f g → (∀ a, g (f a) = 0) ∧ (∀ b, g b = 0 → ∃ a, f a = b) :=
+begin
+  rintro ⟨h₁, h₂⟩,
+  split,
+  { intro a,
+    rw ←comp_apply,
+    rw h₁,
+    exact zero_apply _, },
+  { intro b',
+    apply quotient.induction_on b',
+    intros b hb,
+    set i := kernel.ι (cokernel.π f),
+    let p := to_im f,
+    have hb' : b.2 ≫ g = 0,
+    { rw pseudo_apply_calc at hb,
+      have hb'' := (pseudo_zero_iff _).1 hb,
+      exact hb'', },
+    let b_cone : fork g 0 := fork.of_ι b.2 (begin
+      rw hb', rw has_zero_morphisms.comp_zero,
+    end),
+    let c : b.1 ⟶ kernel (cokernel.π f) := is_limit.lift h₂ b_cone,
+    let Y := pullback p c,
+    let a : Y ⟶ P := pullback.fst,
+    use a,
+    erw pseudo_apply_calc,
+    change ⟦(a ≫ f : with_codomain Q)⟧ = ⟦b⟧,
+    apply quotient.sound,
+    refine ⟨Y, 𝟙 Y, pullback.snd, by apply_instance, by apply_instance, _⟩,
+    change 𝟙 Y ≫ a ≫ f = pullback.snd ≫ b.2,
+    rw category.id_comp,
+    conv_lhs { congr, skip, rw ←f_factor f, },
+    rw ←category.assoc,
+    rw pullback.condition,
+    rw category.assoc,
+    congr,
+    exact is_limit.fac h₂ b_cone walking_parallel_pair.zero, }
+end
+
+lemma exact_char' {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) :
+  (∀ a, g (f a) = 0) ∧ (∀ b, g b = 0 → ∃ a, f a = b) → exact f g :=
+begin
+  rintro ⟨h₁, h₂⟩,
+  have : f ≫ g = 0,
+  { apply (zero_iff _).2,
+    intro a,
+    rw comp_apply,
+    exact h₁ a, },
+  fsplit,
+  exact this,
+  { set i := kernel.ι (cokernel.π f),
+    let p := to_im f,
+    have gip : p ≫ i ≫ g = 0,
+    { rw ←category.assoc, rw f_factor, exact this },
+    have gi : i ≫ g = 0,
+    { apply additive.cancel_zero_iff_epi.1 (abelian.to_im_epi f) _ _, exact gip, },
+      sorry,
+    }
+end
+
+lemma sub {P Q : C} (f : P ⟶ Q) (x y : pseudoelements P) : f x = f y →
+  ∃ z, f z = 0 ∧ ∀ (R : C) (g : P ⟶ R), pseudo_apply g y = 0 → g z = g x :=
+begin
+  apply quotient.induction_on₂ x y,
+  intros a a' h,
+  obtain ⟨R, p, q, ep, eq, comm⟩ := quotient.exact h,
+  change p ≫ (a.2 ≫ f) = q ≫ (a'.2 ≫ f) at comm,
+  let a'' : R ⟶ P := p ≫ a.2 - q ≫ a'.2,
+  use a'',
+  split,
+  { erw pseudo_apply_calc,
+    change ⟦((p ≫ a.2 - q ≫ a'.2) ≫ f : with_codomain Q)⟧ = ⟦(0 : Q ⟶ Q)⟧,
+    erw additive.preadditive.distrib_left,
+    rw additive.neg_left,
+    simp only [category.assoc],
+    rw ←sub_eq_add_neg,
+    rw sub_eq_zero.2 comm,
+    apply zero_eq_zero, },
+  { intros Z g hh,
+    rw pseudo_apply_calc,
+    erw pseudo_apply_calc,
+    change ⟦(a'' ≫ g : with_codomain Z)⟧ = ⟦(a.2 ≫ g : with_codomain Z)⟧,
+    change ⟦(a'.2 ≫ g : with_codomain Z)⟧ = ⟦(0 : Z ⟶ Z)⟧ at hh,
+    obtain ⟨X, p', q', ep', eq', comm'⟩ := quotient.exact hh,
+    change p' ≫ (a'.2 ≫ g) = q' ≫ 0 at comm',
+    rw has_zero_morphisms.comp_zero at comm',
+    have st := additive.cancel_zero_iff_epi.1 ep' _ (a'.snd ≫ g) comm',
+    apply quotient.sound,
+    use R,
+    use 𝟙 R,
+    use p,
+    split,
+    apply_instance,
+    split,
+    exact ep,
+    change 𝟙 R ≫ a'' ≫ g = p ≫ a.2 ≫ g,
+    rw category.id_comp,
+    erw additive.preadditive.distrib_left,
+    simp,
+    rw st,
+    erw has_zero_morphisms.comp_zero, }
+end 
 
 end
 

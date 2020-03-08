@@ -201,4 +201,64 @@ begin
 end
 
 end
+
+section factor
+variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
+include 𝒞
+
+variables {P Q : C} (f : P ⟶ Q)
+
+def to_im : P ⟶ kernel (cokernel.π f) :=
+kernel.lift (cokernel.π f) f $ cokernel.condition f
+
+lemma f_factor : to_im f ≫ kernel.ι (cokernel.π f) = f :=
+by erw limit.lift_π; refl
+
+instance to_im_epi : epi (to_im f) :=
+begin
+  apply cancel_zero_iff_epi.2,
+  intros R g h,
+  let t := kernel.lift g (to_im f) h,
+  have t_kernel : t ≫ kernel.ι g = to_im f := by simp,
+  haveI : mono (kernel.ι g) := equalizer.ι_mono _ _,
+  haveI : mono (kernel.ι (cokernel.π f)) := equalizer.ι_mono _ _,
+  let u := kernel.ι g ≫ kernel.ι (cokernel.π f),
+  haveI : mono u := by apply_instance,
+  have u_is_kernel :=
+    abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair u 0)) (colimit.is_colimit _),
+  let h := cokernel.π u, -- u is the kernel of h
+  have fh : f ≫ h = 0,
+  { conv_lhs { congr, rw ←f_factor f }, rw ←t_kernel,
+    simp only [category.assoc],
+    conv_lhs { congr, skip, rw ←category.assoc },
+    change t ≫ u ≫ h = 0,
+    rw cokernel.condition,
+    rw has_zero_morphisms.comp_zero, },
+  let l := cokernel.desc f h fh,
+  have hl : cokernel.π f ≫ l = h := by simp; refl,
+  have hg : kernel.ι (cokernel.π f) ≫ h = 0,
+  { rw ←hl, rw ←category.assoc, rw kernel.condition, rw has_zero_morphisms.zero_comp, },
+  let a_fork : fork h 0 := fork.of_ι (kernel.ι (cokernel.π f)) (begin
+    rw hg, rw has_zero_morphisms.comp_zero,
+  end),
+  let s := is_limit.lift u_is_kernel a_fork,
+  have su : s ≫ u = kernel.ι (cokernel.π f),
+  { change (is_limit.lift u_is_kernel a_fork) ≫ u = kernel.ι (cokernel.π f),
+    exact is_limit.fac u_is_kernel a_fork walking_parallel_pair.zero, },
+  change s ≫ kernel.ι g ≫ kernel.ι (cokernel.π f) = kernel.ι (cokernel.π f) at su,
+  conv_rhs at su { rw ←category.id_comp _ (kernel.ι (cokernel.π f))},
+  rw ←category.assoc at su,
+  have su' := (cancel_mono _).1 su,
+  haveI : epi (kernel.ι g) := begin
+    apply @epi_of_comp_epi _ _ _ _ _ s _,
+    rw su',
+    exact identity_is_epi _,
+  end,
+  have := kernel.condition g,
+  exact cancel_zero_iff_epi.1 (by apply_instance) _ _ this,
+end
+
+
+end factor
+
 end category_theory.abelian
