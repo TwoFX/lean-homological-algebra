@@ -29,7 +29,7 @@ local_context >>= list.mfoldl (λ (s : option expr) (f : expr), do
     end) <|> return none
   end) none
 
-meta def transitivity' : tactic unit := do
+meta def atransitivity : tactic unit := do
   `(%%l = %%r) ← target,
   op ← transitivity_dfs l r [],
   match op with
@@ -39,8 +39,8 @@ meta def transitivity' : tactic unit := do
 
 namespace interactive
 
-meta def transitivity' : tactic unit :=
-tactic.transitivity'
+meta def atransitivity : tactic unit :=
+tactic.atransitivity
 
 end interactive
 

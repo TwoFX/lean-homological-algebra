@@ -185,27 +185,19 @@ def p_is_limit : is_limit (p_cone f g) :=
   end,
   uniq' := λ s m h,
   begin
-    ext, rw limit.lift_π, cases j,
-    { unfold limit.π,
+    ext; rw limit.lift_π,
+    { conv_lhs { change m ≫ (limit.cone (cospan f g)).π.app walking_cospan.left },
       erw ←blubb',
       conv_lhs { change m ≫ fork.ι (p_cone f g) ≫ biproduct.π₁ },
       rw ←category.assoc,
       erw h walking_parallel_pair.zero,
       refl, },
-    { unfold limit.π,
+    { conv_lhs { change m ≫ (limit.cone (cospan f g)).π.app walking_cospan.right },
       erw ←blubb',
       conv_lhs { change m ≫ fork.ι (p_cone f g) ≫ biproduct.π₂ },
       rw ←category.assoc,
       erw h walking_parallel_pair.zero,
       refl, },
-    { unfold limit.π,
-      erw ←blubb',
-      conv_lhs { change m ≫ ((fork.ι (p_cone f g) ≫ biproduct.π₁) ≫ f) },
-      simp only [category.assoc],
-      rw ←category.assoc,
-      erw h walking_parallel_pair.zero,
-      rw ←category.assoc,
-      refl, }
   end }
 
 /- Now we need: biproduct.desc f g is a cokernel of pullback_to_biproduct -/

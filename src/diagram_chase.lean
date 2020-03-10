@@ -56,7 +56,7 @@ meta def rb (e : Prop) [decidable e] : tactic bool :=
 if e then return tt else return ff
 
 meta def resolve : tactic unit :=
-tactic.transitivity'
+tactic.atransitivity
 
 meta def cad := list (expr × expr)
 

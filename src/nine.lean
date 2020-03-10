@@ -75,7 +75,7 @@ range_eq_top.2 $ λ c,
 begin
   chase' c [] using [γ₁, g₂, β₂, f₃, α₂, f₂] with c' b' b'' a'' a' bb only β₂ b' = β₂ bb,
   have hbbb := mem_ker.1 (sub_mem_ker_iff.2 h_48),
-  have hbb : g₂ bb = 0, by transitivity',
+  have hbb : g₂ bb = 0, by atransitivity,
   have hbx : g₂ (b' - bb) = g₂ b', by rw [map_sub, hbb, sub_zero],
   chase' (b' - bb) [hbbb] using [β₁] with b only g₁ b = c,
   exact ⟨b, h_86⟩,
