@@ -1,6 +1,7 @@
 import category_theory.category
 import category_theory.limits.shapes.pullbacks
 import category_theory.limits.shapes.kernels
+import category_theory.limits.shapes.binary_products
 import additive
 import biproduct
 import to_mathlib
@@ -22,8 +23,10 @@ include 𝒞
 
 class abelian extends preadditive.{v} C :=
 (has_zero : has_zero_object.{v} C)
-(finitely_complete : has_finite_limits.{v} C)
-(finitely_cocomplete : has_finite_colimits.{v} C)
+(has_binary_products : has_binary_products.{v} C)
+(has_binary_coproducts : has_binary_coproducts.{v} C)
+(has_kernels : has_kernels.{v} C)
+(has_cokernels : has_cokernels.{v} C)
 (epi_is_cokernel_of_kernel : Π {X Y : C} {f : X ⟶ Y} [epi f] (s : fork f 0) (h : is_limit s),
   is_colimit (cofork.of_π f (begin
     rw fork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
@@ -33,7 +36,72 @@ class abelian extends preadditive.{v} C :=
     rw cofork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
   end) : fork (cofork.π s) 0))
 
-attribute [instance] abelian.has_zero abelian.finitely_complete abelian.finitely_cocomplete
+
+attribute [instance] abelian.has_zero abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
+
+end
+
+section
+variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
+include 𝒞
+variables  {X Y Z : C} (a : X ⟶ Z) (b : Y ⟶ Z)
+
+instance [mono a] [mono b] : has_limit (cospan a b) :=
+begin
+  let a_is_kernel_of_f := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair a 0)) (colimit.is_colimit _),
+  let f := cokernel.π a,
+  let b_is_kernel_of_g := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair b 0)) (colimit.is_colimit _),
+  let g := cokernel.π b,
+  let fg := prod.lift f g,
+  let k := kernel.ι fg,
+  have ffg : fg ≫ limits.prod.fst = f,
+  { simp, },
+  have gfg : fg ≫ limits.prod.snd = g,
+  { simp, },
+  have kf : k ≫ f = 0,
+  { rw ←ffg, rw ←category.assoc, rw kernel.condition, rw has_zero_morphisms.zero_comp, },
+  have kg : k ≫ g = 0,
+  { rw ←gfg, rw ←category.assoc, rw kernel.condition, rw has_zero_morphisms.zero_comp, },
+  let f_cone : fork f 0 := fork.of_ι k (begin rw kf, rw has_zero_morphisms.comp_zero, end),
+  let g_cone : fork g 0 := fork.of_ι k (begin rw kg, rw has_zero_morphisms.comp_zero, end),
+  let a' : kernel fg ⟶ X := a_is_kernel_of_f.lift f_cone,
+  have aa' : k = a' ≫ a,
+  { erw is_limit.fac _ f_cone walking_parallel_pair.zero, refl, },
+  let b' : kernel fg ⟶ Y := b_is_kernel_of_g.lift g_cone,
+  have bb' : k = b' ≫ b,
+  { erw is_limit.fac _ g_cone walking_parallel_pair.zero, refl, },
+  let limit_cone : pullback_cone a b := pullback_cone.mk a' b' (begin
+    rw ←aa', rw bb',
+  end),
+  refine ⟨limit_cone, _⟩,
+  refine ⟨λ s, kernel.lift fg (s.π.app walking_cospan.right ≫ b) _, _, _⟩,
+  { apply limit.hom_ext, intro j, cases j,
+    { simp only [category.assoc],
+      rw limit.lift_π,
+      rw ←category.assoc,
+      erw ←pullback_cone.condition s,
+      rw category.assoc,
+      erw cokernel.condition,
+      rw has_zero_morphisms.zero_comp,
+      erw has_zero_morphisms.comp_zero, },
+    { simp only [category.assoc],
+      rw limit.lift_π,
+      erw cokernel.condition,
+      rw has_zero_morphisms.zero_comp,
+      erw has_zero_morphisms.comp_zero, } },
+    { apply_auto_param,
+      cases j,
+      { apply (cancel_mono a).1,
+        sorry, },
+      sorry,
+      sorry,
+      },
+      sorry,
+
+  --let a' : kernel fg ⟶ X := kernel.lift f k kf,
+  --let b' : kernel fg ⟶ Y := kernel.lift g k kg,
+  --{ erw ←limit.lift_π , }
+end
 
 end
 
@@ -41,6 +109,9 @@ section
 variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
 variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
+
+instance : has_finite_limits.{v} C := sorry
+instance : has_finite_colimits.{v} C := sorry
 
 def pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
 pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂
