@@ -1,5 +1,5 @@
 import additive category_theory.limits.shapes.binary_products
-import to_mathlib
+import hom_to_mathlib
 
 universes v u
 

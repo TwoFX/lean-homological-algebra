@@ -1,7 +1,7 @@
 import category_theory.category
 import abelian
 import exact
-import to_mathlib
+import hom_to_mathlib
 
 open category_theory
 open category_theory.limits
@@ -198,8 +198,6 @@ begin
   apply (pseudo_zero_iff (g : with_codomain P)).1,
   exact hx,
 end
-
-set_option trace.app_builder true
 
 lemma epi_iff_surjective {P Q : C} (f : P ⟶ Q) : epi f ↔ function.surjective f :=
 begin

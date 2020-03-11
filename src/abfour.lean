@@ -1,7 +1,7 @@
 import category_theory.category
 import abelian
 import exact
-import to_mathlib
+import hom_to_mathlib
 import pseudoelements
 
 open category_theory

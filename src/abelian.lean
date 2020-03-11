@@ -2,14 +2,18 @@ import category_theory.category
 import category_theory.limits.shapes.pullbacks
 import category_theory.limits.shapes.kernels
 import category_theory.limits.shapes.binary_products
+import category_theory.limits.shapes.constructions.limits_of_products_and_equalizers
+import finite_products
 import additive
 import biproduct
-import to_mathlib
+import hom_to_mathlib
 
 open category_theory
 open category_theory.additive
 open category_theory.limits
 open category_theory.additive
+
+noncomputable theory
 
 universes v u
 
@@ -60,7 +64,7 @@ begin
   exact epi_limit_cone_parallel_pair_is_iso _ _ s this,
 end
 
-instance : has_limit (parallel_pair f g) :=
+def fg_has_limit : has_limit (parallel_pair f g) :=
 { cone := fork.of_ι (kernel.ι (f - g)) (sub_eq_zero.1 $
     by rw ←sub_distrib_right; exact kernel.condition _),
   is_limit :=
@@ -72,7 +76,22 @@ instance : has_limit (parallel_pair f g) :=
       ext, convert h walking_parallel_pair.zero, simp, refl,
     end } }
 
-instance : has_colimit (parallel_pair f g) :=
+instance F_has_limit {F : walking_parallel_pair ⥤ C} : has_limit F :=
+begin
+  convert fg_has_limit (F.map walking_parallel_pair_hom.left) (F.map walking_parallel_pair_hom.right),
+  apply category_theory.functor.ext,
+  tidy,
+  cases f,
+  tidy,
+end
+
+instance : has_limits_of_shape.{v} walking_parallel_pair C :=
+{ has_limit := by apply_instance }
+
+instance : has_equalizers.{v} C :=
+{ has_limits_of_shape := by apply_instance }
+
+def fg_has_colimit : has_colimit (parallel_pair f g) :=
 { cocone := cofork.of_π (cokernel.π (f - g)) (sub_eq_zero.1 $
     by rw ←sub_distrib_left; exact cokernel.condition _),
   is_colimit :=
@@ -85,62 +104,20 @@ instance : has_colimit (parallel_pair f g) :=
       ext, convert h walking_parallel_pair.one, simp, refl,
     end } }
 
-/-instance [mono a] [mono b] : has_limit (cospan a b) :=
+instance F_has_colimit {F : walking_parallel_pair ⥤ C} : has_colimit F :=
 begin
-  let a_is_kernel_of_f := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair a 0)) (colimit.is_colimit _),
-  let f := cokernel.π a,
-  let b_is_kernel_of_g := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair b 0)) (colimit.is_colimit _),
-  let g := cokernel.π b,
-  let fg := prod.lift f g,
-  let k := kernel.ι fg,
-  have ffg : fg ≫ limits.prod.fst = f,
-  { simp, },
-  have gfg : fg ≫ limits.prod.snd = g,
-  { simp, },
-  have kf : k ≫ f = 0,
-  { rw ←ffg, rw ←category.assoc, rw kernel.condition, rw has_zero_morphisms.zero_comp, },
-  have kg : k ≫ g = 0,
-  { rw ←gfg, rw ←category.assoc, rw kernel.condition, rw has_zero_morphisms.zero_comp, },
-  let f_cone : fork f 0 := fork.of_ι k (begin rw kf, rw has_zero_morphisms.comp_zero, end),
-  let g_cone : fork g 0 := fork.of_ι k (begin rw kg, rw has_zero_morphisms.comp_zero, end),
-  let a' : kernel fg ⟶ X := a_is_kernel_of_f.lift f_cone,
-  have aa' : k = a' ≫ a,
-  { erw is_limit.fac _ f_cone walking_parallel_pair.zero, refl, },
-  let b' : kernel fg ⟶ Y := b_is_kernel_of_g.lift g_cone,
-  have bb' : k = b' ≫ b,
-  { erw is_limit.fac _ g_cone walking_parallel_pair.zero, refl, },
-  let limit_cone : pullback_cone a b := pullback_cone.mk a' b' (begin
-    rw ←aa', rw bb',
-  end),
-  refine ⟨limit_cone, _⟩,
-  refine ⟨λ s, kernel.lift fg (s.π.app walking_cospan.right ≫ b) _, _, _⟩,
-  { apply limit.hom_ext, intro j, cases j,
-    { simp only [category.assoc],
-      rw limit.lift_π,
-      rw ←category.assoc,
-      erw ←pullback_cone.condition s,
-      rw category.assoc,
-      erw cokernel.condition,
-      rw has_zero_morphisms.zero_comp,
-      erw has_zero_morphisms.comp_zero, },
-    { simp only [category.assoc],
-      rw limit.lift_π,
-      erw cokernel.condition,
-      rw has_zero_morphisms.zero_comp,
-      erw has_zero_morphisms.comp_zero, } },
-    { apply_auto_param,
-      cases j,
-      { apply (cancel_mono a).1,
-        sorry, },
-      sorry,
-      sorry,
-      },
-      sorry,
+  convert fg_has_colimit (F.map walking_parallel_pair_hom.left) (F.map walking_parallel_pair_hom.right),
+  apply category_theory.functor.ext,
+  tidy,
+  cases f,
+  tidy,
+end
 
-  --let a' : kernel fg ⟶ X := kernel.lift f k kf,
-  --let b' : kernel fg ⟶ Y := kernel.lift g k kg,
-  --{ erw ←limit.lift_π , }
-end-/
+instance : has_colimits_of_shape.{v} walking_parallel_pair C :=
+{has_colimit := by apply_instance }
+
+instance : has_coequalizers.{v} C :=
+{ has_colimits_of_shape := by apply_instance }
 
 end
 
@@ -149,8 +126,14 @@ variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
 variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 
-instance : has_finite_limits.{v} C := sorry
-instance : has_finite_colimits.{v} C := sorry
+local attribute [instance] has_zero_object.has_initial_of_has_zero_object
+local attribute [instance] has_zero_object.has_terminal_of_has_zero_object
+
+instance : has_finite_products.{v} C :=
+{ has_limits_of_shape := λ J a b, begin resetI, exact trunc.out has_trunc_finite_products end }
+
+instance : has_finite_limits.{v} C :=
+finite_limits_from_equalizers_and_finite_products
 
 def pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
 pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂
@@ -176,6 +159,12 @@ pullback_cone.mk (fork.ι s ≫ biproduct.π₁) (fork.ι s ≫ biproduct.π₂)
   erw fork.condition s,
   erw has_zero_morphisms.comp_zero,
 end
+
+lemma pullback_cone_of_fork_app_left (s : fork (biproduct.desc f (-g)) 0) :
+  (pullback_cone_of_fork f g s).π.app walking_cospan.left = fork.ι s ≫ biproduct.π₁ := rfl
+
+lemma pullback_cone_of_fork_app_right (s : fork (biproduct.desc f (-g)) 0) :
+  (pullback_cone_of_fork f g s).π.app walking_cospan.right = fork.ι s ≫ biproduct.π₂ := rfl
 
 section 
 
@@ -224,16 +213,17 @@ def p_is_limit : is_limit (p_cone f g) :=
   end,
   uniq' := λ s m h,
   begin
-    ext; rw limit.lift_π,
+    -- TODO: Figure out why ext does not trigger this
+    apply pullback.hom_ext; rw limit.lift_π,
     { conv_lhs { change m ≫ (limit.cone (cospan f g)).π.app walking_cospan.left },
       erw ←blubb',
-      conv_lhs { change m ≫ fork.ι (p_cone f g) ≫ biproduct.π₁ },
+      rw pullback_cone_of_fork_app_left,
       rw ←category.assoc,
       erw h walking_parallel_pair.zero,
       refl, },
     { conv_lhs { change m ≫ (limit.cone (cospan f g)).π.app walking_cospan.right },
       erw ←blubb',
-      conv_lhs { change m ≫ fork.ι (p_cone f g) ≫ biproduct.π₂ },
+      rw pullback_cone_of_fork_app_right,
       rw ←category.assoc,
       erw h walking_parallel_pair.zero,
       refl, },
