@@ -7,6 +7,19 @@ open category_theory.limits
 
 universes v u
 
+namespace category_theory.limits
+variables {C : Type u} [𝒞 : category.{v} C]
+include 𝒞
+
+variables {X Y : C} {f g : X ⟶ Y}
+
+@[simp] lemma cofork.of_π_app_zero {P : C} (π : Y ⟶ P) (w : f ≫ π = g ≫ π) :
+  (cofork.of_π π w).ι.app walking_parallel_pair.zero = f ≫ π := rfl
+@[simp] lemma cofork.of_π_app_one {P : C} (π : Y ⟶ P) (w : f ≫ π = g ≫ π) :
+  (cofork.of_π π w).ι.app walking_parallel_pair.one = π := rfl
+
+end category_theory.limits
+
 section
 variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
@@ -51,6 +64,12 @@ e ▸ eq.refl _
 
 lemma mono_of_comp_mono {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (m : mono (f ≫ g)) : mono f :=
 ⟨λ _ _ _ h, (cancel_mono (f ≫ g)).1 $ by simpa using congr_comp h g⟩
+
+lemma kernel_fork_condition [has_zero_morphisms.{v} C] {P Q : C} {f : P ⟶ Q} (s : fork f 0) : fork.ι s ≫ f = 0 :=
+begin
+  rw fork.condition,
+  erw has_zero_morphisms.comp_zero,
+end
 
 lemma kernel_fork_app_one [has_zero_morphisms.{v} C] {P Q : C} (f : P ⟶ Q) (s : fork f 0) :
   s.π.app walking_parallel_pair.one = 0 :=

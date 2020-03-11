@@ -235,11 +235,11 @@ end
 lemma exact_char {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) :
   exact f g → (∀ a, g (f a) = 0) ∧ (∀ b, g b = 0 → ∃ a, f a = b) :=
 begin
-  rintro ⟨h₁, h₂⟩,
+  intro h,
   split,
   { intro a,
     rw ←comp_apply,
-    rw h₁,
+    rw h.1,
     exact zero_apply _, },
   { intro b',
     apply quotient.induction_on b',
@@ -253,7 +253,7 @@ begin
     let b_cone : fork g 0 := fork.of_ι b.2 (begin
       rw hb', rw has_zero_morphisms.comp_zero,
     end),
-    let c : b.1 ⟶ kernel (cokernel.π f) := is_limit.lift h₂ b_cone,
+    let c : b.1 ⟶ kernel (cokernel.π f) := is_limit.lift (exact_ker _ _ h) b_cone,
     let Y := pullback p c,
     let a : Y ⟶ P := pullback.fst,
     use a,
@@ -268,7 +268,15 @@ begin
     rw pullback.condition,
     rw category.assoc,
     congr,
-    exact is_limit.fac h₂ b_cone walking_parallel_pair.zero, }
+    exact is_limit.fac (exact_ker _ _ h) b_cone walking_parallel_pair.zero, }
+end
+
+lemma comp_zero {P Q R : C} (f : Q ⟶ R) (a : P ⟶ Q) : a ≫ f = 0 → f a = 0 :=
+begin
+  intro h,
+  erw pseudo_apply_calc,
+  erw h,
+  exact zero_eq_zero,
 end
 
 lemma exact_char' {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) :
@@ -288,8 +296,34 @@ begin
     { rw ←category.assoc, rw f_factor, exact this },
     have gi : i ≫ g = 0,
     { apply additive.cancel_zero_iff_epi.1 (abelian.to_im_epi f) _ _, exact gip, },
-      sorry,
-    }
+    let b := kernel.ι g,
+    have hb : b ≫ g = 0 := kernel.condition _,
+    have hgb : g b = 0 := comp_zero _ _ hb,
+    cases h₂ _ hgb with a ha,
+    cases quotient.exists_rep a with a' ha',
+    rw ←ha' at ha,
+    obtain ⟨Z, r, q, er, eq, comm⟩ := quotient.exact ha,
+    rw ←f_factor f at comm,
+    change r ≫ a'.2 ≫ p ≫ i = q ≫ b at comm,
+    let P := pullback i b,
+    let j : P ⟶ kernel g := pullback.snd,
+    let c : P ⟶ kernel (cokernel.π f) := pullback.fst,
+    let z : Z ⟶ P := pullback.lift (r ≫ a'.2 ≫ p) q (by simp only [category.assoc, comm]),
+    have hjz : z ≫ j = q,
+    { simp, refl, },
+    have hcz : z ≫ c = r ≫ a'.2 ≫ p,
+    { simp, refl, },
+    haveI je : epi j := by { resetI, exact epi_of_epi_fac hjz, },
+    have ji : is_iso j := mono_epi_iso j,
+    have hh : c ≫ i = j ≫ b := pullback.condition,
+    have hh' := congr_comp' hh (inv j),
+    conv_rhs at hh' { rw ←category.assoc, rw is_iso.inv_hom_id, rw category.id_comp, },
+    change b ≫ cokernel.π f = 0,
+    rw ←hh',
+    simp only [category.assoc],
+    erw kernel.condition,
+    rw ←category.assoc,
+    rw has_zero_morphisms.comp_zero, }
 end
 
 lemma sub {P Q : C} (f : P ⟶ Q) (x y : pseudoelements P) : f x = f y →

@@ -44,9 +44,48 @@ end
 section
 variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
-variables  {X Y Z : C} (a : X ⟶ Z) (b : Y ⟶ Z)
+variables  {X Y : C} (f : X ⟶ Y) (g : X ⟶ Y)
 
-instance [mono a] [mono b] : has_limit (cospan a b) :=
+lemma mono_epi_iso [mono f] [epi f] : is_iso f :=
+begin
+  let s : fork (cokernel.π f) 0 := fork.of_ι f (begin
+    rw cokernel.condition, erw has_zero_morphisms.comp_zero,
+  end),
+  have := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair f 0)) (colimit.is_colimit _),
+  change is_limit s at this,
+  haveI : epi (s.π.app walking_parallel_pair.zero) := begin
+    change epi f,
+    apply_instance,
+  end,
+  exact epi_limit_cone_parallel_pair_is_iso _ _ s this,
+end
+
+instance : has_limit (parallel_pair f g) :=
+{ cone := fork.of_ι (kernel.ι (f - g)) (sub_eq_zero.1 $
+    by rw ←sub_distrib_right; exact kernel.condition _),
+  is_limit :=
+  { lift := λ s, kernel.lift (f - g) (fork.ι s) $
+      by rw sub_distrib_right; apply sub_eq_zero.2; exact fork.condition _,
+    fac' := λ s j, begin cases j, { simp, refl, },
+      { simp, convert cone.w s walking_parallel_pair_hom.left, } end,
+    uniq' := λ s m h, begin
+      ext, convert h walking_parallel_pair.zero, simp, refl,
+    end } }
+
+instance : has_colimit (parallel_pair f g) :=
+{ cocone := cofork.of_π (cokernel.π (f - g)) (sub_eq_zero.1 $
+    by rw ←sub_distrib_left; exact cokernel.condition _),
+  is_colimit :=
+  { desc := λ s, cokernel.desc (f - g) (cofork.π s) $
+      by rw sub_distrib_left; apply sub_eq_zero.2; exact cofork.condition _,
+    fac' := λ s j, begin cases j,
+      { simp, convert cocone.w s walking_parallel_pair_hom.left, },
+      { simp, refl, } end,
+    uniq' := λ s m h, begin
+      ext, convert h walking_parallel_pair.one, simp, refl,
+    end } }
+
+/-instance [mono a] [mono b] : has_limit (cospan a b) :=
 begin
   let a_is_kernel_of_f := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair a 0)) (colimit.is_colimit _),
   let f := cokernel.π a,
@@ -101,7 +140,7 @@ begin
   --let a' : kernel fg ⟶ X := kernel.lift f k kf,
   --let b' : kernel fg ⟶ Y := kernel.lift g k kg,
   --{ erw ←limit.lift_π , }
-end
+end-/
 
 end
 
