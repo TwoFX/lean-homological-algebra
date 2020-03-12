@@ -17,52 +17,225 @@ noncomputable theory
 
 universes v u
 
-
-
 namespace category_theory.abelian
+
+section
+variables {C : Type u} [𝒞 : category.{v} C]
+include 𝒞
+
+variables [has_zero_morphisms.{v} C] {X Y : C}
+
+/-- `is_kernel f` means that `f` is the kernel of some morphism `of`. -/
+structure is_kernel (f : X ⟶ Y) :=
+(Z : C)
+(of : Y ⟶ Z)
+(condition : f ≫ of = 0)
+(l : is_limit $ kernel_fork.of_ι of f condition)
+
+/-- Any map that is zero when composed with `s.of` factors through `f`. -/
+def is_kernel.lift {f : X ⟶ Y} (s : is_kernel f) {W : C} (g : W ⟶ Y) (h : g ≫ s.of = 0) :
+  { l : W ⟶ X // l ≫ f = g } :=
+⟨is_limit.lift s.l $ kernel_fork.of_ι s.of g h, is_limit.fac s.l _ walking_parallel_pair.zero⟩
+
+/-- `is_cokernel f` means that `f` is the cokernel of some morphism `of`. -/
+structure is_cokernel (f : X ⟶ Y) :=
+(Z : C)
+(of : Z ⟶ X)
+(condition : of ≫ f = 0)
+(l : is_colimit $ cokernel_cofork.of_π of f condition)
+
+/-- Any map that is zero when precomposed with `s.of` factors through `f`. -/
+def is_cokernel.desc {f : X ⟶ Y} (s : is_cokernel f) {W : C} (g : X ⟶ W) (h : s.of ≫ g = 0) :
+  { l : Y ⟶ W // f ≫ l = g } :=
+⟨is_colimit.desc s.l $ cokernel_cofork.of_π s.of g h, is_colimit.fac s.l _ walking_parallel_pair.one⟩
+
+end
 
 section
 variables (C : Type u) [𝒞 : category.{v} C]
 include 𝒞
 
+/-- A (preadditive) category `C` is called abelian if it has a zero object, all binary products and
+    coproducts, all kernels and cokernels, and if every monomorphism is the kernel of some morphism
+    and every epimorphism is the cokernel of somme morphism. -/
 class abelian extends preadditive.{v} C :=
 (has_zero : has_zero_object.{v} C)
 (has_binary_products : has_binary_products.{v} C)
 (has_binary_coproducts : has_binary_coproducts.{v} C)
 (has_kernels : has_kernels.{v} C)
 (has_cokernels : has_cokernels.{v} C)
-(epi_is_cokernel_of_kernel : Π {X Y : C} {f : X ⟶ Y} [epi f] (s : fork f 0) (h : is_limit s),
-  is_colimit (cofork.of_π f (begin
-    rw fork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
-  end) : cofork (fork.ι s) 0))
-(mono_is_kernel_of_cokernel : Π {X Y : C} {f : X ⟶ Y} [mono f] (s : cofork f 0) (h : is_colimit s),
-  is_limit (fork.of_ι f (begin
-    rw cofork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
-  end) : fork (cofork.π s) 0))
-
+(mono_is_kernel : Π {X Y : C} (f : X ⟶ Y), is_kernel.{v} f)
+(epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y), is_cokernel.{v} f)
 
 attribute [instance] abelian.has_zero abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
 
 end
 
+section factor
+variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
+include 𝒞
+
+variables {P Q : C} (f : P ⟶ Q)
+
+/-- There is a canonical epimorphism `p : P ⟶ image f` for every `f`. -/
+def factor_thru_image : P ⟶ kernel (cokernel.π f) :=
+kernel.lift (cokernel.π f) f $ cokernel.condition f
+
+/-- `f` factors through its image via the canonical morphism `p`. -/
+lemma image.fac : factor_thru_image f ≫ kernel.ι (cokernel.π f) = f :=
+by erw limit.lift_π; refl
+
+/-- The map `p : P ⟶ image f` is an epimorphism -/
+instance : epi (factor_thru_image f) :=
+let I := kernel (cokernel.π f), p := factor_thru_image f, i := kernel.ι (cokernel.π f) in
+-- It will suffice to consider some g : I ⟶ R such that p ≫ g = 0 and show that g = 0.
+cancel_zero_iff_epi.2 $ λ R (g : I ⟶ R) (hpg : p ≫ g = 0),
+begin
+  -- Since C is abelian, u := ker g ≫ i is the kernel of some morphism h.
+  let u := kernel.ι g ≫ i,
+  have hu := abelian.mono_is_kernel u,
+  let h := hu.of,
+
+  -- By hypothesis, p factors through the kernel of g via some t.
+  obtain ⟨t, ht⟩ := kernel.lift' g p hpg,
+
+  have fh : f ≫ h = 0, calc
+    f ≫ h = (p ≫ i) ≫ h : (image.fac f).symm ▸ rfl
+       ... = ((t ≫ kernel.ι g) ≫ i) ≫ h : ht ▸ rfl
+       ... = t ≫ u ≫ h : by simp only [category.assoc]; conv_lhs { congr, skip, rw ←category.assoc }
+       ... = t ≫ 0 : hu.condition ▸ rfl
+       ... = 0 : has_zero_morphisms.comp_zero _ _ _,
+
+  -- h factors through the cokernel of f via some l.
+  obtain ⟨l, hl⟩ := cokernel.desc' f h fh,
+
+  have hih : i ≫ h = 0, calc
+    i ≫ h = i ≫ cokernel.π f ≫ l : hl ▸ rfl
+       ... = 0 ≫ l : by rw [←category.assoc, kernel.condition]
+       ... = 0 : has_zero_morphisms.zero_comp _ _ _,
+
+  -- i factors through u = ker h via some s.
+  obtain ⟨s, hs⟩ := is_kernel.lift hu i hih,
+
+  have hs' : (s ≫ kernel.ι g) ≫ i = 𝟙 I ≫ i, by rw [category.assoc, hs, category.id_comp],
+
+  have : epi (kernel.ι g) := epi_of_epi_fac ((cancel_mono _).1 hs'),
+
+  -- ker g is an epimorphism, but ker g ≫ g = 0 = ker g ≫ 0, so g = 0 as required.
+  exact cancel_zero_iff_epi.1 this _ _ (kernel.condition g)
+end
+
+/-- There is a canonical monomorphism `i : coimage f ⟶ Q`. -/
+def factor_thru_coimage : cokernel (kernel.ι f) ⟶ Q :=
+cokernel.desc (kernel.ι f) f $ kernel.condition f
+
+/-- `f` factors through its coimage via the canonical morphism `p`. -/
+lemma coimage.fac : cokernel.π (kernel.ι f) ≫ factor_thru_coimage f = f :=
+by erw colimit.ι_desc; refl
+
+/-- The canonical morphism `i : coimage f ⟶ Q` is a monomorphism -/
+instance : mono (factor_thru_coimage f) :=
+let I := cokernel (kernel.ι f), i := factor_thru_coimage f, p := cokernel.π (kernel.ι f) in
+cancel_zero_iff_mono.2 $ λ R (g : R ⟶ I) (hgi : g ≫ i = 0),
+begin
+  -- Since C is abelian, u := p ≫ coker g is the cokernel of some morphism h.
+  let u := p ≫ cokernel.π g,
+  have hu := abelian.epi_is_cokernel u,
+  let h := hu.of,
+
+  -- By hypothesis, i factors through the cokernel of g via some t.
+  obtain ⟨t, ht⟩ := cokernel.desc' g i hgi,
+
+  have hf : h ≫ f = 0, calc
+    h ≫ f = h ≫ (p ≫ i) : (coimage.fac f).symm ▸ rfl
+    ... = h ≫ (p ≫ (cokernel.π g ≫ t)) : ht ▸ rfl
+    ... = h ≫ u ≫ t : by simp only [category.assoc]; conv_lhs { congr, skip, rw ←category.assoc }
+    ... = 0 ≫ t : by rw [←category.assoc, hu.condition]
+    ... = 0 : has_zero_morphisms.zero_comp _ _ _,
+
+  -- h factors through the kernel of f via some l.
+  obtain ⟨l, hl⟩ := kernel.lift' f h hf,
+
+  have hhp : h ≫ p = 0, calc
+    h ≫ p = (l ≫ kernel.ι f) ≫ p : hl ▸ rfl
+    ... = l ≫ 0 : by rw [category.assoc, cokernel.condition]
+    ... = 0 : has_zero_morphisms.comp_zero _ _ _,
+
+  -- p factors through u = coker h via some s.
+  obtain ⟨s, hs⟩ := is_cokernel.desc hu p hhp,
+
+  have hs' : p ≫ cokernel.π g ≫ s = p ≫ 𝟙 I, by rw [←category.assoc, hs, category.comp_id],
+
+  have : mono (cokernel.π g) := mono_of_mono_fac ((cancel_epi _).1 hs'),
+
+  -- coker g is a monomorphism, but g ≫ coker g = 0 = 0 ≫ coker g, so g = 0 as required.
+  exact cancel_zero_iff_mono.1 this _ _ (cokernel.condition g)
+end
+
+end factor
+
+section mono_epi_iso
+variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
+include 𝒞
+variables {X Y : C} (f : X ⟶ Y)
+
+/-- In an abelian category, an monomorphism which is also an epimorphism is an isomorphism. -/
+def mono_epi_iso [mono f] [epi f] : is_iso f :=
+begin
+  have hf := abelian.mono_is_kernel f,
+  let s := kernel_fork.of_ι hf.of f hf.condition,
+  haveI : epi (s.π.app walking_parallel_pair.zero) :=
+    show epi f, by apply_instance,
+  exact epi_limit_cone_parallel_pair_is_iso _ _ s hf.l
+end
+
+end mono_epi_iso
+
+section cokernel_of_kernel
+variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
+include 𝒞
+variables {X Y : C} {f : X ⟶ Y}
+
+/-(epi_is_cokernel_of_kernel : Π {X Y : C} {f : X ⟶ Y} [epi f] (s : fork f 0) (h : is_limit s),
+  is_colimit (cofork.of_π f (begin
+    rw fork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
+  end) : cofork (fork.ι s) 0))-/
+/-(mono_is_kernel_of_cokernel : Π {X Y : C} {f : X ⟶ Y} [mono f] (s : cofork f 0) (h : is_colimit s),
+  is_limit (fork.of_ι f (begin
+    rw cofork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
+  end) : fork (cofork.π s) 0))-/
+
+/-- If `f` is an epimorphism and `s` is some limit kernel cone on `f`, then `f` is a cokernel
+    of `fork.ι s`. -/
+def epi_is_cokernel_of_kernel [epi f] (s : fork f 0) (h : is_limit s) :
+  is_colimit (cokernel_cofork.of_π (fork.ι s) f (kernel_fork_condition s)) :=
+begin
+  haveI : epi (factor_thru_coimage f) := epi_of_epi_fac (coimage.fac f),
+  haveI : is_iso (factor_thru_coimage f) := mono_epi_iso (factor_thru_coimage f),
+  let i : cokernel (kernel.ι f) ≅ Y := as_iso (factor_thru_coimage f),
+  let u : kernel f ≅ s.X :=
+    functor.map_iso cones.forget (is_limit.unique_up_to_iso (limit.is_limit _) h ),
+  have h : u.hom ≫ fork.ι s = kernel.ι f :=
+    cone_morphism.w (is_limit.unique_up_to_iso (limit.is_limit _) h).hom walking_parallel_pair.zero,
+  have x := cokernel.transport (kernel.ι f) (fork.ι s) u h,
+  apply is_colimit.of_iso_colimit x,
+  ext,
+  tactic.swap,
+  exact i,
+  cases j,
+  { rw cokernel_cofork_app_zero,
+    rw cokernel_cofork_app_zero,
+    rw has_zero_morphisms.zero_comp,
+    refl, },
+  { exact coimage.fac f, }
+end
+
+end cokernel_of_kernel
+
 section
 variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
-variables  {X Y : C} (f : X ⟶ Y) (g : X ⟶ Y)
-
-lemma mono_epi_iso [mono f] [epi f] : is_iso f :=
-begin
-  let s : fork (cokernel.π f) 0 := fork.of_ι f (begin
-    rw cokernel.condition, erw has_zero_morphisms.comp_zero,
-  end),
-  have := abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair f 0)) (colimit.is_colimit _),
-  change is_limit s at this,
-  haveI : epi (s.π.app walking_parallel_pair.zero) := begin
-    change epi f,
-    apply_instance,
-  end,
-  exact epi_limit_cone_parallel_pair_is_iso _ _ s this,
-end
+variables {X Y : C} (f : X ⟶ Y) (g : X ⟶ Y)
 
 def fg_has_limit : has_limit (parallel_pair f g) :=
 { cone := fork.of_ι (kernel.ι (f - g)) (sub_eq_zero.1 $
@@ -238,7 +411,7 @@ by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa }
 instance epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
 cancel_zero_iff_epi.2 $ λ R e h,
 begin
-  have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
+  have := epi_is_cokernel_of_kernel _ (p_is_limit f g),
   let u := biproduct.desc (0 : X ⟶ R) e,
   have pu : pullback_to_biproduct f g ≫ u = 0,
   { unfold pullback_to_biproduct, simp, exact h, },
@@ -268,7 +441,7 @@ by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₂ _, simp, apply_instance, }
 instance epi_pullback' [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
 cancel_zero_iff_epi.2 $ λ R e h,
 begin
-  have := abelian.epi_is_cokernel_of_kernel _ (p_is_limit f g),
+  have := epi_is_cokernel_of_kernel _ (p_is_limit f g),
   let u := biproduct.desc e (0 : Y ⟶ R),
   have pu : pullback_to_biproduct f g ≫ u = 0,
   { unfold pullback_to_biproduct, simp, exact h, },
@@ -294,63 +467,6 @@ end
 
 end
 
-section factor
-variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
-include 𝒞
 
-variables {P Q : C} (f : P ⟶ Q)
-
-def to_im : P ⟶ kernel (cokernel.π f) :=
-kernel.lift (cokernel.π f) f $ cokernel.condition f
-
-lemma f_factor : to_im f ≫ kernel.ι (cokernel.π f) = f :=
-by erw limit.lift_π; refl
-
-instance to_im_epi : epi (to_im f) :=
-begin
-  apply cancel_zero_iff_epi.2,
-  intros R g h,
-  let t := kernel.lift g (to_im f) h,
-  have t_kernel : t ≫ kernel.ι g = to_im f := by simp,
-  haveI : mono (kernel.ι g) := equalizer.ι_mono _ _,
-  haveI : mono (kernel.ι (cokernel.π f)) := equalizer.ι_mono _ _,
-  let u := kernel.ι g ≫ kernel.ι (cokernel.π f),
-  haveI : mono u := by apply_instance,
-  have u_is_kernel :=
-    abelian.mono_is_kernel_of_cokernel (colimit.cocone (parallel_pair u 0)) (colimit.is_colimit _),
-  let h := cokernel.π u, -- u is the kernel of h
-  have fh : f ≫ h = 0,
-  { conv_lhs { congr, rw ←f_factor f }, rw ←t_kernel,
-    simp only [category.assoc],
-    conv_lhs { congr, skip, rw ←category.assoc },
-    change t ≫ u ≫ h = 0,
-    rw cokernel.condition,
-    rw has_zero_morphisms.comp_zero, },
-  let l := cokernel.desc f h fh,
-  have hl : cokernel.π f ≫ l = h := by simp; refl,
-  have hg : kernel.ι (cokernel.π f) ≫ h = 0,
-  { rw ←hl, rw ←category.assoc, rw kernel.condition, rw has_zero_morphisms.zero_comp, },
-  let a_fork : fork h 0 := fork.of_ι (kernel.ι (cokernel.π f)) (begin
-    rw hg, rw has_zero_morphisms.comp_zero,
-  end),
-  let s := is_limit.lift u_is_kernel a_fork,
-  have su : s ≫ u = kernel.ι (cokernel.π f),
-  { change (is_limit.lift u_is_kernel a_fork) ≫ u = kernel.ι (cokernel.π f),
-    exact is_limit.fac u_is_kernel a_fork walking_parallel_pair.zero, },
-  change s ≫ kernel.ι g ≫ kernel.ι (cokernel.π f) = kernel.ι (cokernel.π f) at su,
-  conv_rhs at su { rw ←category.id_comp _ (kernel.ι (cokernel.π f))},
-  rw ←category.assoc at su,
-  have su' := (cancel_mono _).1 su,
-  haveI : epi (kernel.ι g) := begin
-    apply @epi_of_comp_epi _ _ _ _ _ s _,
-    rw su',
-    exact identity_is_epi _,
-  end,
-  have := kernel.condition g,
-  exact cancel_zero_iff_epi.1 (by apply_instance) _ _ this,
-end
-
-
-end factor
 
 end category_theory.abelian

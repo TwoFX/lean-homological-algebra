@@ -8,6 +8,8 @@ open category_theory.abelian
 open category_theory.additive
 open category_theory.limits.walking_parallel_pair
 
+noncomputable theory
+
 universe u
 
 variables (R : Type u) [ring R]
@@ -116,7 +118,7 @@ end cokernel
 
 section products
 
-instance (M N : Module R) : has_limit (pair M N) :=
+lemma mn_has_limit (M N : Module R) : has_limit (pair M N) :=
 { cone := @binary_fan.mk _ _ M N (of R $ M × N) (linear_map.fst R M N) (linear_map.snd R M N),
   is_limit :=
   { lift := λ s, linear_map.pair (s.π.app walking_pair.left) (s.π.app walking_pair.right),
@@ -141,7 +143,19 @@ instance (M N : Module R) : has_limit (pair M N) :=
         refl, },
     end } }
 
-instance (M N : Module R) : has_colimit (pair M N) :=
+instance (F : discrete walking_pair ⥤ Module R) : has_limit F :=
+begin
+  convert mn_has_limit R (F.obj walking_pair.left) (F.obj walking_pair.right),
+  apply category_theory.functor.ext,
+  { tidy, },
+  { intro j, cases j; refl },
+end
+
+instance : has_binary_products.{u} (Module R) :=
+{ has_limits_of_shape :=
+  { has_limit := by apply_instance } }
+
+def mn_has_colimit (M N : Module R) : has_colimit (pair M N) :=
 { cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (linear_map.inl R M N) (linear_map.inr R M N),
   is_colimit := 
   { desc := λ s, linear_map.copair (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
@@ -170,24 +184,35 @@ instance (M N : Module R) : has_colimit (pair M N) :=
       simp only [prod.mk.eta, add_zero, zero_add],
     end } }
 
+instance (F : discrete walking_pair ⥤ Module R) : has_colimit F :=
+begin
+  convert mn_has_colimit R (F.obj walking_pair.left) (F.obj walking_pair.right),
+  apply category_theory.functor.ext,
+  { tidy, },
+  { intro j, cases j; refl },
+end
+
+instance : has_binary_coproducts.{u} (Module R) :=
+{ has_colimits_of_shape :=
+  { has_colimit := by apply_instance } }
+
 end products
 
-/-instance : abelian.{u} (Module.{u} R) :=
+instance : abelian.{u} (Module.{u} R) :=
 { hom_group := by apply_instance,
   distrib_left' := λ P Q R f f' g,
     show (f + f') ≫ g = f ≫ g + f' ≫ g, by ext; simp,
   distrib_right' := λ P Q R f g g',
     show f ≫ (g + g') = f ≫ g + f ≫ g', by ext; simp,
   has_zero := by apply_instance,
-  has_binary_products := _,
-  has_binary_coproducts := _,
+  has_binary_products := by apply_instance,
+  has_binary_coproducts := by apply_instance,
   has_kernels := by apply_instance,
   has_cokernels := by apply_instance,
-  epi_is_cokernel_of_kernel :=
+  epi_is_cokernel_of_kernel := λ X Y f e s i,
   begin
-    intros X Y f e s i,
     
   end,
-  mono_is_kernel_of_cokernel := _ }-/
+  mono_is_kernel_of_cokernel := _ }
 
 end Module
