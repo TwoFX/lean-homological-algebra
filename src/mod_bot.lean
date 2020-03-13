@@ -1,4 +1,5 @@
 import linear_algebra.basic
+import modified_isomorphism_theorem
 
 universes u u' u''
 
@@ -23,14 +24,28 @@ variables (f : M →ₗ[R] N) (h : f.ker = ⊥)
 noncomputable def equiv_range_of_ker_bot : M ≃ₗ[R] f.range :=
 linear_equiv.trans (equiv_quot_bot' M f.ker h) (linear_map.quot_ker_equiv_range f)
 
+noncomputable def equiv_range_of_ker_bot' : M ≃ₗ[R] f.range.mkq.ker :=
+linear_equiv.trans (equiv_quot_bot' M f.ker h) (quot_ker_equiv_range' f)
+
 @[simp] lemma equiv_range_of_ker_bot_map :
   (equiv_range_of_ker_bot f h).to_linear_map =
   (linear_map.quot_ker_equiv_range f).to_linear_map.comp
     (equiv_quot_bot' M f.ker h).to_linear_map :=
 rfl
 
+@[simp] lemma equiv_range_of_ker_bot_map' :
+  (equiv_range_of_ker_bot' f h).to_linear_map =
+  (quot_ker_equiv_range' f).to_linear_map.comp
+    (equiv_quot_bot' M f.ker h).to_linear_map := rfl
+
 lemma fac :
-    f.range.subtype.comp (equiv_range_of_ker_bot f h).to_linear_map = f :=
+  f.range.subtype.comp (equiv_range_of_ker_bot f h).to_linear_map = f :=
 linear_map.ext $ λ x, by erw [equiv_range_of_ker_bot_map, linear_map.comp_apply,
     submodule.subtype_apply, equiv_quot_bot_eq, ←linear_map.comp_apply,
     submodule.liftq_mkq, linear_map.cod_restrict_apply]
+
+lemma fac' :
+  f.range.mkq.ker.subtype.comp (equiv_range_of_ker_bot' f h).to_linear_map = f :=
+linear_map.ext $ λ x, begin
+  erw [equiv_range_of_ker_bot_map', linear_map.comp_apply], -- WTF??
+end

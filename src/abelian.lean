@@ -64,8 +64,8 @@ class abelian extends preadditive.{v} C :=
 (has_binary_coproducts : has_binary_coproducts.{v} C)
 (has_kernels : has_kernels.{v} C)
 (has_cokernels : has_cokernels.{v} C)
-(mono_is_kernel : Π {X Y : C} (f : X ⟶ Y), is_kernel.{v} f)
-(epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y), is_cokernel.{v} f)
+(mono_is_kernel : Π {X Y : C} (f : X ⟶ Y) [mono f], is_kernel.{v} f)
+(epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y) [epi f], is_cokernel.{v} f)
 
 attribute [instance] abelian.has_zero abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
 

@@ -13,6 +13,9 @@ variables (f : M →ₗ[R] N)
 lemma ker_comp : f.comp (f.ker).subtype = 0 :=
 linear_map.ext $ λ x, suffices f x = 0, by simp [this], mem_ker.1 x.2
 
+lemma comp_mkq : f.range.mkq.comp f = 0 :=
+linear_map.ext $ λ x, by simp; use x
+
 lemma ker_eq_bot_of_cancel (h : ∀ (u v : f.ker →ₗ[R] M), f.comp u = f.comp v → u = v) :
   f.ker = ⊥ :=
 begin
@@ -40,8 +43,45 @@ open category_theory Module
 section
 
 variables {A : Type u} {B : Type u} [add_comm_group A] [add_comm_group B] [module R A] [module R B]
+
 def up (g : A →ₗ[R] B) : (of R A) ⟶ (of R B) := g
 
+def up_equiv (g : A ≃ₗ[R] B) : (of R A) ≅ (of R B) :=
+{ hom := up g,
+  inv := up g.symm,
+  hom_inv_id' :=
+  begin
+    ext,
+    simp only [function.comp_app, id_apply, Module.coe_comp],
+    erw linear_equiv.symm_apply_apply,
+  end,
+  inv_hom_id' :=
+  begin
+    ext,
+    simp only [function.comp_app, id_apply, Module.coe_comp],
+    erw linear_equiv.apply_symm_apply,
+  end }
+
+end
+
+section
+variables {A B : Module R}
+
+def up_equiv' (g : A ≃ₗ[R] B) : A ≅ B :=
+{ hom := g,
+  inv := g.symm,
+  hom_inv_id' :=
+  begin
+    ext,
+    simp only [linear_equiv.coe_apply, function.comp_app, id_apply, Module.coe_comp],
+    erw linear_equiv.symm_apply_apply,
+  end,
+  inv_hom_id' :=
+  begin
+    ext,
+    simp only [linear_equiv.coe_apply, function.comp_app, id_apply, Module.coe_comp],
+    erw linear_equiv.apply_symm_apply,
+  end }
 end
 
 variables (f : M ⟶ N)

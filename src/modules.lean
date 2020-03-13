@@ -1,6 +1,8 @@
 import algebra.category.Module.basic
 import linear_algebra.basic
 import abelian
+import mod_bot
+import mod_mono_epi
 
 open category_theory
 open category_theory.limits
@@ -198,6 +200,17 @@ instance : has_binary_coproducts.{u} (Module R) :=
 
 end products
 
+attribute [instance] has_zero_object.zero_morphisms_of_zero_object
+
+section
+variables {M N : Module R} (f : M ⟶ N)
+
+lemma kernel_ker : kernel f = f.ker := rfl
+
+lemma kernel_ι_subtype : kernel.ι f = f.ker.subtype := rfl
+
+end
+
 instance : abelian.{u} (Module.{u} R) :=
 { hom_group := by apply_instance,
   distrib_left' := λ P Q R f f' g,
@@ -209,11 +222,17 @@ instance : abelian.{u} (Module.{u} R) :=
   has_binary_coproducts := by apply_instance,
   has_kernels := by apply_instance,
   has_cokernels := by apply_instance,
-  mono_is_kernel := λ X Y f,
-  { Z := _,
-  of := _,
-  condition := _,
-  l := _ },
+  mono_is_kernel := λ A B f m,
+  { Z := of R f.range.quotient,
+    of := f.range.mkq,
+    condition := comp_mkq f,
+    l := begin
+      refine kernel.transport _ _ _ _,
+      { haveI := m,
+        exact up_equiv' (equiv_range_of_ker_bot' f (ker_eq_bot_of_mono f)), },
+      { haveI := m,
+        exact fac' f (ker_eq_bot_of_mono f), }
+    end },
   epi_is_cokernel := _ }
 
 end Module
