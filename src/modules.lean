@@ -206,6 +206,7 @@ section
 variables {M N : Module R} (f : M ⟶ N)
 
 lemma kernel_ker : kernel f = f.ker := rfl
+lemma cokernel_quot : cokernel f = of R f.range.quotient := rfl
 
 lemma kernel_ι_subtype : kernel.ι f = f.ker.subtype := rfl
 
@@ -231,8 +232,18 @@ instance : abelian.{u} (Module.{u} R) :=
       { haveI := m,
         exact up_equiv' (equiv_range_of_ker_bot' f (ker_eq_bot_of_mono f)), },
       { haveI := m,
-        exact fac' f (ker_eq_bot_of_mono f), }
+        exact equiv_range_of_ker_bot_fac' f (ker_eq_bot_of_mono f), }
     end },
-  epi_is_cokernel := _ }
+  epi_is_cokernel := λ A B f e,
+  { Z := of R f.ker,
+    of := f.ker.subtype,
+    condition := ker_comp f,
+    l := begin
+      refine cokernel.transport' _ _ _ _,
+      { haveI := e,
+        exact up_equiv' (equiv_range_of_range_top f (range_eq_top_of_epi f)), },
+      { haveI := e,
+        exact equiv_range_of_range_top_fac f (range_eq_top_of_epi f), },
+    end } }
 
 end Module

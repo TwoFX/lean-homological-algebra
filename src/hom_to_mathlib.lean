@@ -72,6 +72,13 @@ begin
   erw has_zero_morphisms.comp_zero,
 end
 
+lemma cokernel_cofork_condition [has_zero_morphisms.{v} C] {P Q : C} {f : P ⟶ Q}
+  (s : cofork f 0) : f ≫ cofork.π s = 0 :=
+begin
+  rw cofork.condition,
+  erw has_zero_morphisms.zero_comp,
+end
+
 lemma kernel_fork_app_one [has_zero_morphisms.{v} C] {P Q : C} (f : P ⟶ Q) (s : fork f 0) :
   s.π.app walking_parallel_pair.one = 0 :=
 begin
@@ -169,6 +176,27 @@ fork.is_limit.mk _
     simp only [limit.lift_π, fork.of_ι_app_zero, category.assoc],
     rw h,
     exact h' walking_parallel_pair.zero,
+  end)
+
+def cokernel.transport' [has_colimit (parallel_pair f 0)]
+  {Z : C} (l : Y ⟶ Z) (i : cokernel f ≅ Z) (h : cokernel.π f ≫ i.hom = l) :
+  is_colimit (cokernel_cofork.of_π f l $ 
+    by rw [←h, ←category.assoc, cokernel.condition, has_zero_morphisms.zero_comp]) :=
+cofork.is_colimit.mk _
+  (λ s, i.inv ≫ (cokernel.desc f (cofork.π s) (cokernel_cofork_condition s)))
+  (λ s, begin
+    rw ←category.assoc,
+    erw ←(iso.eq_comp_inv i).2 h,
+    rw colimit.ι_desc,
+    refl,
+  end)
+  (λ s m h', begin
+    apply (iso.eq_inv_comp i).2,
+    ext,
+    simp only [category_theory.limits.cofork.of_π_app_one, colimit.ι_desc],
+    rw ←category.assoc,
+    rw h,
+    exact h' walking_parallel_pair.one,
   end)
 
 end

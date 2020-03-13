@@ -33,3 +33,20 @@ let F : f.ker.quotient →ₗ[R] f.range.mkq.ker :=
       classical.some_spec $ hr' $ F $ submodule.quotient.mk x),
   right_inv  := λ x : f.range.mkq.ker, subtype.eq $ classical.some_spec (hr' x),
   .. F }
+
+noncomputable def quot_ker_equiv_range'' : f.ker.subtype.range.quotient ≃ₗ[R] f.range :=
+have hr : ∀ x : f.range, ∃ y, f y = ↑x := λ x, x.2.imp $ λ _, and.right,
+let F : f.ker.subtype.range.quotient →ₗ[R] f.range :=
+  f.ker.subtype.range.liftq (cod_restrict f.range f $ λ x, ⟨x, trivial, rfl⟩)
+    (λ x hx, by simp; apply subtype.coe_ext.2; simpa using hx) in
+{ inv_fun    := λx, submodule.quotient.mk (classical.some (hr x)),
+  left_inv   := begin
+    rintro ⟨x⟩,
+    simp,
+    apply (submodule.quotient.eq _).2,
+    simp only [submodule.range_subtype],
+    exact (sub_mem_ker_iff.2 $
+      classical.some_spec $ hr $ F $ submodule.quotient.mk x),
+    end,
+  right_inv  := λ x : range f, subtype.eq $ classical.some_spec (hr x),
+  .. F }

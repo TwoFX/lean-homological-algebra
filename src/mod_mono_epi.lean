@@ -29,6 +29,19 @@ begin
   exact submodule.map_zero ⊤,
 end
 
+lemma range_eq_top_of_cancel
+  (h : ∀ (u v : N →ₗ[R] f.range.quotient), u.comp f = v.comp f → u = v) : f.range = ⊤ :=
+begin
+  have h₀ := h 0 f.range.mkq,
+  have h₁ : (0 : N →ₗ[R] f.range.quotient).comp f = 0,
+  { ext, simp, },
+  have h₂ : f.range.mkq.comp f = 0 := comp_mkq f,
+  have h₃ := h₀ (eq.trans h₁ h₂.symm),
+  rw ←submodule.ker_mkq f.range,
+  rw ←h₃,
+  exact ker_zero,
+end
+
 end linear_map
 
 section category
@@ -91,6 +104,14 @@ begin
   apply ker_eq_bot_of_cancel,
   intros u v h,
   apply (@cancel_mono _ _ _ _ _ f _ (up u) (up v)).1,
+  exact h,
+end
+
+lemma range_eq_top_of_epi [epi f] : f.range = ⊤ :=
+begin
+  apply range_eq_top_of_cancel,
+  intros u v h,
+  apply (@cancel_epi _ _ _ _ _ f _ (up u) (up v)).1,
   exact h,
 end
 
