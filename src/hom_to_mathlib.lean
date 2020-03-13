@@ -109,28 +109,67 @@ def cokernel.desc' [has_colimit (parallel_pair f 0)]
   {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) : { d : cokernel f ⟶ Z // cokernel.π f ≫ d = g } :=
 ⟨cokernel.desc f g h, by erw colimit.ι_desc; refl⟩
 
+section
+
+open category_theory.limits.walking_parallel_pair
+open category_theory.limits.walking_parallel_pair_hom
+
+variables {f} {g : X ⟶ Y}
+def fork.is_limit.mk (t : fork f g)
+  (lift : Π (s : cone (parallel_pair f g)), s.X ⟶ t.X)
+  (fac : ∀ (s : cone (parallel_pair f g)), lift s ≫ t.π.app zero = s.π.app zero)
+  (uniq : ∀ (s : cone (parallel_pair f g)) (m : s.X ⟶ t.X)
+    (w : ∀ j : walking_parallel_pair, m ≫ t.π.app j = s.π.app j),
+  m = lift s) : is_limit t :=
+{ lift := lift,
+  fac' := λ s j, walking_parallel_pair.cases_on j (fac s) $ by  
+    rw [←s.w left, ←t.w left, ←category.assoc, fac],
+  uniq' := uniq }
+
+def cofork.is_colimit.mk (t : cofork f g)
+  (desc : Π (s : cocone (parallel_pair f g)), t.X ⟶ s.X)
+  (fac : ∀ (s : cocone (parallel_pair f g)),
+    t.ι.app one ≫ desc s = s.ι.app one)
+  (uniq : ∀ (s : cocone (parallel_pair f g)) (m : t.X ⟶ s.X)
+    (w : ∀ j : walking_parallel_pair, t.ι.app j ≫ m = s.ι.app j),
+  m = desc s) : is_colimit t :=
+{ desc := desc,
+  fac' := λ s j, walking_parallel_pair.cases_on j (by
+    rw [←s.w left, ←t.w left, category.assoc, fac]) (fac s),
+  uniq' := uniq }
+
+end
+
 def cokernel.transport [has_colimit (parallel_pair f 0)]
   {Z : C} (l : Z ⟶ Y) (i : X ≅ Z) (h : i.hom ≫ l = f) :
   is_colimit (cokernel_cofork.of_π l (cokernel.π f) $
   by rw [(iso.eq_inv_comp i).2 h, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]) :=
-{ desc := λ s, cokernel.desc f (cofork.π s) $
+cofork.is_colimit.mk _
+  (λ s, cokernel.desc f (cofork.π s) $
     by erw [←h, category.assoc, cofork.condition,
-    has_zero_morphisms.zero_comp, has_zero_morphisms.comp_zero],
-  fac' := λ s j,
-  begin
-    cases j,
-    { rw cokernel_cofork_app_zero,
-      rw cokernel_cofork_app_zero,
-      rw has_zero_morphisms.zero_comp,
-      refl, },
-    { erw colimit.ι_desc, refl, },
-  end,
-  uniq' := λ s m h,
-  begin
+    has_zero_morphisms.zero_comp, has_zero_morphisms.comp_zero])
+   (λ s, by erw colimit.ι_desc; refl)
+   (λ s m h, by ext; rw colimit.ι_desc; exact h walking_parallel_pair.one)
+
+def kernel.transport [has_limit (parallel_pair f 0)]
+  {Z : C} (l : Z ⟶ X) (i : Z ≅ kernel f) (h : i.hom ≫ kernel.ι f = l) :
+  is_limit (kernel_fork.of_ι f l $
+    by rw [←h, category.assoc, kernel.condition, has_zero_morphisms.comp_zero]) :=
+fork.is_limit.mk _
+  (λ s, (kernel.lift f (fork.ι s) (kernel_fork_condition s)) ≫ i.inv)
+  (λ s, begin
+    rw category.assoc,
+    erw (iso.inv_comp_eq i).2 h.symm,
+    rw limit.lift_π,
+    refl,
+  end)
+  (λ s m h', begin
+    apply (iso.eq_comp_inv i).2,
     ext,
-    rw colimit.ι_desc,
-    exact h walking_parallel_pair.one,
-  end }
+    simp only [limit.lift_π, fork.of_ι_app_zero, category.assoc],
+    rw h,
+    exact h' walking_parallel_pair.zero,
+  end)
 
 end
 

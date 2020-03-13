@@ -209,10 +209,11 @@ instance : abelian.{u} (Module.{u} R) :=
   has_binary_coproducts := by apply_instance,
   has_kernels := by apply_instance,
   has_cokernels := by apply_instance,
-  epi_is_cokernel_of_kernel := λ X Y f e s i,
-  begin
-    
-  end,
-  mono_is_kernel_of_cokernel := _ }
+  mono_is_kernel := λ X Y f,
+  { Z := _,
+  of := _,
+  condition := _,
+  l := _ },
+  epi_is_cokernel := _ }
 
 end Module

@@ -214,7 +214,7 @@ begin
   haveI : is_iso (factor_thru_coimage f) := mono_epi_iso (factor_thru_coimage f),
   let i : cokernel (kernel.ι f) ≅ Y := as_iso (factor_thru_coimage f),
   let u : kernel f ≅ s.X :=
-    functor.map_iso cones.forget (is_limit.unique_up_to_iso (limit.is_limit _) h ),
+    functor.map_iso cones.forget (is_limit.unique_up_to_iso (limit.is_limit _) h),
   have h : u.hom ≫ fork.ι s = kernel.ι f :=
     cone_morphism.w (is_limit.unique_up_to_iso (limit.is_limit _) h).hom walking_parallel_pair.zero,
   have x := cokernel.transport (kernel.ι f) (fork.ι s) u h,
