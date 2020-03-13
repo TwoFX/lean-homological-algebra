@@ -249,7 +249,7 @@ def fg_has_limit : has_limit (parallel_pair f g) :=
       ext, convert h walking_parallel_pair.zero, simp, refl,
     end } }
 
-instance F_has_limit {F : walking_parallel_pair ⥤ C} : has_limit F :=
+def F_has_limit {F : walking_parallel_pair ⥤ C} : has_limit F :=
 begin
   convert fg_has_limit (F.map walking_parallel_pair_hom.left) (F.map walking_parallel_pair_hom.right),
   apply category_theory.functor.ext,
@@ -259,7 +259,7 @@ begin
 end
 
 instance : has_limits_of_shape.{v} walking_parallel_pair C :=
-{ has_limit := by apply_instance }
+{ has_limit := λ F, F_has_limit }
 
 instance : has_equalizers.{v} C :=
 { has_limits_of_shape := by apply_instance }
@@ -277,7 +277,7 @@ def fg_has_colimit : has_colimit (parallel_pair f g) :=
       ext, convert h walking_parallel_pair.one, simp, refl,
     end } }
 
-instance F_has_colimit {F : walking_parallel_pair ⥤ C} : has_colimit F :=
+def F_has_colimit {F : walking_parallel_pair ⥤ C} : has_colimit F :=
 begin
   convert fg_has_colimit (F.map walking_parallel_pair_hom.left) (F.map walking_parallel_pair_hom.right),
   apply category_theory.functor.ext,
@@ -287,7 +287,7 @@ begin
 end
 
 instance : has_colimits_of_shape.{v} walking_parallel_pair C :=
-{has_colimit := by apply_instance }
+{has_colimit := λ F, F_has_colimit}
 
 instance : has_coequalizers.{v} C :=
 { has_colimits_of_shape := by apply_instance }
@@ -302,11 +302,13 @@ variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 local attribute [instance] has_zero_object.has_initial_of_has_zero_object
 local attribute [instance] has_zero_object.has_terminal_of_has_zero_object
 
-instance : has_finite_products.{v} C :=
+/-instance : has_finite_products.{v} C :=
 { has_limits_of_shape := λ J a b, begin resetI, exact trunc.out has_trunc_finite_products end }
 
 instance : has_finite_limits.{v} C :=
-finite_limits_from_equalizers_and_finite_products
+finite_limits_from_equalizers_and_finite_products-/
+
+instance : has_pullbacks.{v} C := sorry
 
 def pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
 pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂

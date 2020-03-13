@@ -18,9 +18,10 @@ f ≫ g = 0 ∧ kernel.ι g ≫ cokernel.π f = 0
 lemma exact_ker {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (e : exact f g) :
   is_limit (fork.of_ι (kernel.ι (cokernel.π f)) (begin
     rw has_zero_morphisms.comp_zero,
-    apply additive.cancel_zero_iff_epi.1 (abelian.to_im_epi f) _ _,
+    have x : epi (abelian.factor_thru_image f) := by apply_instance,
+    apply additive.cancel_zero_iff_epi.1 x _ (kernel.ι (cokernel.π f) ≫ g),
     rw ←category.assoc,
-    rw abelian.f_factor f,
+    rw abelian.image.fac f,
     exact e.1,
   end) : fork g 0) :=
 { lift := λ s, kernel.lift (cokernel.π f) (fork.ι s) (begin
