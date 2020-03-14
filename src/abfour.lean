@@ -24,11 +24,11 @@ include fg gh fg' gh' comm₁ comm₂ comm₃
 
 local attribute [instance] hom_to_fun
 
-lemma four' [epi α] [mono β] [mono δ] : mono γ :=
+lemma abelian_four' (hα : epi α) (hβ : mono β) (hδ : mono δ) : mono γ :=
 mono_of_zero_of_map_zero _ $ λ c hc,
 begin
   have : h c = 0,
-  { apply injective_of_mono δ (by apply_instance),
+  { apply injective_of_mono δ hδ,
     rw ←comp_apply,
     rw ←comm₃,
     rw comp_apply,
@@ -43,9 +43,9 @@ begin
     rw hb,
     exact hc, },
   cases (exact_char f' g' fg').2 _ this with a' ha',
-  cases (category_theory.abelian.epi_iff_surjective α).1 (by apply_instance) a' with a ha,
+  cases (category_theory.abelian.epi_iff_surjective α).1 hα a' with a ha,
   have : f a = b,
-  { apply injective_of_mono β (by apply_instance),
+  { apply injective_of_mono β hβ,
     rw ←comp_apply,
     rw ←comm₁,
     rw comp_apply,

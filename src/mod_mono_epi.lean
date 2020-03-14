@@ -107,6 +107,9 @@ begin
   exact h,
 end
 
+lemma ker_eq_bot_of_mono' (h : mono f) : f.ker = ⊥ :=
+ker_eq_bot_of_mono f
+
 lemma range_eq_top_of_epi [epi f] : f.range = ⊤ :=
 begin
   apply range_eq_top_of_cancel,
@@ -114,5 +117,26 @@ begin
   apply (@cancel_epi _ _ _ _ _ f _ (up u) (up v)).1,
   exact h,
 end
+
+lemma mono_of_ker_eq_bot (hf : f.ker = ⊥) : mono f :=
+⟨λ Z u v h, begin
+  ext,
+  apply (linear_map.ker_eq_bot.1 hf),
+  rw ←linear_map.comp_apply,
+  change (u ≫ f) x = f (v x),
+  rw h,
+  rw Module.coe_comp,
+end⟩
+
+lemma epi_of_range_eq_top (hf : f.range = ⊤) : epi f :=
+⟨λ Z u v h, begin
+  ext,
+  cases linear_map.range_eq_top.1 hf x with y hy,
+  rw ←hy,
+  rw ←linear_map.comp_apply,
+  change (f ≫ u) y = v (f y),
+  rw h,
+  rw Module.coe_comp,
+end⟩
 
 end category
