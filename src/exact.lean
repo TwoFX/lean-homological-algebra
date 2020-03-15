@@ -44,6 +44,9 @@ end),
     refl,
   end }
 
+lemma kernel_exact {P Q : C} (f : P ⟶ Q) : exact (kernel.ι f) f :=
+⟨kernel.condition _, cokernel.condition _⟩
+
 end
 
 end category_theory.abelian

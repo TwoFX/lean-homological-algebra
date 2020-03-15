@@ -125,7 +125,7 @@ lemma mono_of_ker_eq_bot (hf : f.ker = ⊥) : mono f :=
   rw ←linear_map.comp_apply,
   change (u ≫ f) x = f (v x),
   rw h,
-  rw Module.coe_comp,
+  refl,
 end⟩
 
 lemma epi_of_range_eq_top (hf : f.range = ⊤) : epi f :=
@@ -136,7 +136,7 @@ lemma epi_of_range_eq_top (hf : f.range = ⊤) : epi f :=
   rw ←linear_map.comp_apply,
   change (f ≫ u) y = v (f y),
   rw h,
-  rw Module.coe_comp,
+  refl,
 end⟩
 
 end category
