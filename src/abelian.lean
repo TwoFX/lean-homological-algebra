@@ -2,8 +2,7 @@ import category_theory.category
 import category_theory.limits.shapes.pullbacks
 import category_theory.limits.shapes.kernels
 import category_theory.limits.shapes.binary_products
-import category_theory.limits.shapes.constructions.limits_of_products_and_equalizers
-import finite_products
+import category_theory.limits.shapes.constructions.pullbacks
 import additive
 import biproduct
 import hom_to_mathlib
@@ -30,24 +29,24 @@ structure is_kernel (f : X ⟶ Y) :=
 (Z : C)
 (of : Y ⟶ Z)
 (condition : f ≫ of = 0)
-(l : is_limit $ kernel_fork.of_ι of f condition)
+(l : is_limit $ kernel_fork.of_ι f condition)
 
 /-- Any map that is zero when composed with `s.of` factors through `f`. -/
 def is_kernel.lift {f : X ⟶ Y} (s : is_kernel f) {W : C} (g : W ⟶ Y) (h : g ≫ s.of = 0) :
   { l : W ⟶ X // l ≫ f = g } :=
-⟨is_limit.lift s.l $ kernel_fork.of_ι s.of g h, is_limit.fac s.l _ walking_parallel_pair.zero⟩
+⟨is_limit.lift s.l $ kernel_fork.of_ι g h, is_limit.fac s.l _ walking_parallel_pair.zero⟩
 
 /-- `is_cokernel f` means that `f` is the cokernel of some morphism `of`. -/
 structure is_cokernel (f : X ⟶ Y) :=
 (Z : C)
 (of : Z ⟶ X)
 (condition : of ≫ f = 0)
-(l : is_colimit $ cokernel_cofork.of_π of f condition)
+(l : is_colimit $ cokernel_cofork.of_π f condition)
 
 /-- Any map that is zero when precomposed with `s.of` factors through `f`. -/
 def is_cokernel.desc {f : X ⟶ Y} (s : is_cokernel f) {W : C} (g : X ⟶ W) (h : s.of ≫ g = 0) :
   { l : Y ⟶ W // f ≫ l = g } :=
-⟨is_colimit.desc s.l $ cokernel_cofork.of_π s.of g h, is_colimit.fac s.l _ walking_parallel_pair.one⟩
+⟨is_colimit.desc s.l $ cokernel_cofork.of_π g h, is_colimit.fac s.l _ walking_parallel_pair.one⟩
 
 end
 
@@ -183,7 +182,7 @@ variables {X Y : C} (f : X ⟶ Y)
 def mono_epi_iso [mono f] [epi f] : is_iso f :=
 begin
   have hf := abelian.mono_is_kernel f,
-  let s := kernel_fork.of_ι hf.of f hf.condition,
+  let s := kernel_fork.of_ι f hf.condition,
   haveI : epi (s.π.app walking_parallel_pair.zero) :=
     show epi f, by apply_instance,
   exact epi_limit_cone_parallel_pair_is_iso _ _ s hf.l
@@ -208,13 +207,13 @@ variables {X Y : C} {f : X ⟶ Y}
 /-- If `f` is an epimorphism and `s` is some limit kernel cone on `f`, then `f` is a cokernel
     of `fork.ι s`. -/
 def epi_is_cokernel_of_kernel [epi f] (s : fork f 0) (h : is_limit s) :
-  is_colimit (cokernel_cofork.of_π (fork.ι s) f (kernel_fork_condition s)) :=
+  is_colimit (cokernel_cofork.of_π f (kernel_fork.condition s)) :=
 begin
   haveI : epi (factor_thru_coimage f) := epi_of_epi_fac (coimage.fac f),
   haveI : is_iso (factor_thru_coimage f) := mono_epi_iso (factor_thru_coimage f),
   let i : cokernel (kernel.ι f) ≅ Y := as_iso (factor_thru_coimage f),
   let u : kernel f ≅ s.X :=
-    functor.map_iso cones.forget (is_limit.unique_up_to_iso (limit.is_limit _) h),
+    functor.map_iso (cones.forget _) (is_limit.unique_up_to_iso (limit.is_limit _) h),
   have h : u.hom ≫ fork.ι s = kernel.ι f :=
     cone_morphism.w (is_limit.unique_up_to_iso (limit.is_limit _) h).hom walking_parallel_pair.zero,
   have x := cokernel.transport (kernel.ι f) (fork.ι s) u h,
@@ -223,8 +222,8 @@ begin
   tactic.swap,
   exact i,
   cases j,
-  { rw cokernel_cofork_app_zero,
-    rw cokernel_cofork_app_zero,
+  { rw cokernel_cofork.app_zero,
+    rw cokernel_cofork.app_zero,
     rw has_zero_morphisms.zero_comp,
     refl, },
   { exact coimage.fac f, }
@@ -237,7 +236,7 @@ variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
 variables {X Y : C} (f : X ⟶ Y) (g : X ⟶ Y)
 
-def fg_has_limit : has_limit (parallel_pair f g) :=
+def abelian_has_limit_parallel_pair : has_limit (parallel_pair f g) :=
 { cone := fork.of_ι (kernel.ι (f - g)) (sub_eq_zero.1 $
     by rw ←sub_distrib_right; exact kernel.condition _),
   is_limit :=
@@ -249,22 +248,16 @@ def fg_has_limit : has_limit (parallel_pair f g) :=
       ext, convert h walking_parallel_pair.zero, simp, refl,
     end } }
 
-def F_has_limit {F : walking_parallel_pair ⥤ C} : has_limit F :=
-begin
-  convert fg_has_limit (F.map walking_parallel_pair_hom.left) (F.map walking_parallel_pair_hom.right),
-  apply category_theory.functor.ext,
-  tidy,
-  cases f,
-  tidy,
+section
+
+local attribute [instance] abelian_has_limit_parallel_pair
+
+def abelian_has_equalizers : has_equalizers.{v} C :=
+has_equalizers_of_has_limit_parallel_pair C
+
 end
 
-instance : has_limits_of_shape.{v} walking_parallel_pair C :=
-{ has_limit := λ F, F_has_limit }
-
-instance : has_equalizers.{v} C :=
-{ has_limits_of_shape := by apply_instance }
-
-def fg_has_colimit : has_colimit (parallel_pair f g) :=
+def abelian_has_colimit_parallel_pair : has_colimit (parallel_pair f g) :=
 { cocone := cofork.of_π (cokernel.π (f - g)) (sub_eq_zero.1 $
     by rw ←sub_distrib_left; exact cokernel.condition _),
   is_colimit :=
@@ -277,20 +270,14 @@ def fg_has_colimit : has_colimit (parallel_pair f g) :=
       ext, convert h walking_parallel_pair.one, simp, refl,
     end } }
 
-def F_has_colimit {F : walking_parallel_pair ⥤ C} : has_colimit F :=
-begin
-  convert fg_has_colimit (F.map walking_parallel_pair_hom.left) (F.map walking_parallel_pair_hom.right),
-  apply category_theory.functor.ext,
-  tidy,
-  cases f,
-  tidy,
+section
+
+local attribute [instance] abelian_has_colimit_parallel_pair
+
+def abelian_has_coequalizers : has_coequalizers.{v} C :=
+has_coequalizers_of_has_colimit_parallel_pair C
+
 end
-
-instance : has_colimits_of_shape.{v} walking_parallel_pair C :=
-{has_colimit := λ F, F_has_colimit}
-
-instance : has_coequalizers.{v} C :=
-{ has_colimits_of_shape := by apply_instance }
 
 end
 
@@ -302,13 +289,13 @@ variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 local attribute [instance] has_zero_object.has_initial_of_has_zero_object
 local attribute [instance] has_zero_object.has_terminal_of_has_zero_object
 
-/-instance : has_finite_products.{v} C :=
-{ has_limits_of_shape := λ J a b, begin resetI, exact trunc.out has_trunc_finite_products end }
+section
+local attribute [instance] abelian_has_equalizers
 
-instance : has_finite_limits.{v} C :=
-finite_limits_from_equalizers_and_finite_products-/
+instance : has_pullbacks.{v} C :=
+has_pullbacks_of_has_binary_products_of_has_equalizers C
 
-instance : has_pullbacks.{v} C := sorry
+end
 
 def pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
 pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂
@@ -384,7 +371,7 @@ def p_is_limit : is_limit (p_cone f g) :=
         erw blubb',
         erw limit.lift_π,
         refl, } },
-    { rw kernel_fork_app_one, rw kernel_fork_app_one, erw has_zero_morphisms.comp_zero, refl, }
+    { rw kernel_fork.app_one, rw kernel_fork.app_one, erw has_zero_morphisms.comp_zero, refl, }
   end,
   uniq' := λ s m h,
   begin
@@ -407,7 +394,7 @@ def p_is_limit : is_limit (p_cone f g) :=
 /- Now we need: biproduct.desc f g is a cokernel of pullback_to_biproduct -/
 
 instance desc_of_f [epi f] : epi (biproduct.desc f (-g)) :=
-by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₁ _, simpa }
+epi_of_epi_fac biproduct.ι₁_desc
 
 /-- Aluffi IX.2.3, cf. Borceux 2, 1.7.6 -/
 instance epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
@@ -438,7 +425,7 @@ begin
 end
 
 instance desc_of_g [epi g] : epi (biproduct.desc f (-g)) :=
-by { apply @epi_of_comp_epi _ _ _ _ _ biproduct.ι₂ _, simp, apply_instance, }
+epi_of_epi_fac biproduct.ι₂_desc
 
 instance epi_pullback' [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
 cancel_zero_iff_epi.2 $ λ R e h,

@@ -225,9 +225,7 @@ begin
     change x ≫ p.2 ≫ f = y ≫ 𝟙 Q at comm,
     rw ←category.assoc at comm,
     erw category.comp_id at comm,
-    apply @epi_of_comp_epi _ _ _ _ _ (x ≫ p.snd) f,
-    rw comm,
-    exact ey, }
+    exact @epi_of_epi_fac _ _ _ _ _ (x ≫ p.snd) f y ey comm, }
 end
 
 lemma exact_char {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) :
@@ -308,14 +306,12 @@ begin
     let j : P ⟶ kernel g := pullback.snd,
     let c : P ⟶ kernel (cokernel.π f) := pullback.fst,
     let z : Z ⟶ P := pullback.lift (r ≫ a'.2 ≫ p) q (by simp only [category.assoc, comm]),
-    have hjz : z ≫ j = q,
-    { simp, refl, },
-    have hcz : z ≫ c = r ≫ a'.2 ≫ p,
-    { simp, refl, },
+    have hjz : z ≫ j = q, by simp,
+    have hcz : z ≫ c = r ≫ a'.2 ≫ p, by simp,
     haveI je : epi j := by { resetI, exact epi_of_epi_fac hjz, },
     have ji : is_iso j := mono_epi_iso j,
     have hh : c ≫ i = j ≫ b := pullback.condition,
-    have hh' := congr_comp' hh (inv j),
+    have hh' := inv j ≫= hh,
     conv_rhs at hh' { rw ←category.assoc, rw is_iso.inv_hom_id, rw category.id_comp, },
     change b ≫ cokernel.π f = 0,
     rw ←hh',

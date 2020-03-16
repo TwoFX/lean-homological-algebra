@@ -25,7 +25,7 @@ lemma exact_ker {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (e : exact f g) :
     exact e.1,
   end) : fork g 0) :=
 { lift := λ s, kernel.lift (cokernel.π f) (fork.ι s) (begin
-  let t : s.X ⟶ kernel g := kernel.lift g (fork.ι s) (kernel_fork_condition _),
+  let t : s.X ⟶ kernel g := kernel.lift g (fork.ι s) (kernel_fork.condition _),
   have : t ≫ kernel.ι g = fork.ι s,
   { simp, },
   rw ←this,
@@ -36,7 +36,7 @@ end),
   fac' := λ s j, begin
     cases j,
     { simp, refl, },
-    { simp, convert cone.w s walking_parallel_pair_hom.left, }
+    { simp, erw has_zero_morphisms.comp_zero, refl, }
   end,
   uniq' := λ s m h, begin
     ext, erw h walking_parallel_pair.zero,
