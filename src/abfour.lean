@@ -123,3 +123,81 @@ begin
 end
 
 end kernels
+
+section cokernels
+variables {P Q R P' Q' R' : C}
+variables {f : P ⟶ Q} {g : Q ⟶ R} {f' : P' ⟶ Q'} {g' : Q' ⟶ R'}
+variables {α : P ⟶ P'} {β : Q ⟶ Q'} {γ : R ⟶ R'}
+variables (comm₁ : α ≫ f' = f ≫ β) (comm₂ : β ≫ g' = g ≫ γ)
+variables (fg : exact f g) (fg' : exact f' g')
+variables [epi g]
+
+include comm₁ comm₂ fg fg'
+
+lemma cokernels : ∃ (u : cokernel α ⟶ cokernel β) (v : cokernel β ⟶ cokernel γ),
+  (cokernel.π α ≫ u = f' ≫ cokernel.π β) ∧ (cokernel.π β ≫ v = g' ≫ cokernel.π γ)
+  ∧ exact u v :=
+begin
+  obtain ⟨u, hu⟩ := cokernel.desc' α (f' ≫ cokernel.π β) (begin
+    rw ←category.assoc,
+    rw comm₁,
+    rw category.assoc,
+    rw cokernel.condition,
+    rw has_zero_morphisms.comp_zero,
+  end),
+  obtain ⟨v, hv⟩ := cokernel.desc' β (g' ≫ cokernel.π γ) (begin
+    rw ←category.assoc,
+    rw comm₂,
+    rw category.assoc,
+    rw cokernel.condition,
+    rw has_zero_morphisms.comp_zero,
+  end),
+  refine ⟨u, v, hu, hv, _⟩,
+  apply exact_char',
+  split,
+  { intro a'',
+    cases (category_theory.abelian.epi_iff_surjective (cokernel.π α)).1 (by apply_instance) a'' with a' ha',
+    rw ←ha',
+    rw ←comp_apply,
+    rw ←comp_apply,
+    rw ←category.assoc,
+    rw hu,
+    rw category.assoc,
+    rw hv,
+    rw ←category.assoc,
+    rw fg'.1,
+    rw comp_apply,
+    rw zero_apply,
+    rw apply_zero, },
+  { intros b'' hb'',
+    cases (category_theory.abelian.epi_iff_surjective (cokernel.π β)).1 (by apply_instance) b'' with b' hb',
+    have : (cokernel.π γ : R' ⟶ cokernel γ) (g' b') = 0,
+    { rw ←comp_apply,
+      rw ←hv,
+      rw comp_apply,
+      rw hb',
+      rw hb'', },
+    cases (exact_char γ (cokernel.π γ) (cokernel_exact _)).2 _ this with c hc,
+    cases (category_theory.abelian.epi_iff_surjective g).1 (by apply_instance) c with b hb,
+    have : g' b' = g' (β b),
+    { rw ←comp_apply,
+      rw comm₂,
+      rw ←hc,
+      rw comp_apply,
+      rw hb, },
+    obtain ⟨bb, hbb, hbb'⟩ := sub _ _ _ this,
+    cases (exact_char f' g' fg').2 _ hbb with a' ha',
+    use (cokernel.π α : P' ⟶ cokernel α) a',
+    rw ←comp_apply,
+    rw hu,
+    rw comp_apply,
+    rw ha',
+    have := hbb' _ (cokernel.π β),
+    rw ←hb',
+    apply this,
+    rw ←comp_apply,
+    rw cokernel.condition,
+    rw zero_apply, },
+end
+
+end cokernels

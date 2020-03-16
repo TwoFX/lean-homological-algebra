@@ -322,7 +322,7 @@ begin
 end
 
 lemma sub {P Q : C} (f : P ⟶ Q) (x y : pseudoelements P) : f x = f y →
-  ∃ z, f z = 0 ∧ ∀ (R : C) (g : P ⟶ R), pseudo_apply g y = 0 → g z = g x :=
+  ∃ z, f z = 0 ∧ ∀ (R : C) (g : P ⟶ R), (g : P ⟶ R) y = 0 → g z = g x :=
 begin
   apply quotient.induction_on₂ x y,
   intros a a' h,
