@@ -4,7 +4,7 @@ import hom_to_mathlib
 universes v u
 
 open category_theory
-open category_theory.additive
+open category_theory.preadditive
 open category_theory.limits
 
 namespace category_theory.limits
@@ -129,6 +129,28 @@ def biproduct.cocone_is_colimit (X Y : C) : is_colimit $ biproduct.cocone X Y :=
 @[ext] lemma biproduct.ext_desc {X Y T : C} {f g : biproduct X Y ⟶ T}
   (h₁ : biproduct.ι₁ ≫ f = biproduct.ι₁ ≫ g) (h₂ : biproduct.ι₂ ≫ f = biproduct.ι₂ ≫ g) : f = g :=
 is_colimit.hom_ext (biproduct.cocone_is_colimit X Y) $ λ j, by { cases j, exact h₁, exact h₂ }
+
+section
+variables {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z)
+
+instance mono_lift_of_mono_f [mono f] : mono (biproduct.lift f g) :=
+mono_of_mono_fac biproduct.lift_π₁
+
+instance mono_lift_of_mono_g [mono g] : mono (biproduct.lift f g) :=
+mono_of_mono_fac biproduct.lift_π₂
+
+end
+
+section
+variables {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
+
+instance epi_desc_of_epi_f [epi f] : epi (biproduct.desc f g) :=
+epi_of_epi_fac biproduct.ι₁_desc
+
+instance epi_desc_of_epi_g [epi g] : epi (biproduct.desc f g) :=
+epi_of_epi_fac biproduct.ι₂_desc
+
+end
 
 end has_biproducts
 

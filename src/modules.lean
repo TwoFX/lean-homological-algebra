@@ -7,7 +7,7 @@ import mod_mono_epi
 open category_theory
 open category_theory.limits
 open category_theory.abelian
-open category_theory.additive
+open category_theory.preadditive
 open category_theory.limits.walking_parallel_pair
 
 noncomputable theory
@@ -113,7 +113,7 @@ end cokernel
 section cokernel
 local attribute [instance] has_zero_object.zero_morphisms_of_zero_object
 
-instance : has_cokernels.{u} (Module R) :=
+instance module_has_cokernels : has_cokernels.{u} (Module R) :=
 ⟨λ _ _ f, ⟨cokernel_cocone _ _ _ f, cokernel_is_colimit _ _ _ f⟩⟩
 
 end cokernel
@@ -149,7 +149,7 @@ section
 
 local attribute [instance] module_has_limit_pair
 
-instance : has_binary_products.{u} (Module R) :=
+instance module_has_binary_products : has_binary_products.{u} (Module R) :=
 has_binary_products_of_has_limit_pair (Module R)
 
 end
@@ -187,7 +187,7 @@ section
 
 local attribute [instance] module_has_colimit_pair
 
-instance : has_binary_coproducts.{u} (Module R) :=
+instance module_has_binary_coproducts : has_binary_coproducts.{u} (Module R) :=
 has_binary_coproducts_of_has_colimit_pair (Module R)
 
 end
@@ -212,7 +212,7 @@ instance : abelian.{u} (Module.{u} R) :=
     show (f + f') ≫ g = f ≫ g + f' ≫ g, by ext; simp,
   distrib_right' := λ P Q R f g g',
     show f ≫ (g + g') = f ≫ g + f ≫ g', by ext; simp,
-  has_zero := by apply_instance,
+  has_zero_object := by apply_instance,
   has_binary_products := by apply_instance,
   has_binary_coproducts := by apply_instance,
   has_kernels := by apply_instance,

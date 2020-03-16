@@ -8,20 +8,19 @@ import biproduct
 import hom_to_mathlib
 
 open category_theory
-open category_theory.additive
+open category_theory.preadditive
 open category_theory.limits
-open category_theory.additive
 
 noncomputable theory
 
 universes v u
 
-namespace category_theory.abelian
+namespace category_theory
 
-section
 variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
 
+section
 variables [has_zero_morphisms.{v} C] {X Y : C}
 
 /-- `is_kernel f` means that `f` is the kernel of some morphism `of`. -/
@@ -47,18 +46,15 @@ structure is_cokernel (f : X ⟶ Y) :=
 def is_cokernel.desc {f : X ⟶ Y} (s : is_cokernel f) {W : C} (g : X ⟶ W) (h : s.of ≫ g = 0) :
   { l : Y ⟶ W // f ≫ l = g } :=
 ⟨is_colimit.desc s.l $ cokernel_cofork.of_π g h, is_colimit.fac s.l _ walking_parallel_pair.one⟩
-
 end
 
-section
-variables (C : Type u) [𝒞 : category.{v} C]
-include 𝒞
+variables (C)
 
 /-- A (preadditive) category `C` is called abelian if it has a zero object, all binary products and
     coproducts, all kernels and cokernels, and if every monomorphism is the kernel of some morphism
     and every epimorphism is the cokernel of somme morphism. -/
 class abelian extends preadditive.{v} C :=
-(has_zero : has_zero_object.{v} C)
+(has_zero_object : has_zero_object.{v} C)
 (has_binary_products : has_binary_products.{v} C)
 (has_binary_coproducts : has_binary_coproducts.{v} C)
 (has_kernels : has_kernels.{v} C)
@@ -66,13 +62,17 @@ class abelian extends preadditive.{v} C :=
 (mono_is_kernel : Π {X Y : C} (f : X ⟶ Y) [mono f], is_kernel.{v} f)
 (epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y) [epi f], is_cokernel.{v} f)
 
-attribute [instance] abelian.has_zero abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
+attribute [instance] abelian.has_zero_object abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
 
-end
+end category_theory
 
-section factor
+open category_theory
+
+namespace category_theory.abelian
 variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
+
+section factor
 
 variables {P Q : C} (f : P ⟶ Q)
 
@@ -174,8 +174,6 @@ end
 end factor
 
 section mono_epi_iso
-variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
-include 𝒞
 variables {X Y : C} (f : X ⟶ Y)
 
 /-- In an abelian category, an monomorphism which is also an epimorphism is an isomorphism. -/
@@ -191,8 +189,6 @@ end
 end mono_epi_iso
 
 section cokernel_of_kernel
-variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
-include 𝒞
 variables {X Y : C} {f : X ⟶ Y}
 
 /-- If `f` is an epimorphism and `s` is some limit kernel cone on `f`, then `f` is a cokernel
@@ -209,7 +205,7 @@ begin
     cone_morphism.w (is_limit.unique_up_to_iso (limit.is_limit _) h).hom walking_parallel_pair.zero,
   have x := cokernel.transport (kernel.ι f) (fork.ι s) u h,
   apply is_colimit.of_iso_colimit x,
-  ext,
+  ext1,
   tactic.swap,
   exact i,
   cases j,
@@ -223,230 +219,151 @@ end
 end cokernel_of_kernel
 
 section
-variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
-include 𝒞
-variables {X Y : C} (f : X ⟶ Y) (g : X ⟶ Y)
+local attribute [instance] preadditive.has_equalizers_of_has_kernels
 
-def abelian_has_limit_parallel_pair : has_limit (parallel_pair f g) :=
-{ cone := fork.of_ι (kernel.ι (f - g)) (sub_eq_zero.1 $
-    by rw ←sub_distrib_right; exact kernel.condition _),
-  is_limit :=
-  { lift := λ s, kernel.lift (f - g) (fork.ι s) $
-      by rw sub_distrib_right; apply sub_eq_zero.2; exact fork.condition _,
-    fac' := λ s j, begin cases j, { simp, refl, },
-      { simp, convert cone.w s walking_parallel_pair_hom.left, } end,
-    uniq' := λ s m h, begin
-      ext, convert h walking_parallel_pair.zero, simp, refl,
-    end } }
-
-section
-
-local attribute [instance] abelian_has_limit_parallel_pair
-
-def abelian_has_equalizers : has_equalizers.{v} C :=
-has_equalizers_of_has_limit_parallel_pair C
-
-end
-
-def abelian_has_colimit_parallel_pair : has_colimit (parallel_pair f g) :=
-{ cocone := cofork.of_π (cokernel.π (f - g)) (sub_eq_zero.1 $
-    by rw ←sub_distrib_left; exact cokernel.condition _),
-  is_colimit :=
-  { desc := λ s, cokernel.desc (f - g) (cofork.π s) $
-      by rw sub_distrib_left; apply sub_eq_zero.2; exact cofork.condition _,
-    fac' := λ s j, begin cases j,
-      { simp, convert cocone.w s walking_parallel_pair_hom.left, },
-      { simp, refl, } end,
-    uniq' := λ s m h, begin
-      ext, convert h walking_parallel_pair.one, simp, refl,
-    end } }
-
-section
-
-local attribute [instance] abelian_has_colimit_parallel_pair
-
-def abelian_has_coequalizers : has_coequalizers.{v} C :=
-has_coequalizers_of_has_colimit_parallel_pair C
-
-end
-
-end
-
-section
-variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
-include 𝒞
-variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
-
-local attribute [instance] has_zero_object.has_initial_of_has_zero_object
-local attribute [instance] has_zero_object.has_terminal_of_has_zero_object
-
-section
-local attribute [instance] abelian_has_equalizers
-
+/-- Any abelian category has pullbacks -/
 instance : has_pullbacks.{v} C :=
 has_pullbacks_of_has_binary_products_of_has_equalizers C
 
 end
 
-def pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
+section pullback_to_biproduct
+variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
+
+/-! This section contains a slightly technical result about pullbacks and biproducts.
+    We will need it in the proof that the pullback of an epimorphism is an epimorpism.
+    TODO: This could in theory be placed in additive.lean -/
+
+/-- The canonical map `pullback f g ⟶ biproduct X Y` -/
+abbreviation pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
 pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂
 
-lemma v : pullback_to_biproduct f g ≫ biproduct.desc f (-g) = 0 :=
+lemma pullback_to_biproduct_π₁ : pullback_to_biproduct f g ≫ biproduct.π₁ = pullback.fst :=
+by simp
+lemma pullback_to_biproduct_π₂ : pullback_to_biproduct f g ≫ biproduct.π₂ = pullback.snd :=
+by simp
+
+/-- The canonical map `pullback f g ⟶ biproduct X Y` induces a kernel cone on the map
+    `biproduct X Y ⟶ Z` induced by `f` and `g`. A slightly more intuitive way to think of
+    this may be that it induces an equalizer fork on the maps induced by `(f, 0)` and
+    `(0, g)`. -/
+def pullback_to_biproduct_fork : fork (biproduct.desc f (-g)) 0 :=
+kernel_fork.of_ι (pullback_to_biproduct f g) $ 
 begin
-  unfold pullback_to_biproduct,
-  simp,
+  simp only [distrib_left, biproduct.ι₁_desc, neg_right, biproduct.ι₂_desc, category.assoc],
   apply sub_eq_zero.2,
-  exact pullback.condition,
+  exact pullback.condition
 end
 
-def p_cone : fork (biproduct.desc f (-g)) 0 :=
-fork.of_ι (pullback_to_biproduct f g) $ by simp [v]
-
-def pullback_cone_of_fork (s : fork (biproduct.desc f (-g)) 0) : pullback_cone f g :=
-pullback_cone.mk (fork.ι s ≫ biproduct.π₁) (fork.ι s ≫ biproduct.π₂) $ begin
-  simp only [category.assoc],
-  apply sub_eq_zero.1,
-  rw ←sub_distrib_right,
-  rw sub_eq_add_neg,
-  rw ←neg_right,
-  erw fork.condition s,
-  erw has_zero_morphisms.comp_zero,
-end
-
-lemma pullback_cone_of_fork_app_left (s : fork (biproduct.desc f (-g)) 0) :
-  (pullback_cone_of_fork f g s).π.app walking_cospan.left = fork.ι s ≫ biproduct.π₁ := rfl
-
-lemma pullback_cone_of_fork_app_right (s : fork (biproduct.desc f (-g)) 0) :
-  (pullback_cone_of_fork f g s).π.app walking_cospan.right = fork.ι s ≫ biproduct.π₂ := rfl
-
-section 
-
-lemma blubb' (j : walking_cospan) : (pullback_cone_of_fork f g (p_cone f g)).π.app j =
-  (limit.cone (cospan f g)).π.app j :=
-begin
-  cases j,
-  { change ((pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂) ≫ biproduct.π₁) =
-      limit.π (cospan f g) walking_cospan.left,
-    simp },
-  { change ((pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂) ≫ biproduct.π₂) =
-      limit.π (cospan f g) walking_cospan.right,
-    simp },
-  change ((pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂) ≫ biproduct.π₁) ≫ f =
-      limit.π (cospan f g) walking_cospan.one,
-  simp,
-  convert limit.w (cospan f g) walking_cospan.hom.inl,
-end
-
-end
-
-
-lemma test₁ (s : fork (biproduct.desc f (-g)) 0) :
-  fork.ι s ≫ biproduct.π₁ = 
-  (pullback_cone_of_fork f g s).π.app walking_cospan.left := rfl
-
-lemma test₂ (s : fork (biproduct.desc f (-g)) 0) :
-  fork.ι s ≫ biproduct.π₂ = (pullback_cone_of_fork f g s).π.app walking_cospan.right := rfl
-
-/-- pullback_to_biproduct is a kernel of biproduct.desc f g -/
-def p_is_limit : is_limit (p_cone f g) :=
-{ lift := λ s, limit.lift (cospan f g) (pullback_cone_of_fork f g s),
-  fac' := λ s j,
+/-- The canonical map `pullback f g ⟶ biproduct X Y` is a kernel of the map induced by
+    `(f, -g)`. -/
+def is_limit_pullback_to_biproduct : is_limit (pullback_to_biproduct_fork f g) :=
+fork.is_limit.mk _
+  (λ s, pullback.lift (fork.ι s ≫ biproduct.π₁) (fork.ι s ≫ biproduct.π₂) $
+  sub_eq_zero.1 $ by erw [category.assoc, category.assoc, ←sub_distrib_right, sub_eq_add_neg,
+    ←neg_right, fork.condition s, has_zero_morphisms.comp_zero]; refl)
+  (λ s,
   begin
-    cases j,
-    { ext, 
-      { simp only [category.assoc], erw test₁,
-        erw blubb',
-        erw limit.lift_π,
-        refl, },
-      { simp only [category.assoc], erw test₂,
-        erw blubb',
-        erw limit.lift_π,
-        refl, } },
-    { rw kernel_fork.app_one, rw kernel_fork.app_one, erw has_zero_morphisms.comp_zero, refl, }
-  end,
-  uniq' := λ s m h,
+    ext; simp only [has_zero_morphisms.comp_zero, neg_right, sub_distrib_right, category.assoc],
+    { erw [pullback_to_biproduct_π₁, limit.lift_π],
+      refl },
+    { erw [pullback_to_biproduct_π₂, limit.lift_π],
+      refl }
+  end)
+  (λ s m h,
   begin
-    -- TODO: Figure out why ext does not trigger this
-    apply pullback.hom_ext; rw limit.lift_π,
-    { conv_lhs { change m ≫ (limit.cone (cospan f g)).π.app walking_cospan.left },
-      erw ←blubb',
-      rw pullback_cone_of_fork_app_left,
-      rw ←category.assoc,
-      erw h walking_parallel_pair.zero,
-      refl, },
-    { conv_lhs { change m ≫ (limit.cone (cospan f g)).π.app walking_cospan.right },
-      erw ←blubb',
-      rw pullback_cone_of_fork_app_right,
-      rw ←category.assoc,
-      erw h walking_parallel_pair.zero,
-      refl, },
-  end }
+    apply pullback.hom_ext;
+    erw limit.lift_π,
+    { erw [pullback_cone.mk_π_app_left, ←pullback_to_biproduct_π₁, ←category.assoc,
+        h walking_parallel_pair.zero],
+      refl },
+    { erw [pullback_cone.mk_π_app_right, ←pullback_to_biproduct_π₂, ←category.assoc,
+        h walking_parallel_pair.zero],
+      refl }
+  end)
 
-/- Now we need: biproduct.desc f g is a cokernel of pullback_to_biproduct -/
+end pullback_to_biproduct
 
-instance desc_of_f [epi f] : epi (biproduct.desc f (-g)) :=
-epi_of_epi_fac biproduct.ι₁_desc
+section epi_pullback
+variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 
-/-- Aluffi IX.2.3, cf. Borceux 2, 1.7.6 -/
-instance epi_pullback [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
+/-- In an abelian category, the pullback of an epimorphism is an epimorphism.
+    Aluffi IX.2.3, cf. Borceux 2, 1.7.6 -/
+instance epi_pullback_of_epi_f [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
+-- It will suffice to consider some morphism e : Y ⟶ R such that 
+-- pullback.snd ≫ e = 0 and show that e = 0.
 cancel_zero_iff_epi.2 $ λ R e h,
 begin
-  have := epi_is_cokernel_of_kernel _ (p_is_limit f g),
+  -- Consider the morphism u := (0, e) : biproduct X Y ⟶ R.
   let u := biproduct.desc (0 : X ⟶ R) e,
-  have pu : pullback_to_biproduct f g ≫ u = 0,
-  { unfold pullback_to_biproduct, simp, exact h, },
-  let pu_cocone : cofork (pullback_to_biproduct f g) 0 := cofork.of_π u (begin
-    rw pu, rw has_zero_morphisms.zero_comp,
-  end),
-  let d : Z ⟶ R := is_colimit.desc this pu_cocone,
-  have hf : f = biproduct.ι₁ ≫ biproduct.desc f (-g),
-  { simp, },
-  have b := is_colimit.fac this pu_cocone walking_parallel_pair.one,
-  conv_rhs at b { change u },
-  conv_lhs at b { congr, change biproduct.desc f (-g) },
-  have hfd : f ≫ d = 0,
-  { rw hf, rw category.assoc, erw b, simp, },
-  have hd : d = 0 := cancel_zero_iff_epi.1 (by apply_instance) _ _ hfd,
-  have hu : u = 0,
-  { rw ←b, change biproduct.desc f (-g) ≫ d = 0, rw hd, simp, },
-  have hh : biproduct.ι₂ ≫ u = 0,
-  { rw hu, simp, },
-  rw biproduct.ι₂_desc at hh,
-  exact hh,
+  -- The composite pullback f g ⟶ biproduct X Y ⟶ R is zero by assumption.
+  have hu : pullback_to_biproduct f g ≫ u = 0 := by simpa,
+
+  -- pullback_to_biproduct f g is a kernel of (f, -g), so (f, -g) is a
+  -- cokernel of pullback_to_biproduct f g
+  have := epi_is_cokernel_of_kernel _ (is_limit_pullback_to_biproduct f g),
+
+  -- We use this fact to obtain a factorization of u through (f, -g) via some d : Z ⟶ R.
+  obtain ⟨d, hd⟩ := colimit_cokernel_cofork.desc' _ this u hu,
+  change Z ⟶ R at d,
+  change biproduct.desc f (-g) ≫ d = u at hd,
+
+  -- But then f ≫ d = 0:
+  have : f ≫ d = 0, calc
+    f ≫ d = (biproduct.ι₁ ≫ biproduct.desc f (-g)) ≫ d : by rw biproduct.ι₁_desc
+    ... = biproduct.ι₁ ≫ u : by erw [category.assoc, hd]
+    ... = 0 : biproduct.ι₁_desc,
+
+  -- But f is an epimorphism, so d = 0...
+  have : d = 0 := (cancel_epi f).1 (by simpa),
+
+  -- ...or, in other words, e = 0.
+  calc
+    e = biproduct.ι₂ ≫ u : by rw biproduct.ι₂_desc
+    ... = biproduct.ι₂ ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
+    ... = biproduct.ι₂ ≫ biproduct.desc f (-g) ≫ 0 : by rw this
+    ... = (biproduct.ι₂ ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
+    ... = 0 : has_zero_morphisms.comp_zero _ _ _
 end
 
-instance desc_of_g [epi g] : epi (biproduct.desc f (-g)) :=
-epi_of_epi_fac biproduct.ι₂_desc
-
-instance epi_pullback' [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
+/-- In an abelian category, the pullback of an epimorphism is an epimorphism. -/
+instance epi_pullback_of_epi_g [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
+-- It will suffice to consider some morphism e : X ⟶ R such that
+-- pullback.fst ≫ e = 0 and show that e = 0.
 cancel_zero_iff_epi.2 $ λ R e h,
 begin
-  have := epi_is_cokernel_of_kernel _ (p_is_limit f g),
+  -- Consider the morphism u := (e, 0) : biproduct X Y ⟶ R.
   let u := biproduct.desc e (0 : Y ⟶ R),
-  have pu : pullback_to_biproduct f g ≫ u = 0,
-  { unfold pullback_to_biproduct, simp, exact h, },
-  let pu_cocone : cofork (pullback_to_biproduct f g) 0 := cofork.of_π u (begin
-    rw pu, rw has_zero_morphisms.zero_comp,
-  end),
-  let d : Z ⟶ R := is_colimit.desc this pu_cocone,
-  have hg : -g = biproduct.ι₂ ≫ biproduct.desc f (-g),
-  { simp, },
-  have b := is_colimit.fac this pu_cocone walking_parallel_pair.one,
-  conv_rhs at b { change u },
-  conv_lhs at b { congr, change biproduct.desc f (-g) },
-  have hgd : -g ≫ d = 0,
-  { rw hg, rw category.assoc, erw b, simp, },
-  have hd : d = 0 := cancel_zero_iff_epi.1 (by apply_instance) _ _ hgd,
-  have hu : u = 0,
-  { rw ←b, change biproduct.desc f (-g) ≫ d = 0, rw hd, simp, },
-  have hh : biproduct.ι₁ ≫ u = 0,
-  { rw hu, simp, },
-  rw biproduct.ι₁_desc at hh,
-  exact hh,
+  -- The composite pullback f g ⟶ biproduct X Y ⟶ R is zero by assumption.
+  have hu : pullback_to_biproduct f g ≫ u = 0 := by simpa,
+
+  -- pullback_to_biproduct f g is a kernel of (f, -g), so (f, -g) is a
+  -- cokernel of pullback_to_biproduct f g
+  have := epi_is_cokernel_of_kernel _ (is_limit_pullback_to_biproduct f g),
+
+  -- We use this fact to obtain a factorization of u through (f, -g) via some d : Z ⟶ R.
+  obtain ⟨d, hd⟩ := colimit_cokernel_cofork.desc' _ this u hu,
+  change Z ⟶ R at d,
+  change biproduct.desc f (-g) ≫ d = u at hd,
+
+  -- But then (-g) ≫ d = 0:
+  have : (-g) ≫ d = 0, calc
+    (-g) ≫ d = (biproduct.ι₂ ≫ biproduct.desc f (-g)) ≫ d : by rw biproduct.ι₂_desc
+    ... = biproduct.ι₂ ≫ u : by erw [category.assoc, hd]
+    ... = 0 : biproduct.ι₂_desc,
+
+  -- But g is an epimorphism, thus so is -g, so d = 0...
+  have : d = 0 := (cancel_epi (-g)).1 (by simpa),
+
+  -- ...or, in other words, e = 0.
+  calc
+    e = biproduct.ι₁ ≫ u : by rw biproduct.ι₁_desc
+    ... = biproduct.ι₁ ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
+    ... = biproduct.ι₁ ≫ biproduct.desc f (-g) ≫ 0 : by rw this
+    ... = (biproduct.ι₁ ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
+    ... = 0 : has_zero_morphisms.comp_zero _ _ _
 end
 
-end
-
-
+end epi_pullback
 
 end category_theory.abelian

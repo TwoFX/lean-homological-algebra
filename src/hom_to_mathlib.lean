@@ -2,6 +2,7 @@ import category_theory.category
 import category_theory.limits.shapes.equalizers
 import category_theory.limits.shapes.zero
 import category_theory.limits.shapes.kernels
+import category_theory.limits.shapes.pullbacks
 
 open category_theory
 open category_theory.limits
@@ -9,6 +10,21 @@ open category_theory.limits
 universes v u
 variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
+
+section
+variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
+
+def limit_kernel_fork.lift' {s : kernel_fork f} (is_lim : is_limit s)
+  {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) :
+  { l : Z ⟶ s.X // l ≫ fork.ι s = g } :=
+⟨is_limit.lift is_lim $ kernel_fork.of_ι g h, by erw is_limit.fac; refl⟩
+
+def colimit_cokernel_cofork.desc' {s : cokernel_cofork f} (is_colim : is_colimit s)
+  {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) :
+  { l : s.X ⟶ Z // cofork.π s ≫ l = g } :=
+⟨is_colimit.desc is_colim $ cokernel_cofork.of_π g h, by erw is_colimit.fac; refl⟩
+
+end
 
 section
 variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
