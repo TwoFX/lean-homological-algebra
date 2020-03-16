@@ -120,7 +120,7 @@ end cokernel
 
 section products
 
-lemma mn_has_limit (M N : Module R) : has_limit (pair M N) :=
+def module_has_limit_pair (M N : Module R) : has_limit (pair M N) :=
 { cone := @binary_fan.mk _ _ M N (of R $ M × N) (linear_map.fst R M N) (linear_map.snd R M N),
   is_limit :=
   { lift := λ s, linear_map.pair (s.π.app walking_pair.left) (s.π.app walking_pair.right),
@@ -145,19 +145,16 @@ lemma mn_has_limit (M N : Module R) : has_limit (pair M N) :=
         refl, },
     end } }
 
-instance (F : discrete walking_pair ⥤ Module R) : has_limit F :=
-begin
-  convert mn_has_limit R (F.obj walking_pair.left) (F.obj walking_pair.right),
-  apply category_theory.functor.ext,
-  { tidy, },
-  { intro j, cases j; refl },
-end
+section
+
+local attribute [instance] module_has_limit_pair
 
 instance : has_binary_products.{u} (Module R) :=
-{ has_limits_of_shape :=
-  { has_limit := by apply_instance } }
+has_binary_products_of_has_limit_pair (Module R)
 
-def mn_has_colimit (M N : Module R) : has_colimit (pair M N) :=
+end
+
+def module_has_colimit_pair (M N : Module R) : has_colimit (pair M N) :=
 { cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (linear_map.inl R M N) (linear_map.inr R M N),
   is_colimit := 
   { desc := λ s, linear_map.copair (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
@@ -186,17 +183,14 @@ def mn_has_colimit (M N : Module R) : has_colimit (pair M N) :=
       simp only [prod.mk.eta, add_zero, zero_add],
     end } }
 
-instance (F : discrete walking_pair ⥤ Module R) : has_colimit F :=
-begin
-  convert mn_has_colimit R (F.obj walking_pair.left) (F.obj walking_pair.right),
-  apply category_theory.functor.ext,
-  { tidy, },
-  { intro j, cases j; refl },
-end
+section
+
+local attribute [instance] module_has_colimit_pair
 
 instance : has_binary_coproducts.{u} (Module R) :=
-{ has_colimits_of_shape :=
-  { has_colimit := by apply_instance } }
+has_binary_coproducts_of_has_colimit_pair (Module R)
+
+end
 
 end products
 

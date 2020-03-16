@@ -195,15 +195,6 @@ variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
 variables {X Y : C} {f : X ⟶ Y}
 
-/-(epi_is_cokernel_of_kernel : Π {X Y : C} {f : X ⟶ Y} [epi f] (s : fork f 0) (h : is_limit s),
-  is_colimit (cofork.of_π f (begin
-    rw fork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
-  end) : cofork (fork.ι s) 0))-/
-/-(mono_is_kernel_of_cokernel : Π {X Y : C} {f : X ⟶ Y} [mono f] (s : cofork f 0) (h : is_colimit s),
-  is_limit (fork.of_ι f (begin
-    rw cofork.condition, erw has_zero_morphisms.comp_zero, erw has_zero_morphisms.zero_comp,
-  end) : fork (cofork.π s) 0))-/
-
 /-- If `f` is an epimorphism and `s` is some limit kernel cone on `f`, then `f` is a cokernel
     of `fork.ι s`. -/
 def epi_is_cokernel_of_kernel [epi f] (s : fork f 0) (h : is_limit s) :
