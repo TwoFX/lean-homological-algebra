@@ -12,6 +12,15 @@ variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
 
 section
+variables {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
+
+def pullback.lift' [has_limit (cospan f g)] {W : C} (f' : W ⟶ X) (g' : W ⟶ Y)
+  (h : f' ≫ f = g' ≫ g) :
+  {l : W ⟶ pullback f g // l ≫ pullback.fst = f' ∧ l ≫ pullback.snd = g' } :=
+⟨pullback.lift f' g' h, by erw limit.lift_π; refl, by erw limit.lift_π; refl⟩
+end
+
+section
 variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
 
 def limit_kernel_fork.lift' {s : kernel_fork f} (is_lim : is_limit s)

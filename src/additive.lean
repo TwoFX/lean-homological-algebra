@@ -70,11 +70,11 @@ instance preadditive_has_zero_morphisms : has_zero_morphisms.{v} C :=
   comp_zero' := λ P Q f R, map_zero $ hom_right R f,
   zero_comp' := λ P Q R f, map_zero $ hom_left P f }
 
-lemma cancel_zero_iff_mono {Q R : C} {f : Q ⟶ R} : mono f ↔ ∀ (P : C) (g : P ⟶ Q), g ≫ f = 0 → g = 0 :=
+lemma cancel_zero_iff_mono {Q R : C} (f : Q ⟶ R) : mono f ↔ ∀ (P : C) (g : P ⟶ Q), g ≫ f = 0 → g = 0 :=
 iff.intro (λ m P g, @zero_of_comp_mono _ _ _ _ _ _ _ _ m) $ λ h,
 ⟨λ P g g' hg, sub_eq_zero.1 $ h P _ $ eq.trans (map_sub (hom_left P f) g g') (sub_eq_zero.2 hg)⟩
 
-lemma cancel_zero_iff_epi {P Q : C} {f : P ⟶ Q} : epi f ↔ ∀ (R : C) (g : Q ⟶ R), f ≫ g = 0 → g = 0 :=
+lemma cancel_zero_iff_epi {P Q : C} (f : P ⟶ Q) : epi f ↔ ∀ (R : C) (g : Q ⟶ R), f ≫ g = 0 → g = 0 :=
 iff.intro (λ e R g, @zero_of_comp_epi _ _ _ _ _ _ _ _ e) $ λ h,
 ⟨λ R g g' hg, sub_eq_zero.1 $ h R _ $ eq.trans (map_sub (hom_right R f) g g') (sub_eq_zero.2 hg)⟩
 

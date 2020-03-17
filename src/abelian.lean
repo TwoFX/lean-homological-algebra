@@ -50,6 +50,9 @@ end
 
 variables (C)
 
+section prio
+set_option default_priority 100
+
 /-- A (preadditive) category `C` is called abelian if it has a zero object, all binary products and
     coproducts, all kernels and cokernels, and if every monomorphism is the kernel of some morphism
     and every epimorphism is the cokernel of somme morphism. -/
@@ -63,7 +66,7 @@ class abelian extends preadditive.{v} C :=
 (epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y) [epi f], is_cokernel.{v} f)
 
 attribute [instance] abelian.has_zero_object abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
-
+end prio
 end category_theory
 
 open category_theory
@@ -88,7 +91,7 @@ by erw limit.lift_π; refl
 instance : epi (factor_thru_image f) :=
 let I := kernel (cokernel.π f), p := factor_thru_image f, i := kernel.ι (cokernel.π f) in
 -- It will suffice to consider some g : I ⟶ R such that p ≫ g = 0 and show that g = 0.
-cancel_zero_iff_epi.2 $ λ R (g : I ⟶ R) (hpg : p ≫ g = 0),
+(cancel_zero_iff_epi _).2 $ λ R (g : I ⟶ R) (hpg : p ≫ g = 0),
 begin
   -- Since C is abelian, u := ker g ≫ i is the kernel of some morphism h.
   let u := kernel.ι g ≫ i,
@@ -121,7 +124,7 @@ begin
   have : epi (kernel.ι g) := epi_of_epi_fac ((cancel_mono _).1 hs'),
 
   -- ker g is an epimorphism, but ker g ≫ g = 0 = ker g ≫ 0, so g = 0 as required.
-  exact cancel_zero_iff_epi.1 this _ _ (kernel.condition g)
+  exact (cancel_zero_iff_epi _).1 this _ _ (kernel.condition g)
 end
 
 /-- There is a canonical monomorphism `i : coimage f ⟶ Q`. -/
@@ -135,7 +138,7 @@ by erw colimit.ι_desc; refl
 /-- The canonical morphism `i : coimage f ⟶ Q` is a monomorphism -/
 instance : mono (factor_thru_coimage f) :=
 let I := cokernel (kernel.ι f), i := factor_thru_coimage f, p := cokernel.π (kernel.ι f) in
-cancel_zero_iff_mono.2 $ λ R (g : R ⟶ I) (hgi : g ≫ i = 0),
+(cancel_zero_iff_mono _).2 $ λ R (g : R ⟶ I) (hgi : g ≫ i = 0),
 begin
   -- Since C is abelian, u := p ≫ coker g is the cokernel of some morphism h.
   let u := p ≫ cokernel.π g,
@@ -168,7 +171,7 @@ begin
   have : mono (cokernel.π g) := mono_of_mono_fac ((cancel_epi _).1 hs'),
 
   -- coker g is a monomorphism, but g ≫ coker g = 0 = 0 ≫ coker g, so g = 0 as required.
-  exact cancel_zero_iff_mono.1 this _ _ (cokernel.condition g)
+  exact (cancel_zero_iff_mono _).1 this _ _ (cokernel.condition g)
 end
 
 end factor
@@ -222,6 +225,7 @@ section
 local attribute [instance] preadditive.has_equalizers_of_has_kernels
 
 /-- Any abelian category has pullbacks -/
+@[priority 100]
 instance : has_pullbacks.{v} C :=
 has_pullbacks_of_has_binary_products_of_has_equalizers C
 
@@ -291,7 +295,7 @@ variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 instance epi_pullback_of_epi_f [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
 -- It will suffice to consider some morphism e : Y ⟶ R such that 
 -- pullback.snd ≫ e = 0 and show that e = 0.
-cancel_zero_iff_epi.2 $ λ R e h,
+(cancel_zero_iff_epi _).2 $ λ R e h,
 begin
   -- Consider the morphism u := (0, e) : biproduct X Y ⟶ R.
   let u := biproduct.desc (0 : X ⟶ R) e,
@@ -330,7 +334,7 @@ end
 instance epi_pullback_of_epi_g [epi g] : epi (pullback.fst : pullback f g ⟶ X) :=
 -- It will suffice to consider some morphism e : X ⟶ R such that
 -- pullback.fst ≫ e = 0 and show that e = 0.
-cancel_zero_iff_epi.2 $ λ R e h,
+(cancel_zero_iff_epi _).2 $ λ R e h,
 begin
   -- Consider the morphism u := (e, 0) : biproduct X Y ⟶ R.
   let u := biproduct.desc e (0 : Y ⟶ R),
