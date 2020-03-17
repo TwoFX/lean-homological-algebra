@@ -227,7 +227,7 @@ has_pullbacks_of_has_binary_products_of_has_equalizers C
 
 end
 
-section pullback_to_biproduct
+namespace pullback_to_biproduct_is_kernel
 variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 
 /-! This section contains a slightly technical result about pullbacks and biproducts.
@@ -251,8 +251,7 @@ def pullback_to_biproduct_fork : fork (biproduct.desc f (-g)) 0 :=
 kernel_fork.of_ι (pullback_to_biproduct f g) $ 
 begin
   simp only [distrib_left, biproduct.ι₁_desc, neg_right, biproduct.ι₂_desc, category.assoc],
-  apply sub_eq_zero.2,
-  exact pullback.condition
+  exact sub_eq_zero.2 pullback.condition
 end
 
 /-- The canonical map `pullback f g ⟶ biproduct X Y` is a kernel of the map induced by
@@ -282,7 +281,7 @@ fork.is_limit.mk _
       refl }
   end)
 
-end pullback_to_biproduct
+end pullback_to_biproduct_is_kernel
 
 section epi_pullback
 variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
@@ -297,11 +296,12 @@ begin
   -- Consider the morphism u := (0, e) : biproduct X Y ⟶ R.
   let u := biproduct.desc (0 : X ⟶ R) e,
   -- The composite pullback f g ⟶ biproduct X Y ⟶ R is zero by assumption.
-  have hu : pullback_to_biproduct f g ≫ u = 0 := by simpa,
+  have hu : pullback_to_biproduct_is_kernel.pullback_to_biproduct f g ≫ u = 0 := by simpa,
 
   -- pullback_to_biproduct f g is a kernel of (f, -g), so (f, -g) is a
   -- cokernel of pullback_to_biproduct f g
-  have := epi_is_cokernel_of_kernel _ (is_limit_pullback_to_biproduct f g),
+  have := epi_is_cokernel_of_kernel _
+    (pullback_to_biproduct_is_kernel.is_limit_pullback_to_biproduct f g),
 
   -- We use this fact to obtain a factorization of u through (f, -g) via some d : Z ⟶ R.
   obtain ⟨d, hd⟩ := colimit_cokernel_cofork.desc' _ this u hu,
@@ -335,11 +335,12 @@ begin
   -- Consider the morphism u := (e, 0) : biproduct X Y ⟶ R.
   let u := biproduct.desc e (0 : Y ⟶ R),
   -- The composite pullback f g ⟶ biproduct X Y ⟶ R is zero by assumption.
-  have hu : pullback_to_biproduct f g ≫ u = 0 := by simpa,
+  have hu : pullback_to_biproduct_is_kernel.pullback_to_biproduct f g ≫ u = 0 := by simpa,
 
   -- pullback_to_biproduct f g is a kernel of (f, -g), so (f, -g) is a
   -- cokernel of pullback_to_biproduct f g
-  have := epi_is_cokernel_of_kernel _ (is_limit_pullback_to_biproduct f g),
+  have := epi_is_cokernel_of_kernel _
+    (pullback_to_biproduct_is_kernel.is_limit_pullback_to_biproduct f g),
 
   -- We use this fact to obtain a factorization of u through (f, -g) via some d : Z ⟶ R.
   obtain ⟨d, hd⟩ := colimit_cokernel_cofork.desc' _ this u hu,

@@ -65,7 +65,7 @@ instance {P Q : C} {f : P ⟶ Q} [epi f] : epi (-f) :=
 instance {P Q : C} {f : P ⟶ Q} [mono f] : mono (-f) :=
 ⟨λ R g g', by rw [neg_right, neg_right, ←neg_left, ←neg_left, cancel_mono]; exact neg_inj⟩ 
 
-instance has_zero_morphisms : has_zero_morphisms.{v} C :=
+instance preadditive_has_zero_morphisms : has_zero_morphisms.{v} C :=
 { has_zero := infer_instance,
   comp_zero' := λ P Q f R, map_zero $ hom_right R f,
   zero_comp' := λ P Q R f, map_zero $ hom_left P f }

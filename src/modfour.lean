@@ -1,6 +1,6 @@
 import linear_algebra.basic
 import modules
-import abfour
+import diagram_lemmas
 import module_exact
 
 open linear_map
