@@ -33,7 +33,7 @@ difficult to prove and probably out of reach for a formal proof for the time bei
 We define the type of pseudoelements of an object and, in particular, the zero pseudoelement.
 
 We prove that every morphism maps the zero pseudoelement to the zero pseudoelement (`apply_zero`)
-and that a zero morphism maps every pseudoelement to the zero pseudoelement (`apply_zero`)
+and that a zero morphism maps every pseudoelement to the zero pseudoelement (`zero_apply`)
 
 Here are the metatheorems we provide:
 * A morphism `f` is zero if and only if it is the zero function on pseudoelements.

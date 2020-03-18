@@ -9,6 +9,8 @@ universes v u
 
 namespace category_theory.abelian
 
+open pseudoelements
+
 section
 variables (A : Type u) [𝒜 : category.{v} A] [abelian.{v} A]
 include 𝒜
@@ -53,6 +55,7 @@ end
 section
 
 local attribute [instance] hom_to_fun
+local attribute [instance] object_to_sort
 
 lemma exact_from_zero (C : cochain_complex.{v} A) (n : ℤ)
   (i : cohomology C (n + 1) ≅ 0) : exact (C.d n) (C.d (n + 1)) :=
@@ -74,7 +77,7 @@ lemma exact_from_zero (C : cochain_complex.{v} A) (n : ℤ)
     rw has_zero_morphisms.comp_zero, },
   have : (cokernel.π (im_to_ker C n) : kernel (C.d (n + 1)) ⟶ cokernel (im_to_ker C n)) a = 0,
   { rw this, rw zero_apply, },
-  cases (exact_char _ _ (cokernel_exact (im_to_ker C n))).2 _ this with b hb,
+  cases (pseudo_exact_of_exact (cokernel_exact (im_to_ker C n))).2 _ this with b hb,
   rw ←hb,
   rw ←comp_apply,
   rw ←comp_apply,
