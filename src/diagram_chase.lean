@@ -1,4 +1,10 @@
 /-
+Copyright (c) 2020 Markus Himmel. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Markus Himmel
+-/
+
+/-
   Todo:
   * Add limited subtraction support (cf. Borceux 2, 1.9.4(5))
     * this should cover both the other four lemma and the nine lemma
