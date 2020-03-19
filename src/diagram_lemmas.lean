@@ -19,6 +19,7 @@ local attribute [instance] object_to_sort
 local attribute [instance] hom_to_fun
 
 universes v u
+section
 variables {C : Type u} [𝒞 : category.{v} C] [abelian.{v} C]
 include 𝒞
 
@@ -209,3 +210,38 @@ begin
 end
 
 end cokernels
+
+end
+
+section restricted_snake
+variables {c : Type u} [𝒞 : category.{v} c] [abelian.{v} c]
+include 𝒞
+
+variables {A B C D E F G H I J K L : c}
+variables {α : A ⟶ B} {β : B ⟶ C} {γ : A ⟶ D} {δ : B ⟶ E} {ε : C ⟶ F}
+variables {ζ : D ⟶ E} {η : E ⟶ F} {θ : D ⟶ G} {κ : E ⟶ H} {μ : F ⟶ I}
+variables {ν : G ⟶ H} {ξ : H ⟶ I} {π : G ⟶ J} {ρ : H ⟶ K} {σ : I ⟶ L}
+variables {τ : J ⟶ K} {φ : K ⟶ L}
+variables (comm₁ : α ≫ δ = γ ≫ ζ) (comm₂ : β ≫ ε = δ ≫ η) (comm₃ : ζ ≫ κ = θ ≫ ν)
+variables (comm₄ : η ≫ μ = κ ≫ ξ) (comm₅ : ν ≫ ρ = π ≫ τ) (comm₆ : ξ ≫ σ = ρ ≫ φ)
+variables (αβ : exact α β) (ζη : exact ζ η) (νξ : exact ν ξ) (τφ : exact τ φ) (γθ : exact γ θ)
+variables (θπ : exact θ π) (δκ : exact δ κ) (κρ : exact κ ρ) (εμ : exact ε μ) (μσ : exact μ σ)
+include comm₁ comm₂ comm₃ comm₄ comm₅ comm₆
+include αβ ζη νξ τφ γθ θπ δκ κρ εμ μσ
+
+lemma restricted_snake [mono α] [mono ζ] [epi η] [mono ν] [epi ξ] [epi φ] [mono γ] [epi π] [mono δ]
+  [epi ρ] [mono ε] [epi σ] : ∃ (ω : C ⟶ J), exact β ω ∧ exact ω τ :=
+begin
+  let Z := pullback ε η,
+  let Δ : Z ⟶ C := pullback.fst,
+  let Γ : Z ⟶ E := pullback.snd,
+
+  let Y := pushout π ν,
+  let Ξ : J ⟶ Y := pushout.inl,
+  let Λ : H ⟶ Y := pushout.inr,
+
+  sorry,
+end
+
+
+end restricted_snake

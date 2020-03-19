@@ -10,6 +10,7 @@ import category_theory.limits.shapes.kernels
 import category_theory.limits.shapes.binary_products
 import category_theory.limits.shapes.constructions.pullbacks
 import category_theory.limits.shapes.regular_mono
+import category_theory.limits.shapes.images
 import additive
 import biproduct
 import hom_to_mathlib
@@ -157,6 +158,25 @@ end
 
 end factor
 
+section image
+
+/-- An abelian category has all images. -/
+instance : has_images.{v} C :=
+{ has_image := λ X Y f, { F :=
+  { I := cokernel (kernel.ι f),
+    m := factor_thru_coimage f,
+    m_mono := by apply_instance,
+    e := cokernel.π (kernel.ι f),
+    fac' := coimage.fac f },
+  is_image :=
+  { lift := λ F, cokernel.desc (kernel.ι f) F.e $
+      (cancel_zero_iff_mono _).1 F.m_mono _ (limits.kernel.ι f ≫ F.e) $
+        by rw [category.assoc, F.fac, kernel.condition],
+    lift_fac' := λ F, (cancel_epi (cokernel.π (kernel.ι f))).1 $
+      by erw [←category.assoc, colimit.ι_desc, coimage.fac, F.fac] } } }
+
+end image
+
 section mono_epi_iso
 variables {X Y : C} (f : X ⟶ Y)
 
@@ -209,6 +229,16 @@ local attribute [instance] preadditive.has_equalizers_of_has_kernels
 @[priority 100]
 instance : has_pullbacks.{v} C :=
 has_pullbacks_of_has_binary_products_of_has_equalizers C
+
+end
+
+section
+local attribute [instance] preadditive.has_coequalizers_of_has_cokernels
+
+/-- Ant abelian category has pushouts -/
+@[priority 100]
+instance : has_pushouts.{v} C :=
+has_pushouts_of_has_binary_coproducts_of_has_coequalizers C
 
 end
 
