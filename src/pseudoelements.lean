@@ -258,7 +258,7 @@ theorem epi_of_pseudo_surjective {P Q : C} (f : P ⟶ Q) : function.surjective f
   match quotient.exists_rep pbar with ⟨p, hp⟩ :=
     have ⟦(p.2 ≫ f : with_codomain Q)⟧ = ⟦𝟙 Q⟧, by rw ←hp at hpbar; exact hpbar,
     match quotient.exact this with ⟨R, x, y, ex, ey, comm⟩ :=
-      @epi_of_epi_fac _ _ _ _ _ (x ≫ p.snd) f y ey $ 
+      @epi_of_epi_fac _ _ _ _ _ (x ≫ p.2) f y ey $
         by erw [category.assoc, comm, category.comp_id]
     end
   end
@@ -282,7 +282,8 @@ theorem pseudo_exact_of_exact {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (h : exact
       apply quotient.sound,
 
       -- pullback.snd is an epimorphism because the map onto the image is!
-      refine ⟨pullback (factor_thru_image f) c, 𝟙 _, pullback.snd, by apply_instance, by apply_instance, _⟩,
+      refine ⟨pullback (factor_thru_image f) c, 𝟙 _, pullback.snd,
+        by apply_instance, by apply_instance, _⟩,
 
       -- Now we can verify that the diagram commutes.
       calc 𝟙 (pullback (factor_thru_image f) c) ≫ pullback.fst ≫ f = pullback.fst ≫ f
@@ -338,9 +339,9 @@ begin
 end⟩
 
 /-- If two pseudoelements `x` and `y` have the same image under some morphism `f`, then we can form
-    their "difference" `z`. This pseudoelement has the properties that `f z = 0` and for all morphisms
-    `g`, if `g y = 0` then `g z = g x`. -/
-lemma sub_of_eq_image {P Q : C} (f : P ⟶ Q) (x y : P) : f x = f y →
+    their "difference" `z`. This pseudoelement has the properties that `f z = 0` and for all
+    morphisms `g`, if `g y = 0` then `g z = g x`. -/
+theorem sub_of_eq_image {P Q : C} (f : P ⟶ Q) (x y : P) : f x = f y →
   ∃ z, f z = 0 ∧ ∀ (R : C) (g : P ⟶ R), (g : P ⟶ R) y = 0 → g z = g x :=
 quotient.induction_on₂ x y $ λ a a' h,
 match quotient.exact h with ⟨R, p, q, ep, eq, comm⟩ :=
@@ -363,6 +364,24 @@ match quotient.exact h with ⟨R, p, q, ep, eq, comm⟩ :=
         erw [category.id_comp, preadditive.distrib_left, neg_left, category.assoc,
           add_right_eq_self, neg_eq_zero, category.assoc, this, has_zero_morphisms.comp_zero]
       end⟩⟩
+end
+
+/-- If `f : P ⟶ R` and `g : Q ⟶ R` are morphisms and `p : P` and `q : Q` are pseudoelements such
+    that `f p = g q`, then there is some `s : pullback f g` such that `fst s = p` and `snd s = q`.
+
+    Remark: Borceux claims that `s` is unique. I was unable to transform his proof sketch into
+    a pen-and-paper proof of this fact, so naturally I was not able to formalize the proof. -/
+theorem pseudo_pullback {P Q R : C} {f : P ⟶ R} {g : Q ⟶ R} {p : P} {q : Q} : f p = g q →
+  ∃ s, (pullback.fst : pullback f g ⟶ P) s = p ∧ (pullback.snd : pullback f g ⟶ Q) s = q :=
+quotient.induction_on₂ p q $ λ x y h,
+begin
+  obtain ⟨Z, a, b, ea, eb, comm⟩ := quotient.exact h,
+
+  obtain ⟨l, hl₁, hl₂⟩ := pullback.lift' f g (a ≫ x.2) (b ≫ y.2)
+    (by simp only [category.assoc]; exact comm),
+
+  exact ⟨l, ⟨quotient.sound ⟨Z, 𝟙 Z, a, by apply_instance, ea, by rw category.id_comp; exact hl₁⟩,
+    quotient.sound ⟨Z, 𝟙 Z, b, by apply_instance, eb, by rw category.id_comp; exact hl₂⟩⟩⟩
 end
 
 end pseudoelements

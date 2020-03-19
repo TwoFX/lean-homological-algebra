@@ -55,15 +55,12 @@ def biproduct.of_prod (X Y : C) [has_limit.{v} (pair X Y)] : biproduct_s.{v} X Y
   begin
     ext j,
     cases j;
-    rw [preadditive.distrib_left, category.assoc, category.assoc];
-    simp,
-    { rw has_zero_morphisms.comp_zero _ category_theory.limits.prod.snd X,
-      refl, },
-    { rw has_zero_morphisms.comp_zero _ category_theory.limits.prod.fst Y,
-      refl, },
+    simp;
+    erw has_zero_morphisms.comp_zero,
   end
 }
 
+@[priority 100]
 instance [has_binary_products.{v} C] : has_biproducts.{v} C :=
 { biproduct := λ X Y, biproduct.of_prod X Y }
 

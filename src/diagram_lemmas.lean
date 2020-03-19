@@ -15,7 +15,6 @@ open category_theory.limits
 open category_theory.abelian
 open category_theory.abelian.pseudoelements
 
-
 local attribute [instance] object_to_sort
 local attribute [instance] hom_to_fun
 
