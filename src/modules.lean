@@ -110,7 +110,7 @@ def cokernel_is_colimit : is_colimit (cokernel_cocone _ _ _ f) :=
     conv_rhs at hx { change cofork.π s },
     conv_lhs at hx { congr, change submodule.mkq f.range },
     rw ←hx,
-    refl,  
+    refl,
   end }
 
 
@@ -162,7 +162,7 @@ end
 
 def module_has_colimit_pair (M N : Module R) : has_colimit (pair M N) :=
 { cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (linear_map.inl R M N) (linear_map.inr R M N),
-  is_colimit := 
+  is_colimit :=
   { desc := λ s, linear_map.copair (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
     fac' := λ s j,
     begin
@@ -180,7 +180,7 @@ def module_has_colimit_pair (M N : Module R) : has_colimit (pair M N) :=
       erw linear_map.copair_apply,
       erw ←h walking_pair.left,
       erw ←h walking_pair.right,
-      simp only [function.comp_app, coe_comp], 
+      simp only [function.comp_app, coe_comp],
       rw binary_cofan.mk_ι_app_left,
       rw binary_cofan.mk_ι_app_right,
       simp only [linear_map.inl_apply, linear_map.inr_apply],
@@ -225,9 +225,9 @@ instance : abelian.{u} (Module.{u} R) :=
   has_cokernels := by apply_instance,
   mono_is_kernel := λ A B f m,
   { Z := of R f.range.quotient,
-    of := f.range.mkq,
-    condition := comp_mkq f,
-    l := begin
+    g := f.range.mkq,
+    w := comp_mkq f,
+    is_limit := begin
       refine kernel.transport _ _ _ _,
       { haveI := m,
         exact up_equiv' (equiv_range_of_ker_bot' f (ker_eq_bot_of_mono f)), },
@@ -235,10 +235,10 @@ instance : abelian.{u} (Module.{u} R) :=
         exact equiv_range_of_ker_bot_fac' f (ker_eq_bot_of_mono f), }
     end },
   epi_is_cokernel := λ A B f e,
-  { Z := of R f.ker,
-    of := f.ker.subtype,
-    condition := ker_comp f,
-    l := begin
+  { W := of R f.ker,
+    g := f.ker.subtype,
+    w := ker_comp f,
+    is_colimit := begin
       refine cokernel.transport' _ _ _ _,
       { haveI := e,
         exact up_equiv' (equiv_range_of_range_top f (range_eq_top_of_epi f)), },

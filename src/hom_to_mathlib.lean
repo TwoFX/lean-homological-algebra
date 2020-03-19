@@ -9,6 +9,7 @@ import category_theory.limits.shapes.equalizers
 import category_theory.limits.shapes.zero
 import category_theory.limits.shapes.kernels
 import category_theory.limits.shapes.pullbacks
+import category_theory.limits.shapes.regular_mono
 
 open category_theory
 open category_theory.limits
@@ -24,6 +25,23 @@ def pullback.lift' [has_limit (cospan f g)] {W : C} (f' : W ⟶ X) (g' : W ⟶ Y
   (h : f' ≫ f = g' ≫ g) :
   {l : W ⟶ pullback f g // l ≫ pullback.fst = f' ∧ l ≫ pullback.snd = g' } :=
 ⟨pullback.lift f' g' h, by erw limit.lift_π; refl, by erw limit.lift_π; refl⟩
+end
+
+section
+variables [has_zero_morphisms.{v} C] {X Y : C}
+
+/-- Any map that is zero when composed with `s.of` factors through `f`. -/
+def normal_mono.lift {f : X ⟶ Y} (s : normal_mono f) {W : C} (g : W ⟶ Y) (h : g ≫ s.g = 0) :
+  { l : W ⟶ X // l ≫ f = g } :=
+{ val := is_limit.lift s.is_limit $ kernel_fork.of_ι g h,
+  property := is_limit.fac s.is_limit _ walking_parallel_pair.zero }
+
+/-- Any map that is zero when precomposed with `s.of` factors through `f`. -/
+def normal_epi.desc {f : X ⟶ Y} (s : normal_epi f) {W : C} (g : X ⟶ W) (h : s.g ≫ g = 0) :
+  { l : Y ⟶ W // f ≫ l = g } :=
+{ val := is_colimit.desc s.is_colimit $ cokernel_cofork.of_π g h,
+  property := is_colimit.fac s.is_colimit _ walking_parallel_pair.one }
+
 end
 
 section
@@ -86,7 +104,7 @@ fork.is_limit.mk _
 
 def cokernel.transport' [has_colimit (parallel_pair f 0)]
   {Z : C} (l : Y ⟶ Z) (i : cokernel f ≅ Z) (h : cokernel.π f ≫ i.hom = l) :
-  is_colimit (cokernel_cofork.of_π l $ 
+  is_colimit (cokernel_cofork.of_π l $
     by rw [←h, ←category.assoc, cokernel.condition, has_zero_morphisms.zero_comp]) :=
 cofork.is_colimit.mk _
   (λ s, i.inv ≫ (cokernel.desc f (cofork.π s) (cokernel_cofork.condition s)))

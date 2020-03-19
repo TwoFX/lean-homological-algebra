@@ -35,7 +35,7 @@ def im_to_ker (C : cochain_complex.{v} A) (n : ℤ) :
     kernel (cokernel.π (C.d n)) ⟶ kernel (C.d (n + 1)) :=
 kernel.lift (C.d (n + 1)) (kernel.ι (cokernel.π (C.d n)))
 begin
-  apply (preadditive.cancel_zero_iff_epi).1
+  apply (preadditive.cancel_zero_iff_epi _).1
     (show epi (factor_thru_image (C.d n)), by apply_instance),
   rw [←category.assoc, image.fac _],
   exact C.condition _
@@ -52,7 +52,7 @@ begin
   { convert e;
     exact int.pred_succ n, },
   let i : kernel (cokernel.π (C.d (n + 1 - 1))) ≅ kernel (C.d ((n + 1 - 1) + 1)) :=
-    functor.map_iso (cones.forget _) 
+    functor.map_iso (cones.forget _)
     (is_limit.unique_up_to_iso (exact_ker _ _ this) (limit.is_limit _)),
   haveI is : is_iso (im_to_ker C (n + 1 - 1)) := is_iso.of_iso i,
   exact cokernel.of_epi.{v u} (im_to_ker C (n + 1 - 1)),

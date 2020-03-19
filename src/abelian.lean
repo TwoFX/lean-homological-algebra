@@ -9,6 +9,7 @@ import category_theory.limits.shapes.pullbacks
 import category_theory.limits.shapes.kernels
 import category_theory.limits.shapes.binary_products
 import category_theory.limits.shapes.constructions.pullbacks
+import category_theory.limits.shapes.regular_mono
 import additive
 import biproduct
 import hom_to_mathlib
@@ -26,33 +27,7 @@ namespace category_theory
 variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
 
-section
-variables [has_zero_morphisms.{v} C] {X Y : C}
 
-/-- `is_kernel f` means that `f` is the kernel of some morphism `of`. -/
-structure is_kernel (f : X ⟶ Y) :=
-(Z : C)
-(of : Y ⟶ Z)
-(condition : f ≫ of = 0)
-(l : is_limit $ kernel_fork.of_ι f condition)
-
-/-- Any map that is zero when composed with `s.of` factors through `f`. -/
-def is_kernel.lift {f : X ⟶ Y} (s : is_kernel f) {W : C} (g : W ⟶ Y) (h : g ≫ s.of = 0) :
-  { l : W ⟶ X // l ≫ f = g } :=
-⟨is_limit.lift s.l $ kernel_fork.of_ι g h, is_limit.fac s.l _ walking_parallel_pair.zero⟩
-
-/-- `is_cokernel f` means that `f` is the cokernel of some morphism `of`. -/
-structure is_cokernel (f : X ⟶ Y) :=
-(Z : C)
-(of : Z ⟶ X)
-(condition : of ≫ f = 0)
-(l : is_colimit $ cokernel_cofork.of_π f condition)
-
-/-- Any map that is zero when precomposed with `s.of` factors through `f`. -/
-def is_cokernel.desc {f : X ⟶ Y} (s : is_cokernel f) {W : C} (g : X ⟶ W) (h : s.of ≫ g = 0) :
-  { l : Y ⟶ W // f ≫ l = g } :=
-⟨is_colimit.desc s.l $ cokernel_cofork.of_π g h, is_colimit.fac s.l _ walking_parallel_pair.one⟩
-end
 
 variables (C)
 
@@ -68,8 +43,8 @@ class abelian extends preadditive.{v} C :=
 (has_binary_coproducts : has_binary_coproducts.{v} C)
 (has_kernels : has_kernels.{v} C)
 (has_cokernels : has_cokernels.{v} C)
-(mono_is_kernel : Π {X Y : C} (f : X ⟶ Y) [mono f], is_kernel.{v} f)
-(epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y) [epi f], is_cokernel.{v} f)
+(mono_is_kernel : Π {X Y : C} (f : X ⟶ Y) [mono f], normal_mono.{v} f)
+(epi_is_cokernel : Π {X Y : C} (f : X ⟶ Y) [epi f], normal_epi.{v} f)
 
 attribute [instance] abelian.has_zero_object abelian.has_binary_products abelian.has_binary_coproducts abelian.has_kernels abelian.has_cokernels
 end prio
@@ -102,7 +77,7 @@ begin
   -- Since C is abelian, u := ker g ≫ i is the kernel of some morphism h.
   let u := kernel.ι g ≫ i,
   have hu := abelian.mono_is_kernel u,
-  let h := hu.of,
+  let h := hu.g,
 
   -- By hypothesis, p factors through the kernel of g via some t.
   obtain ⟨t, ht⟩ := kernel.lift' g p hpg,
@@ -111,7 +86,7 @@ begin
     f ≫ h = (p ≫ i) ≫ h : (image.fac f).symm ▸ rfl
        ... = ((t ≫ kernel.ι g) ≫ i) ≫ h : ht ▸ rfl
        ... = t ≫ u ≫ h : by simp only [category.assoc]; conv_lhs { congr, skip, rw ←category.assoc }
-       ... = t ≫ 0 : hu.condition ▸ rfl
+       ... = t ≫ 0 : hu.w ▸ rfl
        ... = 0 : has_zero_morphisms.comp_zero _ _ _,
 
   -- h factors through the cokernel of f via some l.
@@ -123,7 +98,7 @@ begin
        ... = 0 : has_zero_morphisms.zero_comp _ _ _,
 
   -- i factors through u = ker h via some s.
-  obtain ⟨s, hs⟩ := is_kernel.lift hu i hih,
+  obtain ⟨s, hs⟩ := normal_mono.lift hu i hih,
 
   have hs' : (s ≫ kernel.ι g) ≫ i = 𝟙 I ≫ i, by rw [category.assoc, hs, category.id_comp],
 
@@ -149,7 +124,7 @@ begin
   -- Since C is abelian, u := p ≫ coker g is the cokernel of some morphism h.
   let u := p ≫ cokernel.π g,
   have hu := abelian.epi_is_cokernel u,
-  let h := hu.of,
+  let h := hu.g,
 
   -- By hypothesis, i factors through the cokernel of g via some t.
   obtain ⟨t, ht⟩ := cokernel.desc' g i hgi,
@@ -158,7 +133,7 @@ begin
     h ≫ f = h ≫ (p ≫ i) : (coimage.fac f).symm ▸ rfl
     ... = h ≫ (p ≫ (cokernel.π g ≫ t)) : ht ▸ rfl
     ... = h ≫ u ≫ t : by simp only [category.assoc]; conv_lhs { congr, skip, rw ←category.assoc }
-    ... = 0 ≫ t : by rw [←category.assoc, hu.condition]
+    ... = 0 ≫ t : by rw [←category.assoc, hu.w]
     ... = 0 : has_zero_morphisms.zero_comp _ _ _,
 
   -- h factors through the kernel of f via some l.
@@ -170,7 +145,7 @@ begin
     ... = 0 : has_zero_morphisms.comp_zero _ _ _,
 
   -- p factors through u = coker h via some s.
-  obtain ⟨s, hs⟩ := is_cokernel.desc hu p hhp,
+  obtain ⟨s, hs⟩ := normal_epi.desc hu p hhp,
 
   have hs' : p ≫ cokernel.π g ≫ s = p ≫ 𝟙 I, by rw [←category.assoc, hs, category.comp_id],
 
@@ -189,10 +164,10 @@ variables {X Y : C} (f : X ⟶ Y)
 def mono_epi_iso [mono f] [epi f] : is_iso f :=
 begin
   have hf := abelian.mono_is_kernel f,
-  let s := kernel_fork.of_ι f hf.condition,
+  let s := kernel_fork.of_ι f hf.w,
   haveI : epi (s.π.app walking_parallel_pair.zero) :=
     show epi f, by apply_instance,
-  exact epi_limit_cone_parallel_pair_is_iso _ _ s hf.l
+  exact epi_limit_cone_parallel_pair_is_iso _ _ s hf.is_limit
 end
 
 end mono_epi_iso
@@ -258,7 +233,7 @@ by simp
     this may be that it induces an equalizer fork on the maps induced by `(f, 0)` and
     `(0, g)`. -/
 def pullback_to_biproduct_fork : fork (biproduct.desc f (-g)) 0 :=
-kernel_fork.of_ι (pullback_to_biproduct f g) $ 
+kernel_fork.of_ι (pullback_to_biproduct f g) $
 begin
   simp only [distrib_left, biproduct.ι₁_desc, neg_right, biproduct.ι₂_desc, category.assoc],
   exact sub_eq_zero.2 pullback.condition
@@ -299,7 +274,7 @@ variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 /-- In an abelian category, the pullback of an epimorphism is an epimorphism.
     Aluffi IX.2.3, cf. Borceux 2, 1.7.6 -/
 instance epi_pullback_of_epi_f [epi f] : epi (pullback.snd : pullback f g ⟶ Y) :=
--- It will suffice to consider some morphism e : Y ⟶ R such that 
+-- It will suffice to consider some morphism e : Y ⟶ R such that
 -- pullback.snd ≫ e = 0 and show that e = 0.
 (cancel_zero_iff_epi _).2 $ λ R e h,
 begin
