@@ -193,7 +193,7 @@ pseudoelement.
 lemma pseudo_zero_aux {P : C} (Q : C) (f : with_codomain P) : f ≈ (0 : Q ⟶ P) ↔ f.2 = 0 :=
 ⟨λ ⟨R, p, q, ep, eq, comm⟩, (preadditive.cancel_zero_iff_epi p).1 ep _ f.snd $
     by erw [comm, has_zero_morphisms.comp_zero],
-  λ hf, ⟨biproduct f.1 Q, biproduct.π₁, biproduct.π₂, by apply_instance, by apply_instance,
+  λ hf, ⟨biproduct f.1 Q, biproduct.fst, biproduct.snd, by apply_instance, by apply_instance,
     by erw [hf, has_zero_morphisms.comp_zero, has_zero_morphisms.comp_zero]⟩⟩
 
 lemma zero_eq_zero {P Q R : C} :

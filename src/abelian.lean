@@ -249,49 +249,49 @@ variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
     We will need it in the proof that the pullback of an epimorphism is an epimorpism.
     TODO: This could in theory be placed in additive.lean -/
 
-/-- The canonical map `pullback f g ⟶ biproduct X Y` -/
-abbreviation pullback_to_biproduct : pullback f g ⟶ biproduct X Y :=
-pullback.fst ≫ biproduct.ι₁ + pullback.snd ≫ biproduct.ι₂
+/-- The canonical map `pullback f g ⟶ X ⊞ Y` -/
+abbreviation pullback_to_biproduct : pullback f g ⟶ X ⊞ Y :=
+pullback.fst ≫ biproduct.inl + pullback.snd ≫ biproduct.inr
 
-lemma pullback_to_biproduct_π₁ : pullback_to_biproduct f g ≫ biproduct.π₁ = pullback.fst :=
+lemma pullback_to_biproduct_fst : pullback_to_biproduct f g ≫ biproduct.fst = pullback.fst :=
 by simp
-lemma pullback_to_biproduct_π₂ : pullback_to_biproduct f g ≫ biproduct.π₂ = pullback.snd :=
+lemma pullback_to_biproduct_snd : pullback_to_biproduct f g ≫ biproduct.snd = pullback.snd :=
 by simp
 
-/-- The canonical map `pullback f g ⟶ biproduct X Y` induces a kernel cone on the map
+/-- The canonical map `pullback f g ⟶ X ⊞ Y` induces a kernel cone on the map
     `biproduct X Y ⟶ Z` induced by `f` and `g`. A slightly more intuitive way to think of
     this may be that it induces an equalizer fork on the maps induced by `(f, 0)` and
     `(0, g)`. -/
 def pullback_to_biproduct_fork : fork (biproduct.desc f (-g)) 0 :=
 kernel_fork.of_ι (pullback_to_biproduct f g) $
 begin
-  simp only [distrib_left, biproduct.ι₁_desc, neg_right, biproduct.ι₂_desc, category.assoc],
+  simp only [distrib_left, biproduct.inl_desc, neg_right, biproduct.inr_desc, category.assoc],
   exact sub_eq_zero.2 pullback.condition
 end
 
-/-- The canonical map `pullback f g ⟶ biproduct X Y` is a kernel of the map induced by
+/-- The canonical map `pullback f g ⟶ X ⊞ Y` is a kernel of the map induced by
     `(f, -g)`. -/
 def is_limit_pullback_to_biproduct : is_limit (pullback_to_biproduct_fork f g) :=
 fork.is_limit.mk _
-  (λ s, pullback.lift (fork.ι s ≫ biproduct.π₁) (fork.ι s ≫ biproduct.π₂) $
+  (λ s, pullback.lift (fork.ι s ≫ biproduct.fst) (fork.ι s ≫ biproduct.snd) $
   sub_eq_zero.1 $ by erw [category.assoc, category.assoc, ←sub_distrib_right, sub_eq_add_neg,
     ←neg_right, fork.condition s, has_zero_morphisms.comp_zero]; refl)
   (λ s,
   begin
     ext; simp only [has_zero_morphisms.comp_zero, neg_right, sub_distrib_right, category.assoc],
-    { erw [pullback_to_biproduct_π₁, limit.lift_π],
+    { erw [pullback_to_biproduct_fst, limit.lift_π],
       refl },
-    { erw [pullback_to_biproduct_π₂, limit.lift_π],
+    { erw [pullback_to_biproduct_snd, limit.lift_π],
       refl }
   end)
   (λ s m h,
   begin
     apply pullback.hom_ext;
     erw limit.lift_π,
-    { erw [pullback_cone.mk_π_app_left, ←pullback_to_biproduct_π₁, ←category.assoc,
+    { erw [pullback_cone.mk_π_app_left, ←pullback_to_biproduct_fst, ←category.assoc,
         h walking_parallel_pair.zero],
       refl },
-    { erw [pullback_cone.mk_π_app_right, ←pullback_to_biproduct_π₂, ←category.assoc,
+    { erw [pullback_cone.mk_π_app_right, ←pullback_to_biproduct_snd, ←category.assoc,
         h walking_parallel_pair.zero],
       refl }
   end)
@@ -308,9 +308,9 @@ instance epi_pullback_of_epi_f [epi f] : epi (pullback.snd : pullback f g ⟶ Y)
 -- pullback.snd ≫ e = 0 and show that e = 0.
 (cancel_zero_iff_epi _).2 $ λ R e h,
 begin
-  -- Consider the morphism u := (0, e) : biproduct X Y ⟶ R.
+  -- Consider the morphism u := (0, e) : X ⊞ Y⟶ R.
   let u := biproduct.desc (0 : X ⟶ R) e,
-  -- The composite pullback f g ⟶ biproduct X Y ⟶ R is zero by assumption.
+  -- The composite pullback f g ⟶ X ⊞ Y ⟶ R is zero by assumption.
   have hu : pullback_to_biproduct_is_kernel.pullback_to_biproduct f g ≫ u = 0 := by simpa,
 
   -- pullback_to_biproduct f g is a kernel of (f, -g), so (f, -g) is a
@@ -325,19 +325,19 @@ begin
 
   -- But then f ≫ d = 0:
   have : f ≫ d = 0, calc
-    f ≫ d = (biproduct.ι₁ ≫ biproduct.desc f (-g)) ≫ d : by rw biproduct.ι₁_desc
-    ... = biproduct.ι₁ ≫ u : by erw [category.assoc, hd]
-    ... = 0 : biproduct.ι₁_desc,
+    f ≫ d = (biproduct.inl ≫ biproduct.desc f (-g)) ≫ d : by rw biproduct.inl_desc
+    ... = biproduct.inl ≫ u : by erw [category.assoc, hd]
+    ... = 0 : biproduct.inl_desc,
 
   -- But f is an epimorphism, so d = 0...
   have : d = 0 := (cancel_epi f).1 (by simpa),
 
   -- ...or, in other words, e = 0.
   calc
-    e = biproduct.ι₂ ≫ u : by rw biproduct.ι₂_desc
-    ... = biproduct.ι₂ ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
-    ... = biproduct.ι₂ ≫ biproduct.desc f (-g) ≫ 0 : by rw this
-    ... = (biproduct.ι₂ ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
+    e = biproduct.inr ≫ u : by rw biproduct.inr_desc
+    ... = biproduct.inr ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
+    ... = biproduct.inr ≫ biproduct.desc f (-g) ≫ 0 : by rw this
+    ... = (biproduct.inr ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
     ... = 0 : has_zero_morphisms.comp_zero _ _ _
 end
 
@@ -347,9 +347,9 @@ instance epi_pullback_of_epi_g [epi g] : epi (pullback.fst : pullback f g ⟶ X)
 -- pullback.fst ≫ e = 0 and show that e = 0.
 (cancel_zero_iff_epi _).2 $ λ R e h,
 begin
-  -- Consider the morphism u := (e, 0) : biproduct X Y ⟶ R.
+  -- Consider the morphism u := (e, 0) : X ⊞ Y ⟶ R.
   let u := biproduct.desc e (0 : Y ⟶ R),
-  -- The composite pullback f g ⟶ biproduct X Y ⟶ R is zero by assumption.
+  -- The composite pullback f g ⟶ X ⊞ Y ⟶ R is zero by assumption.
   have hu : pullback_to_biproduct_is_kernel.pullback_to_biproduct f g ≫ u = 0 := by simpa,
 
   -- pullback_to_biproduct f g is a kernel of (f, -g), so (f, -g) is a
@@ -364,19 +364,19 @@ begin
 
   -- But then (-g) ≫ d = 0:
   have : (-g) ≫ d = 0, calc
-    (-g) ≫ d = (biproduct.ι₂ ≫ biproduct.desc f (-g)) ≫ d : by rw biproduct.ι₂_desc
-    ... = biproduct.ι₂ ≫ u : by erw [category.assoc, hd]
-    ... = 0 : biproduct.ι₂_desc,
+    (-g) ≫ d = (biproduct.inr ≫ biproduct.desc f (-g)) ≫ d : by rw biproduct.inr_desc
+    ... = biproduct.inr ≫ u : by erw [category.assoc, hd]
+    ... = 0 : biproduct.inr_desc,
 
   -- But g is an epimorphism, thus so is -g, so d = 0...
   have : d = 0 := (cancel_epi (-g)).1 (by simpa),
 
   -- ...or, in other words, e = 0.
   calc
-    e = biproduct.ι₁ ≫ u : by rw biproduct.ι₁_desc
-    ... = biproduct.ι₁ ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
-    ... = biproduct.ι₁ ≫ biproduct.desc f (-g) ≫ 0 : by rw this
-    ... = (biproduct.ι₁ ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
+    e = biproduct.inl ≫ u : by rw biproduct.inl_desc
+    ... = biproduct.inl ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
+    ... = biproduct.inl ≫ biproduct.desc f (-g) ≫ 0 : by rw this
+    ... = (biproduct.inl ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
     ... = 0 : has_zero_morphisms.comp_zero _ _ _
 end
 

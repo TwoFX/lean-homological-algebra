@@ -69,7 +69,7 @@ instance {P Q : C} {f : P ⟶ Q} [epi f] : epi (-f) :=
 ⟨λ R g g', by rw [neg_left, neg_left, ←neg_right, ←neg_right, cancel_epi]; exact neg_inj⟩
 
 instance {P Q : C} {f : P ⟶ Q} [mono f] : mono (-f) :=
-⟨λ R g g', by rw [neg_right, neg_right, ←neg_left, ←neg_left, cancel_mono]; exact neg_inj⟩ 
+⟨λ R g g', by rw [neg_right, neg_right, ←neg_left, ←neg_left, cancel_mono]; exact neg_inj⟩
 
 instance preadditive_has_zero_morphisms : has_zero_morphisms.{v} C :=
 { has_zero := infer_instance,
@@ -98,14 +98,13 @@ def has_limit_parallel_pair [has_limit (parallel_pair (f - g) 0)] :
   has_limit (parallel_pair f g) :=
 { cone := fork.of_ι (kernel.ι (f - g)) (sub_eq_zero.1 $
     by rw ←sub_distrib_right; exact kernel.condition _),
-  is_limit :=
-  { lift := λ s, kernel.lift (f - g) (fork.ι s) $
-      by rw sub_distrib_right; apply sub_eq_zero.2; exact fork.condition _,
-    fac' := λ s j, begin cases j, { simp, refl, },
-      { simp, convert cone.w s walking_parallel_pair_hom.left, } end,
-    uniq' := λ s m h, begin
-      ext, convert h walking_parallel_pair.zero, simp, refl,
-    end } }
+  is_limit := fork.is_limit.mk _
+    (λ s, kernel.lift (f - g) (fork.ι s) $
+      by rw sub_distrib_right; apply sub_eq_zero.2; exact fork.condition _)
+    (λ s, by erw limit.lift_π; refl)
+    (λ s m h, by
+      { ext, convert h walking_parallel_pair.zero; erw limit.lift_π, refl }) }
+
 
 end
 
