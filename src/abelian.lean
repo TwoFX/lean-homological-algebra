@@ -210,14 +210,11 @@ begin
   have x := cokernel.transport (kernel.ι f) (fork.ι s) u h,
   apply is_colimit.of_iso_colimit x,
   ext1,
-  tactic.swap,
-  exact i,
-  cases j,
-  { rw cokernel_cofork.app_zero,
-    rw cokernel_cofork.app_zero,
-    rw has_zero_morphisms.zero_comp,
-    refl, },
-  { exact coimage.fac f, }
+  swap,
+  { exact i, },
+  { cases j,
+    { simp only [cokernel_cofork.app_zero, has_zero_morphisms.zero_comp], refl },
+    { exact coimage.fac f } }
 end
 
 end cokernel_of_kernel
@@ -251,12 +248,7 @@ variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
 
 /-- The canonical map `pullback f g ⟶ X ⊞ Y` -/
 abbreviation pullback_to_biproduct : pullback f g ⟶ X ⊞ Y :=
-pullback.fst ≫ biproduct.inl + pullback.snd ≫ biproduct.inr
-
-lemma pullback_to_biproduct_fst : pullback_to_biproduct f g ≫ biproduct.fst = pullback.fst :=
-by simp
-lemma pullback_to_biproduct_snd : pullback_to_biproduct f g ≫ biproduct.snd = pullback.snd :=
-by simp
+biproduct.lift pullback.fst pullback.snd
 
 /-- The canonical map `pullback f g ⟶ X ⊞ Y` induces a kernel cone on the map
     `biproduct X Y ⟶ Z` induced by `f` and `g`. A slightly more intuitive way to think of
@@ -264,36 +256,30 @@ by simp
     `(0, g)`. -/
 def pullback_to_biproduct_fork : fork (biproduct.desc f (-g)) 0 :=
 kernel_fork.of_ι (pullback_to_biproduct f g) $
-begin
-  simp only [distrib_left, biproduct.inl_desc, neg_right, biproduct.inr_desc, category.assoc],
-  exact sub_eq_zero.2 pullback.condition
-end
+  by rw [biproduct.lift_desc, neg_right, pullback.condition, add_right_neg]
+
+local attribute [irreducible] has_limit_cospan_of_has_limit_pair_of_has_limit_parallel_pair
 
 /-- The canonical map `pullback f g ⟶ X ⊞ Y` is a kernel of the map induced by
     `(f, -g)`. -/
 def is_limit_pullback_to_biproduct : is_limit (pullback_to_biproduct_fork f g) :=
 fork.is_limit.mk _
   (λ s, pullback.lift (fork.ι s ≫ biproduct.fst) (fork.ι s ≫ biproduct.snd) $
-  sub_eq_zero.1 $ by erw [category.assoc, category.assoc, ←sub_distrib_right, sub_eq_add_neg,
-    ←neg_right, fork.condition s, has_zero_morphisms.comp_zero]; refl)
+    sub_eq_zero.1 $ by erw [category.assoc, category.assoc, ←sub_distrib_right, sub_eq_add_neg,
+      ←neg_right, fork.condition s, has_zero_morphisms.comp_zero]; refl)
   (λ s,
   begin
     ext; simp only [has_zero_morphisms.comp_zero, neg_right, sub_distrib_right, category.assoc],
-    { erw [pullback_to_biproduct_fst, limit.lift_π],
-      refl },
-    { erw [pullback_to_biproduct_snd, limit.lift_π],
-      refl }
+    { erw [biproduct.lift_fst, limit.lift_π], refl },
+    { erw [biproduct.lift_snd, limit.lift_π], refl }
   end)
   (λ s m h,
   begin
-    apply pullback.hom_ext;
-    erw limit.lift_π,
-    { erw [pullback_cone.mk_π_app_left, ←pullback_to_biproduct_fst, ←category.assoc,
-        h walking_parallel_pair.zero],
-      refl },
-    { erw [pullback_cone.mk_π_app_right, ←pullback_to_biproduct_snd, ←category.assoc,
-        h walking_parallel_pair.zero],
-      refl }
+    ext; erw limit.lift_π,
+    { calc m ≫ pullback.fst = m ≫ pullback_to_biproduct f g ≫ biproduct.fst : by rw biproduct.lift_fst
+        ... = fork.ι s ≫ biproduct.fst : by erw [←category.assoc, h walking_parallel_pair.zero]; refl },
+    { calc m ≫ pullback.snd = m ≫ pullback_to_biproduct f g ≫ biproduct.snd : by rw biproduct.lift_snd
+        ... = fork.ι s ≫ biproduct.snd : by erw [←category.assoc, h walking_parallel_pair.zero]; refl }
   end)
 
 end pullback_to_biproduct_is_kernel

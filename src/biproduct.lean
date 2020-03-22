@@ -114,6 +114,10 @@ by unfold biproduct.desc; simp
   biproduct.inr ≫ biproduct.desc f g = g :=
 by unfold biproduct.desc; simp
 
+@[simp] lemma biproduct.lift_desc {T U : C} {f : T ⟶ X} {g : T ⟶ Y} {h : X ⟶ U} {i : Y ⟶ U} :
+  biproduct.lift f g ≫ biproduct.desc h i = f ≫ h + g ≫ i :=
+by unfold biproduct.lift; unfold biproduct.desc; simp
+
 section
 variables (X Y)
 
@@ -171,17 +175,11 @@ end
 def biproduct.of_prod (X Y : C) [has_limit.{v} (pair X Y)] : has_biproduct.{v} X Y :=
 { P := X ⨯ Y,
   is_biproduct :=
-  { fst := @category_theory.limits.prod.fst _ _ X Y _,
-    snd := @category_theory.limits.prod.snd _ _ X Y _,
+  { fst := prod.fst,
+    snd := prod.snd,
     inl := prod.lift (𝟙 X) 0,
     inr := prod.lift 0 (𝟙 Y),
-    total' :=
-    begin
-      ext j,
-      cases j;
-      simp;
-      erw has_zero_morphisms.comp_zero,
-    end } }
+    total' := by ext j; cases j; simp; erw has_zero_morphisms.comp_zero } }
 
 @[priority 100]
 instance [has_binary_products.{v} C] : has_biproducts.{v} C :=
