@@ -154,10 +154,7 @@ local attribute [instance] with_codomain_to_sort
 lemma pseudo_apply_aux {P Q : C} (f : P ⟶ Q) (a b : with_codomain P) :
   a ≈ b → ⟦app f a⟧ = ⟦app f b⟧ :=
 λ ⟨R, p, q, ep, eq, comm⟩, quotient.sound ⟨R, p, q, ep, eq,
-begin
-  change p ≫ (a.2 ≫ f) = q ≫ (b.2 ≫ f),
-  rw [←category.assoc, comm, category.assoc]
-end⟩
+  show p ≫ a.2 ≫ f = q ≫ b.2 ≫ f, by rw [←category.assoc, comm, category.assoc]⟩
 
 /-- A morphism `f` induces a function `pseudo_apply f` on pseudoelements. -/
 def pseudo_apply {P Q : C} (f : P ⟶ Q) : P → Q :=
