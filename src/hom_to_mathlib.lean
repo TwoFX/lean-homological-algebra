@@ -66,6 +66,19 @@ def kernel.lift' [has_limit (parallel_pair f 0)]
   {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) : { l : Z ⟶ kernel f // l ≫ kernel.ι f = g} :=
 ⟨kernel.lift f g h, by erw limit.lift_π; refl⟩
 
+def kernel.lift'' [has_limit (parallel_pair f 0)]
+  {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) : ∃! l, l ≫ kernel.ι f = g :=
+⟨kernel.lift f g h, by erw limit.lift_π; refl, λ k hk, begin
+  apply is_limit.uniq _ (kernel_fork.of_ι g h),
+  intro j,
+  cases j,
+  exact hk,
+  rw ←cone_parallel_pair_left,
+  rw ←category.assoc,
+  erw hk,
+  refl,
+end⟩
+
 def cokernel.desc' [has_colimit (parallel_pair f 0)]
   {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) : { d : cokernel f ⟶ Z // cokernel.π f ≫ d = g } :=
 ⟨cokernel.desc f g h, by erw colimit.ι_desc; refl⟩

@@ -12,11 +12,12 @@ import algebra.punit_instances
 open linear_map
 
 section four
-variables {R : Type*} [ring R]
-variables {A : Type*} {B : Type*} {C : Type*} {D : Type*}
+universe u
+variables {R : Type u} [ring R]
+variables {A : Type u} {B : Type u} {C : Type u} {D : Type u}
 variables [add_comm_group A] [add_comm_group B] [add_comm_group C] [add_comm_group D]
 variables [module R A] [module R B] [module R C] [module R D]
-variables {A' : Type*} {B' : Type*} {C' : Type*} {D' : Type*}
+variables {A' : Type u} {B' : Type u} {C' : Type u} {D' : Type u}
 variables [add_comm_group A'] [add_comm_group B'] [add_comm_group C'] [add_comm_group D']
 variables [module R A'] [module R B'] [module R C'] [module R D']
 variables {f : A →ₗ[R] B} {g : B →ₗ[R] C} {h : C →ₗ[R] D}
@@ -112,13 +113,13 @@ end
 
 lemma nfour' (hα : α.range = ⊤) (hβ : β.ker = ⊥) (hδ : δ.ker = ⊥) : γ.ker = ⊥ :=
 ker_eq_bot'.2 $ assume (c : C) (hc : γ c = 0),
-  have hhc : c ∈ h.ker, from mem_ker.2 $ ker_eq_bot'.1 hδ (h c) $ 
+  have hhc : c ∈ h.ker, from mem_ker.2 $ ker_eq_bot'.1 hδ (h c) $
     have h' (γ c) = 0, from hc.symm ▸ map_zero h',
     show (δ ∘ h) c = 0, from comm₃ ▸ this,
   match (gh.symm ▸ hhc : c ∈ g.range) with ⟨(b : B), ⟨_, (hb : g b = c)⟩⟩ :=
     have hgb' : β b ∈ g'.ker, from mem_ker.2 $
       have γ (g b) = 0, from hb.symm ▸ hc,
-      show (g' ∘ β) b = 0, from comm₂.symm ▸ this,    
+      show (g' ∘ β) b = 0, from comm₂.symm ▸ this,
     match (fg'.symm ▸ hgb' : β b ∈ f'.range) with ⟨(a' : A'), ⟨_, (ha' : f' a' = β b)⟩⟩ :=
       match range_eq_top.1 hα a' with ⟨(a : A), (ha : α a = a')⟩ :=
         have hb₀ : b ∈ f.range, from ⟨a, ⟨trivial, ker_eq_bot.1 hβ $
@@ -143,7 +144,7 @@ ker_eq_bot'.2 $ assume (c : C) (hc : γ c = 0), show c = 0, from
     calc δ (h c) = h' (γ c) : congr_fun comm₃.symm c
              ... = h' 0     : congr_arg h' hc
              ... = 0        : map_zero h',
-  
+
   -- By exactness, this gives us a preimage b of c under g
   exists.elim (gh.symm ▸ this : c ∈ range g) $ assume (b : B) ⟨_, (hb : g b = c)⟩,
     -- Now we claim that g'(β(b)) = 0,
@@ -152,21 +153,21 @@ ker_eq_bot'.2 $ assume (c : C) (hc : γ c = 0), show c = 0, from
       calc g' (β b) = γ (g b) : congr_fun comm₂ b
                 ... = γ c     : congr_arg γ hb
                 ... = 0       : hc,
-    
+
     -- Again by exactness, we have a preimage a' of β b under f'...
     exists.elim (fg'.symm ▸ this : β b ∈ range f') $ assume (a' : A') ⟨_, (ha' : f' a' = β b)⟩,
       -- ...which in turn, by surjectivity of α, has a preimage a.
       exists.elim (range_eq_top.1 hα a') $ assume (a : A) (ha : α a = a'),
-      
+
       -- We claim that f(a) = b.
-      have f a = b, from 
+      have f a = b, from
         -- By injectivity of β, we might as well check that β(f(a)) = β(b),
         suffices β (f a) = β b, from ker_eq_bot.1 hβ this,
         -- which is true by commutativity.
         calc β (f a) = f' (α a) : congr_fun comm₁.symm a
                  ... = f' a'    : congr_arg f' ha
                  ... = β b      : ha',
-      
+
       -- But now we are done, since going two steps in an exact sequence is zero.
       calc c = g b     : hb.symm
          ... = g (f a) : congr_arg g this.symm
