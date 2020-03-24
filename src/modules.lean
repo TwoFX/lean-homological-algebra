@@ -33,7 +33,7 @@ cokernel_cofork.of_π (up f.range.mkq) $ comp_mkq _
 
 def cokernel_is_colimit : is_colimit (cokernel_cocone f) :=
 cofork.is_colimit.mk _
-  (λ s, f.range.liftq (cofork.π s) $ range_le_ker_iff.2 $ cokernel_cofork.condition s)
+  (λ s, f.range.liftq (cofork.π s) $ linear_map.range_le_ker_iff.2 $ cokernel_cofork.condition s)
   (λ s, f.range.liftq_mkq (cofork.π s) _)
   (λ s m h,
   begin
