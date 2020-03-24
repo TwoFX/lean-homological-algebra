@@ -125,9 +125,8 @@ instance : abelian.{u} (Module.{u} R) :=
     is_limit := begin
       refine kernel.transport _ _ _ _,
       { haveI := m,
-        exact up_equiv (equiv_range_of_ker_bot' f (ker_eq_bot_of_mono f)), },
-      { haveI := m,
-        exact equiv_range_of_ker_bot_fac' f (ker_eq_bot_of_mono f), }
+        exact up_equiv (equiv_range_of_ker_bot f (ker_eq_bot_of_mono f)), },
+      { ext, refl }
     end },
   epi_is_cokernel := λ A B f e,
   { W := of R f.ker,
@@ -137,8 +136,7 @@ instance : abelian.{u} (Module.{u} R) :=
       refine cokernel.transport' _ _ _ _,
       { haveI := e,
         exact up_equiv (equiv_range_of_range_top f (range_eq_top_of_epi f)), },
-      { haveI := e,
-        exact equiv_range_of_range_top_fac f (range_eq_top_of_epi f), },
+      { ext, refl }
     end } }
 
 section
