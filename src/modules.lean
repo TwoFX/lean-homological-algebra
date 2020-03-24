@@ -61,14 +61,14 @@ section products
 def module_has_limit_pair (M N : Module R) : has_limit (pair M N) :=
 { cone := @binary_fan.mk _ _ M N (of R $ M × N) (linear_map.fst R M N) (linear_map.snd R M N),
   is_limit :=
-  { lift := λ s, linear_map.pair (s.π.app walking_pair.left) (s.π.app walking_pair.right),
-    fac' := λ s j, walking_pair.cases_on j (linear_map.fst_pair _ _) (linear_map.snd_pair _ _),
+  { lift := λ s, linear_map.prod (s.π.app walking_pair.left) (s.π.app walking_pair.right),
+    fac' := λ s j, walking_pair.cases_on j (linear_map.fst_prod _ _) (linear_map.snd_prod _ _),
     uniq' := λ s m h,
     begin
       ext,
-      rw linear_map.pair_apply,
-      { rw ←h walking_pair.left, refl, },
-      { rw ←h walking_pair.right, refl, },
+      rw linear_map.prod_apply,
+      { rw ←h walking_pair.left, refl },
+      { rw ←h walking_pair.right, refl }
     end } }
 
 section
@@ -83,12 +83,12 @@ end
 def module_has_colimit_pair (M N : Module R) : has_colimit (pair M N) :=
 { cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (linear_map.inl R M N) (linear_map.inr R M N),
   is_colimit :=
-  { desc := λ s, linear_map.copair (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
-    fac' := λ s j, walking_pair.cases_on j (linear_map.copair_inl _ _) (linear_map.copair_inr _ _),
+  { desc := λ s, linear_map.coprod (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
+    fac' := λ s j, walking_pair.cases_on j (linear_map.coprod_inl _ _) (linear_map.coprod_inr _ _),
     uniq' := λ s m h,
     begin
       ext,
-      erw [linear_map.copair_apply, ←h walking_pair.left, ←h walking_pair.right,
+      erw [linear_map.coprod_apply, ←h walking_pair.left, ←h walking_pair.right,
         binary_cofan.mk_ι_app_left, binary_cofan.mk_ι_app_right, linear_map.comp_apply,
         linear_map.comp_apply, ←linear_map.map_add],
       apply congr_arg,
