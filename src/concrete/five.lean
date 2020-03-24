@@ -6,7 +6,7 @@ Authors: Markus Himmel
 
 import linear_algebra.basic
 import tactic.tidy
-import diagram_chase
+import concrete.diagram_chase
 import algebra.punit_instances
 
 open linear_map
@@ -228,11 +228,13 @@ end
 end four
 
 section five
-variables {R : Type*} [ring R]
-variables {A : Type*} {B : Type*} {C : Type*} {D : Type*} {E :  Type*}
+universe u
+
+variables {R : Type u} [ring R]
+variables {A : Type u} {B : Type u} {C : Type u} {D : Type u} {E :  Type u}
 variables [add_comm_group A] [add_comm_group B] [add_comm_group C] [add_comm_group D] [add_comm_group E]
 variables [module R A] [module R B] [module R C] [module R D] [module R E]
-variables {A' : Type*} {B' : Type*} {C' : Type*} {D' : Type*} {E' : Type*}
+variables {A' : Type u} {B' : Type u} {C' : Type u} {D' : Type u} {E' : Type u}
 variables [add_comm_group A'] [add_comm_group B'] [add_comm_group C'] [add_comm_group D'] [add_comm_group E']
 variables [module R A'] [module R B'] [module R C'] [module R D'] [module R E']
 variables {f : A →ₗ[R] B} {g : B →ₗ[R] C} {h : C →ₗ[R] D} {i : D →ₗ[R] E}

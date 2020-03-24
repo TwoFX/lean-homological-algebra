@@ -32,7 +32,7 @@ Authors: Markus Himmel
 import data.list
 import tactic.tidy
 import linear_algebra
-import transitivity
+import concrete.transitivity
 
 section
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
@@ -49,7 +49,7 @@ variables {R : Type*} [ring R]
 variables {A : Type*} {B : Type*} {C : Type*}
 variables [add_comm_group A] [add_comm_group B] [add_comm_group C]
 variables [module R A] [module R B] [module R C]
-variables {f : A →ₗ[R] B} {g : B →ₗ[R] C} 
+variables {f : A →ₗ[R] B} {g : B →ₗ[R] C}
 
 lemma exact_apply (fg : linear_map.range f = linear_map.ker g) (a : A) : g (f a) = 0 :=
 linear_map.mem_ker.1 $ fg ▸ submodule.mem_map_of_mem trivial
@@ -110,7 +110,7 @@ do
   list.mmap' (λ f, do
     n ← get_unused_name "h",
     tactic.interactive.«have» n ``(%%f %%l = %%f %%r) ``(congr_arg %%f %%h)) funs
-  
+
 
 meta def introduce_map (c : cad) (f : expr) : tactic unit :=
 (do
@@ -314,7 +314,7 @@ do
       chase (pexpr.of_expr q) [(pexpr.of_expr r)] fs ids.tail fin
     ) $
     ite (cod = t') (do
-      (c, d) ← pullback t f' ids.head c, 
+      (c, d) ← pullback t f' ids.head c,
       chase (pexpr.of_expr c) [(pexpr.of_expr d)] fs ids.tail fin) $
     tactic.fail "Cannot chase along this function"
   end

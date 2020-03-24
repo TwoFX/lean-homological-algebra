@@ -8,9 +8,9 @@ import algebra.category.Module.basic
 import linear_algebra.basic
 import abelian
 import exact
-import mod_bot
-import mod_mono_epi
-import mod_to_mathlib
+import modules.trivial_equivalence
+import modules.mono_epi
+import modules.to_mathlib
 
 open category_theory
 open category_theory.limits

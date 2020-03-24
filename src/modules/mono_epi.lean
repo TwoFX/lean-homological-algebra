@@ -6,7 +6,7 @@ Authors: Markus Himmel
 
 import linear_algebra.basic
 import algebra.category.Module.basic
-import mod_to_mathlib
+import modules.to_mathlib
 
 section linear_map
 universes u u' u''

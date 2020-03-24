@@ -310,7 +310,7 @@ variables (θπ : exact θ π) (δκ : exact δ κ) (κρ : exact κ ρ) (εμ :
 include comm₁ comm₂ comm₃ comm₄ comm₅ comm₆
 include αβ ζη νξ τφ γθ θπ δκ κρ εμ μσ
 
-lemma restricted_snake [mono α] [mono ζ] [epi η] [mono ν] [epi ξ] [epi φ] [mono γ] [epi π] [mono δ]
+/-lemma restricted_snake [mono α] [mono ζ] [epi η] [mono ν] [epi ξ] [epi φ] [mono γ] [epi π] [mono δ]
   [epi ρ] [mono ε] [epi σ] : ∃ (ω : C ⟶ J), exact β ω ∧ exact ω τ :=
 begin
   let Z := pullback ε η,
@@ -322,7 +322,7 @@ begin
   let Λ : H ⟶ Y := pushout.inr,
 
   sorry,
-end
+end-/
 
 
 end restricted_snake

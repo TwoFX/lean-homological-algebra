@@ -5,7 +5,7 @@ Authors: Markus Himmel
 -/
 
 import linear_algebra.basic
-import modified_isomorphism_theorem
+import modules.modified_isomorphism_theorem
 
 universes u u' u''
 

@@ -5,11 +5,11 @@ Authors: Markus Himmel
 -/
 
 import linear_algebra.basic
-import modules
+import modules.modules
 import diagram_lemmas
-import module_exact
 
 open linear_map
+open Module
 
 universe u
 

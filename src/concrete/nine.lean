@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Markus Himmel
 -/
 
-import linear_algebra.basic diagram_chase
+import linear_algebra.basic concrete.diagram_chase
 
 open linear_map
 
