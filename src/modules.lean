@@ -9,6 +9,7 @@ import linear_algebra.basic
 import abelian
 import mod_bot
 import mod_mono_epi
+import mod_to_mathlib
 
 open category_theory
 open category_theory.limits
@@ -20,99 +21,34 @@ noncomputable theory
 
 universe u
 
-variables (R : Type u) [ring R]
+variables {R : Type u} [ring R]
 
 namespace Module
 
 section cokernel
-variables (M N : Module R) (f : M ⟶ N)
+variables {M N : Module R} (f : M ⟶ N)
 
 local attribute [instance] has_zero_object.zero_morphisms_of_zero_object
 
 set_option trace.app_builder true
 
-lemma zero_map_apply (x : M) : ((has_zero_morphisms.has_zero.{u} M N).zero : M ⟶ N) x = 0 :=
-begin
-  have : (inhabited.default (M ⟶ (of R punit))) = ((0 : M →ₗ[R] punit) : M ⟶ (of R punit)),
-  { apply has_zero_object.zero_of_to_zero, },
-  conv_lhs { change
-    (inhabited.default (of R punit ⟶ N) : of R punit ⟶ N)
-    ((inhabited.default (M ⟶ of R punit) : M ⟶ of R punit) x) },
-  erw this,
-  rw linear_map.zero_apply,
-  erw linear_map.map_zero,
-end
+def cokernel_cocone : cofork f 0 :=
+cokernel_cofork.of_π (up f.range.mkq) $ comp_mkq _
 
-lemma zero_map : (has_zero_morphisms.has_zero.{u} M N).zero = ((0 : M →ₗ[R] N) : M ⟶ N) :=
-begin
-  ext,
-  rw zero_map_apply,
-  simp,
-end
-
-def cokernel_cocone : cocone (parallel_pair f 0) :=
-{ X := of R f.range.quotient,
-  ι :=
-  { app := λ j,
-    match j with
-    | zero := 0
-    | one := f.range.mkq
-    end,
-    naturality' := λ j j' g, by { cases j; cases j'; cases g,
-      { refl, },
-      { conv_rhs { change (0 : M ⟶ (of R f.range.quotient)) },
-        conv_lhs { change ((f ≫ f.range.mkq) : M ⟶ (of R f.range.quotient)) },
-        ext,
-        simp,
-        rw zero_map,
-        rw linear_map.zero_apply,
-        apply (@linear_map.mem_ker _ _ _ _ _ _ _ _ f.range.mkq (f x)).1,
-        rw submodule.ker_mkq,
-        exact submodule.mem_map_of_mem trivial, },
-      { refl, },
-      { refl, } } } }
-
-lemma b (s : cofork f 0) : f.range ≤ (cofork.π s).ker :=
-begin
-  refine submodule.le_def'.mpr _,
-  intros n hn,
-  apply linear_map.mem_ker.2,
-  cases linear_map.mem_range.1 hn with m hm,
-  rw ←hm,
-  rw ←function.comp_apply (cofork.π s) f,
-  rw ←coe_comp,
-  rw cofork.condition,
-  erw has_zero_morphisms.zero_comp,
-  rw zero_map_apply,
-end
-
-def cokernel_is_colimit : is_colimit (cokernel_cocone _ _ _ f) :=
-{ desc := λ s, f.range.liftq (cofork.π s) (b _ _ _ f s),
-  fac' := λ s j,
-  begin
-    cases j,
-    { erw ←cocone_parallel_pair_right, erw ←cocone_parallel_pair_right,
-      rw has_zero_morphisms.zero_comp,
-      rw has_zero_morphisms.zero_comp,
-      erw has_zero_morphisms.zero_comp,
-      refl, },
-    { convert f.range.liftq_mkq (cofork.π s) (b _ _ _ f s), }
-  end,
-  uniq' := λ s m h,
+def cokernel_is_colimit : is_colimit (cokernel_cocone f) :=
+cofork.is_colimit.mk _
+  (λ s, f.range.liftq (cofork.π s) $ range_le_ker_iff.2 $ cokernel_cofork.condition s)
+  (λ s, f.range.liftq_mkq (cofork.π s) $ range_le_ker_iff.2 $ cokernel_cofork.condition s)
+  (λ s m h,
   begin
     ext,
-    have u := linear_map.range_eq_top.1 (submodule.range_mkq f.range) x,
-    cases u with n hn,
+    cases linear_map.range_eq_top.1 (submodule.range_mkq f.range) x with n hn,
     rw ←hn,
-    conv_rhs { rw ←linear_map.comp_apply },
-    erw f.range.liftq_mkq (cofork.π s) (b _ _ _ f s),
-    have hx := h walking_parallel_pair.one,
-    conv_rhs at hx { change cofork.π s },
-    conv_lhs at hx { congr, change submodule.mkq f.range },
-    rw ←hx,
-    refl,
-  end }
-
+    conv_rhs { erw [←linear_map.comp_apply, submodule.liftq_mkq] },
+    rw ←linear_map.comp_apply,
+    apply linear_map.congr,
+    exact h walking_parallel_pair.one,
+  end)
 
 end cokernel
 
@@ -120,7 +56,7 @@ section cokernel
 local attribute [instance] has_zero_object.zero_morphisms_of_zero_object
 
 instance module_has_cokernels : has_cokernels.{u} (Module R) :=
-⟨λ _ _ f, ⟨cokernel_cocone _ _ _ f, cokernel_is_colimit _ _ _ f⟩⟩
+⟨λ _ _ f, ⟨cokernel_cocone f, cokernel_is_colimit f⟩⟩
 
 end cokernel
 
