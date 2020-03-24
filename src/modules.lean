@@ -7,6 +7,7 @@ Authors: Markus Himmel
 import algebra.category.Module.basic
 import linear_algebra.basic
 import abelian
+import exact
 import mod_bot
 import mod_mono_epi
 import mod_to_mathlib
@@ -16,6 +17,7 @@ open category_theory.limits
 open category_theory.abelian
 open category_theory.preadditive
 open category_theory.limits.walking_parallel_pair
+open linear_map
 
 noncomputable theory
 
@@ -33,15 +35,15 @@ cokernel_cofork.of_π (up f.range.mkq) $ comp_mkq _
 
 def cokernel_is_colimit : is_colimit (cokernel_cocone f) :=
 cofork.is_colimit.mk _
-  (λ s, f.range.liftq (cofork.π s) $ linear_map.range_le_ker_iff.2 $ cokernel_cofork.condition s)
+  (λ s, f.range.liftq (cofork.π s) $ range_le_ker_iff.2 $ cokernel_cofork.condition s)
   (λ s, f.range.liftq_mkq (cofork.π s) _)
   (λ s m h,
   begin
     ext,
-    cases linear_map.range_eq_top.1 (submodule.range_mkq f.range) x with n hn,
+    cases range_eq_top.1 (submodule.range_mkq f.range) x with n hn,
     rw ←hn,
-    conv_rhs { erw [←linear_map.comp_apply, submodule.liftq_mkq] },
-    rw ←linear_map.comp_apply,
+    conv_rhs { erw [←comp_apply, submodule.liftq_mkq] },
+    rw ←comp_apply,
     apply linear_map.congr,
     exact h walking_parallel_pair.one,
   end)
@@ -59,14 +61,14 @@ end cokernel
 section products
 
 def module_has_limit_pair (M N : Module R) : has_limit (pair M N) :=
-{ cone := @binary_fan.mk _ _ M N (of R $ M × N) (linear_map.fst R M N) (linear_map.snd R M N),
+{ cone := @binary_fan.mk _ _ M N (of R $ M × N) (fst R M N) (snd R M N),
   is_limit :=
-  { lift := λ s, linear_map.prod (s.π.app walking_pair.left) (s.π.app walking_pair.right),
-    fac' := λ s j, walking_pair.cases_on j (linear_map.fst_prod _ _) (linear_map.snd_prod _ _),
+  { lift := λ s, prod (s.π.app walking_pair.left) (s.π.app walking_pair.right),
+    fac' := λ s j, walking_pair.cases_on j (fst_prod _ _) (snd_prod _ _),
     uniq' := λ s m h,
     begin
       ext,
-      rw linear_map.prod_apply,
+      rw prod_apply,
       { rw ←h walking_pair.left, refl },
       { rw ←h walking_pair.right, refl }
     end } }
@@ -81,19 +83,17 @@ has_binary_products_of_has_limit_pair (Module R)
 end
 
 def module_has_colimit_pair (M N : Module R) : has_colimit (pair M N) :=
-{ cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (linear_map.inl R M N) (linear_map.inr R M N),
+{ cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (inl R M N) (inr R M N),
   is_colimit :=
-  { desc := λ s, linear_map.coprod (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
-    fac' := λ s j, walking_pair.cases_on j (linear_map.coprod_inl _ _) (linear_map.coprod_inr _ _),
+  { desc := λ s, coprod (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
+    fac' := λ s j, walking_pair.cases_on j (coprod_inl _ _) (coprod_inr _ _),
     uniq' := λ s m h,
     begin
       ext,
-      erw [linear_map.coprod_apply, ←h walking_pair.left, ←h walking_pair.right,
-        binary_cofan.mk_ι_app_left, binary_cofan.mk_ι_app_right, linear_map.comp_apply,
-        linear_map.comp_apply, ←linear_map.map_add],
+      erw [coprod_apply, ←h walking_pair.left, ←h walking_pair.right,
+        binary_cofan.mk_ι_app_left, binary_cofan.mk_ι_app_right, comp_apply, comp_apply, ←map_add],
       apply congr_arg,
-      rw [linear_map.inl_apply, linear_map.inr_apply, prod.mk_add_mk, zero_add, add_zero,
-        prod.mk.eta]
+      rw [inl_apply, inr_apply, prod.mk_add_mk, zero_add, add_zero, prod.mk.eta]
     end } }
 
 section
@@ -140,5 +140,14 @@ instance : abelian.{u} (Module.{u} R) :=
       { haveI := e,
         exact equiv_range_of_range_top_fac f (range_eq_top_of_epi f), },
     end } }
+
+section
+variables {X Y Z : Module R} (f : X ⟶ Y) (g : Y ⟶ Z)
+
+lemma exact_is_exact : exact f g ↔ f.range = g.ker :=
+⟨λ h, le_antisymm (range_le_ker_iff.2 h.1) (ker_le_range_iff.2 h.2),
+ λ h, ⟨range_le_ker_iff.1 $ le_of_eq h, ker_le_range_iff.1 $ le_of_eq h.symm⟩⟩
+
+ end
 
 end Module
