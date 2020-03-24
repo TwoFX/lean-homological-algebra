@@ -28,17 +28,13 @@ namespace Module
 section cokernel
 variables {M N : Module R} (f : M ⟶ N)
 
-local attribute [instance] has_zero_object.zero_morphisms_of_zero_object
-
-set_option trace.app_builder true
-
 def cokernel_cocone : cofork f 0 :=
 cokernel_cofork.of_π (up f.range.mkq) $ comp_mkq _
 
 def cokernel_is_colimit : is_colimit (cokernel_cocone f) :=
 cofork.is_colimit.mk _
   (λ s, f.range.liftq (cofork.π s) $ range_le_ker_iff.2 $ cokernel_cofork.condition s)
-  (λ s, f.range.liftq_mkq (cofork.π s) $ range_le_ker_iff.2 $ cokernel_cofork.condition s)
+  (λ s, f.range.liftq_mkq (cofork.π s) _)
   (λ s m h,
   begin
     ext,
@@ -66,25 +62,13 @@ def module_has_limit_pair (M N : Module R) : has_limit (pair M N) :=
 { cone := @binary_fan.mk _ _ M N (of R $ M × N) (linear_map.fst R M N) (linear_map.snd R M N),
   is_limit :=
   { lift := λ s, linear_map.pair (s.π.app walking_pair.left) (s.π.app walking_pair.right),
-    fac' := λ s j,
-    begin
-      ext,
-      rw coe_comp,
-      rw function.comp_apply,
-      rw ←linear_map.comp_apply,
-      cases j,
-      { erw linear_map.fst_pair, },
-      { erw linear_map.snd_pair, },
-    end,
+    fac' := λ s j, walking_pair.cases_on j (linear_map.fst_pair _ _) (linear_map.snd_pair _ _),
     uniq' := λ s m h,
     begin
       ext,
-      { simp only [linear_map.pair_apply],
-        rw ←h walking_pair.left,
-        refl, },
-      { simp only [linear_map.pair_apply],
-        rw ←h walking_pair.right,
-        refl, },
+      rw linear_map.pair_apply,
+      { rw ←h walking_pair.left, refl, },
+      { rw ←h walking_pair.right, refl, },
     end } }
 
 section
@@ -100,29 +84,16 @@ def module_has_colimit_pair (M N : Module R) : has_colimit (pair M N) :=
 { cocone := @binary_cofan.mk _ _ M N (of R $ M × N) (linear_map.inl R M N) (linear_map.inr R M N),
   is_colimit :=
   { desc := λ s, linear_map.copair (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
-    fac' := λ s j,
-    begin
-      ext,
-      rw coe_comp,
-      rw function.comp_apply,
-      rw ←linear_map.comp_apply,
-      cases j,
-      { erw linear_map.copair_inl, },
-      { erw linear_map.copair_inr, },
-    end,
+    fac' := λ s j, walking_pair.cases_on j (linear_map.copair_inl _ _) (linear_map.copair_inr _ _),
     uniq' := λ s m h,
     begin
       ext,
-      erw linear_map.copair_apply,
-      erw ←h walking_pair.left,
-      erw ←h walking_pair.right,
-      simp only [function.comp_app, coe_comp],
-      rw binary_cofan.mk_ι_app_left,
-      rw binary_cofan.mk_ι_app_right,
-      simp only [linear_map.inl_apply, linear_map.inr_apply],
-      erw ←linear_map.map_add,
-      conv_rhs { change m ((x.fst + 0, 0 + x.snd))},
-      simp only [prod.mk.eta, add_zero, zero_add],
+      erw [linear_map.copair_apply, ←h walking_pair.left, ←h walking_pair.right,
+        binary_cofan.mk_ι_app_left, binary_cofan.mk_ι_app_right, linear_map.comp_apply,
+        linear_map.comp_apply, ←linear_map.map_add],
+      apply congr_arg,
+      rw [linear_map.inl_apply, linear_map.inr_apply, prod.mk_add_mk, zero_add, add_zero,
+        prod.mk.eta]
     end } }
 
 section
@@ -135,18 +106,6 @@ has_binary_coproducts_of_has_colimit_pair (Module R)
 end
 
 end products
-
-attribute [instance] has_zero_object.zero_morphisms_of_zero_object
-
-section
-variables {M N : Module R} (f : M ⟶ N)
-
-lemma kernel_ker : kernel f = f.ker := rfl
-lemma cokernel_quot : cokernel f = of R f.range.quotient := rfl
-
-lemma kernel_ι_subtype : kernel.ι f = f.ker.subtype := rfl
-
-end
 
 instance : abelian.{u} (Module.{u} R) :=
 { hom_group := by apply_instance,
