@@ -51,7 +51,6 @@ cofork.is_colimit.mk _
 end cokernel
 
 section cokernel
-local attribute [instance] has_zero_object.zero_morphisms_of_zero_object
 
 instance module_has_cokernels : has_cokernels.{u} (Module R) :=
 ⟨λ _ _ f, ⟨cokernel_cocone f, cokernel_is_colimit f⟩⟩
