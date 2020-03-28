@@ -80,9 +80,44 @@ meta def element_lemma.symm : element_lemma → tactic element_lemma
 
 meta def morphism.is_zero (m : morphism) : tactic bool :=
 do
-  d ← i_to_expr ``(%%(m.domain) ⟶ %%(m.codomain)),
-  z ← mk_app `has_zero.zero [d],
-  return $ if m.m = z then tt else ff
+  d ← infer_type m.m,
+  z ← i_to_expr ``(0 : %%d),
+
+  -- Why does the following not work?
+  -- z ← mk_app `has_zero.zero [d],
+
+  (do is_def_eq m.m z,
+  return tt) <|> return ff
+
+meta def diagram_term.type : diagram_term → tactic expr
+| ⟨[], e⟩ := infer_type e
+| ⟨t::ts, e⟩ := return t.codomain
+
+meta def diagram_term.zero (t : diagram_term) : tactic diagram_term :=
+do
+  s ← t.type,
+  x ← i_to_expr ``(0 : %%s),
+  return ⟨[], x⟩
+
+/-- Try to generate a proof of `as_expr t = 0`. -/
+meta def diagram_term.to_zero : diagram_term → tactic (option expr)
+| ⟨[], e⟩ := (do
+  d ← infer_type e,
+  f ← i_to_expr ``(0 : %%d),
+  is_def_eq e f,
+  some <$> mk_eq_refl e) <|> return none
+| ⟨t::ts, e⟩ := do
+  z ← t.is_zero,
+  if z then some <$> mk_app
+    `category_theory.abelian.pseudoelements.zero_apply [t.codomain, as_expr ⟨ts, e⟩] else do
+    inner ← diagram_term.to_zero ⟨ts, e⟩,
+    match inner with
+    | none := return none
+    | some i := do
+      fs ← mk_app `congr_arg [t.app, i],
+      sn ← mk_app `category_theory.abelian.pseudoelements.apply_zero [t.m],
+      some <$> mk_eq_trans fs sn
+    end
 
 /-- Try to parse `e` as a morphism. -/
 meta def as_morphism (e : expr) : tactic (option morphism) :=

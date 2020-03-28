@@ -213,7 +213,7 @@ theorem apply_zero {P Q : C} (f : P ⟶ Q) : f 0 = 0 :=
 by erw [pseudo_apply_bar, has_zero_morphisms.zero_comp]; exact zero_eq_zero
 
 /-- The zero morphism maps every pseudoelement to 0. -/
-theorem zero_apply {P Q : C} (a : P) : (0 : P ⟶ Q) a = 0 :=
+theorem zero_apply {P : C} (Q : C) (a : P) : (0 : P ⟶ Q) a = 0 :=
 quotient.induction_on a $ λ a',
   by erw [pseudo_apply_bar, has_zero_morphisms.comp_zero]; exact zero_eq_zero
 
@@ -224,7 +224,7 @@ quotient.induction_on a $ λ a',
   exact h (𝟙 P) }
 
 theorem zero_iff {P Q : C} (f : P ⟶ Q) : f = 0 ↔ ∀ a, f a = 0 :=
-⟨λ h a, by rw h; exact zero_apply _, zero_morphism_ext _⟩
+⟨λ h a, by rw h; exact zero_apply _ _, zero_morphism_ext _⟩
 
 /-- A monomorphism is injective on pseudoelements. -/
 theorem pseudo_injective_of_mono {P Q : C} (f : P ⟶ Q) [mono f] : function.injective f :=
@@ -264,7 +264,7 @@ end
 /-- Two morphisms in an exact sequence are exact on pseudoelements. -/
 theorem pseudo_exact_of_exact {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (h : exact f g) :
   (∀ a, g (f a) = 0) ∧ (∀ b, g b = 0 → ∃ a, f a = b) :=
-⟨λ a, by rw [←comp_apply, h.1]; exact zero_apply _,
+⟨λ a, by rw [←comp_apply, h.1]; exact zero_apply _ _,
   λ b', quotient.induction_on b' $ λ b hb,
     have hb' : b.2 ≫ g = 0, from (pseudo_zero_iff _).1 hb,
     begin

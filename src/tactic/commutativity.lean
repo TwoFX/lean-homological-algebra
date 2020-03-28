@@ -150,32 +150,49 @@ do
   ⟨ms, cs, es⟩ ← get,
   return $ list.join $ list.map (λ l, try_apply_elem_lemma l t) es
 
-meta def find_proof_dfs :
-diagram_term → diagram_term → list diagram_term → chase_tactic (option expr) :=
-λ cur goal seen,
-if cur = goal then some <$> mk_eq_refl (as_expr cur) else
-do
-  -- TODO: zero
-  cands_comm ← try_all_comm cur,
-  cands_elem ← try_all_elem cur,
-  let cands := list.append cands_comm cands_elem,
-
-  list.mfoldl (λ r s,
+meta mutual def show_via_zero, find_proof_dfs
+with show_via_zero : diagram_term → diagram_term → chase_tactic (option expr)
+| cur goal := do
+  l ← diagram_term.to_zero cur,
+  match l with
+  | none := return none
+  | some e := do
+    zer ← goal.zero,
+    r ← find_proof_dfs goal zer [],
     match r with
-    | some q := return $ some q
-    | none :=
-      ite (list.any seen (λ e, if e = (next_term s) then tt else ff)) (return none) $
-      do
-        --trace format!"trying {s}...",
-        l ← find_proof_dfs (next_term s) goal (cur::seen),
-        match l with
-        | none := none
-        | some q := do
-          f ← build_proof cur s,
-          t ← mk_eq_trans f q,
-          return $ some t
-        end
-    end) none cands
+    | none := return none
+    | some f := (mk_eq_symm f) >>= (λ g, some <$> mk_eq_trans e g)
+    end
+  end
+with find_proof_dfs :
+diagram_term → diagram_term → list diagram_term → chase_tactic (option expr)
+| cur goal seen := if cur = goal then some <$> mk_eq_refl (as_expr cur) else
+do
+  via_zero ← show_via_zero cur goal,
+  match via_zero with
+  | some e := return $ some e
+  | none := do
+    cands_comm ← try_all_comm cur,
+    cands_elem ← try_all_elem cur,
+    let cands := list.append cands_comm cands_elem,
+
+    list.mfoldl (λ r s,
+      match r with
+      | some q := return $ some q
+      | none :=
+        ite (list.any seen (λ e, to_bool $ e = (next_term s))) (return none) $
+        do
+          --trace format!"trying {s}...",
+          l ← find_proof_dfs (next_term s) goal (cur::seen),
+          match l with
+          | none := none
+          | some q := do
+            f ← build_proof cur s,
+            t ← mk_eq_trans f q,
+            return $ some t
+          end
+      end) none cands
+    end
 
 meta def find_proof (cur goal : diagram_term) : chase_tactic (option expr) :=
 find_proof_dfs cur goal []
@@ -191,6 +208,15 @@ do
 end tactic.chase
 
 namespace tactic.interactive
+
+open interactive (parse)
+
+meta def to_zero (s : parse lean.parser.pexpr) : tactic unit :=
+do
+  u ← i_to_expr s,
+  some m ← tactic.chase.as_diagram_term u,
+  some e ← tactic.chase.diagram_term.to_zero m,
+  tactic.exact e
 
 meta def commutativity : tactic unit :=
 chase.run_chase_tactic tactic.chase.commutativity

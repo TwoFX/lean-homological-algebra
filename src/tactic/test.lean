@@ -23,11 +23,16 @@ variables (fg : exact f g) (gh : exact g h) (fg' : exact f' g') (gh' : exact g' 
 variables (comm₁ : α ≫ f' = f ≫ β) (comm₂ : β ≫ g' = g ≫ γ) (comm₃ : γ ≫ h' = h ≫ δ)
 include fg gh fg' gh' comm₁ comm₂ comm₃
 
+set_option trace.app_builder true
 
-lemma test (a : A) (b : A') (hh : α a = b) : γ (g (f a)) = g' (f' b) :=
-by commutativity
 
+lemma test (a : A) (b : B) (h₀ : β b = 0) (h₁ : f a = b) : f' (α a) = 0 :=
+begin
+  --to_zero (y (u (g (f a)))),
+  commutativity,
+end
 #print test
+
 
 end four
 
