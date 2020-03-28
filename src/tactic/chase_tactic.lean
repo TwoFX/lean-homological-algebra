@@ -119,6 +119,31 @@ meta def diagram_term.to_zero : diagram_term → tactic (option expr)
       some <$> mk_eq_trans fs sn
     end
 
+meta def is_mono (m : morphism) : tactic bool :=
+(do i_to_expr ``(mono %%(m.m)) >>= mk_instance, return tt) <|> return ff
+
+meta def is_epi (m : morphism) : tactic bool :=
+(do i_to_expr ``(epi %%(m.m)) >>= mk_instance, return tt) <|> return ff
+
+meta def has_domain (e : expr) (m : morphism) : tactic bool :=
+(do is_def_eq m.domain e, return tt) <|> return ff
+
+meta def is_mono_with_domain (e : expr) (m : morphism) : tactic bool :=
+do
+  l ← has_domain e m,
+  match l with
+  | ff := return ff
+  | tt := is_mono m
+  end
+
+meta def monos_with_domain (e : expr) : chase_tactic (list morphism) :=
+do
+  ⟨ms, cs, es⟩ ← get,
+  list.mfilter (λ m, is_mono_with_domain e m) ms
+
+meta def mono_with_domain (e : expr) : chase_tactic (option morphism) :=
+monos_with_domain e >>= (return ∘ list.head')
+
 /-- Try to parse `e` as a morphism. -/
 meta def as_morphism (e : expr) : tactic (option morphism) :=
 do

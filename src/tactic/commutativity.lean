@@ -197,12 +197,27 @@ do
 meta def find_proof (cur goal : diagram_term) : chase_tactic (option expr) :=
 find_proof_dfs cur goal []
 
+meta def inj_find_proof : diagram_term → diagram_term → chase_tactic (option expr)
+| ⟨t, e⟩ ⟨t', e'⟩ := do
+  mm ← diagram_term.type ⟨t, e⟩ >>= mono_with_domain,
+  match mm with
+  | none := find_proof ⟨t, e⟩ ⟨t', e'⟩
+  | some m := do
+    ii ← inj_find_proof ⟨m::t, e⟩ ⟨m::t', e'⟩,
+    match ii with
+    | none := none
+    | some i := some <$> mk_app `category_theory.abelian.pseudoelements.pseudo_injective_of_mono [i]
+    end
+  end
+
+--meta def find_applicable_mono : chase_tactic (option morphism) :=
+
 meta def commutativity : chase_tactic unit :=
 do
   (_, l, r) ← target_lhs_rhs,
   some lhs ← as_diagram_term l,
   some rhs ← as_diagram_term r,
-  some p ← find_proof lhs rhs,
+  some p ← inj_find_proof lhs rhs,
   tactic.exact p
 
 end tactic.chase
@@ -210,13 +225,6 @@ end tactic.chase
 namespace tactic.interactive
 
 open interactive (parse)
-
-meta def to_zero (s : parse lean.parser.pexpr) : tactic unit :=
-do
-  u ← i_to_expr s,
-  some m ← tactic.chase.as_diagram_term u,
-  some e ← tactic.chase.diagram_term.to_zero m,
-  tactic.exact e
 
 meta def commutativity : tactic unit :=
 chase.run_chase_tactic tactic.chase.commutativity

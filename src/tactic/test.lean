@@ -26,7 +26,7 @@ include fg gh fg' gh' comm₁ comm₂ comm₃
 set_option trace.app_builder true
 
 
-lemma test (a : A) (b : B) (h₀ : β b = 0) (h₁ : f a = b) : f' (α a) = 0 :=
+lemma test (a : A) (b : B) (h₀ : β b = 0) (h₁ : f a = b) [mono f'] : α a = 0 :=
 begin
   --to_zero (y (u (g (f a)))),
   commutativity,
