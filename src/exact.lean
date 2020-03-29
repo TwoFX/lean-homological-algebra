@@ -82,6 +82,9 @@ begin
   exact has_zero_morphisms.comp_zero _ _ _,
 end⟩
 
+lemma exact_zero_of_epi' {P Q : C} (f : P ⟶ Q) [epi f] : exact f (0 : Q ⟶ Q) :=
+exact_zero_of_epi _ _
+
 lemma epi_of_exact_zero {P Q : C} (f : P ⟶ Q) (R : C) (h : exact f (0 : Q ⟶ R)) : epi f :=
 (preadditive.cancel_zero_iff_epi f).2 $ λ Z g h₀,
 begin

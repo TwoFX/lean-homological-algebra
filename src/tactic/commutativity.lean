@@ -70,8 +70,9 @@ meta def next_term : lemma_app → diagram_term
 
 meta def apply_comm_lemma_at_aux : ℕ → diagram_term → tactic (option expr)
 | 0 t := some <$> (mk_eq_refl $ as_expr t)
-| (n + 1) ⟨[], _⟩ := none
-| (n + 1) ⟨t::[], e⟩ := none
+| 1 t := some <$> (mk_eq_refl $ as_expr t)
+| (n + 1) ⟨[], _⟩ := return none
+| (n + 1) ⟨t::[], e⟩ := return none
 | (n + 1) ⟨t::(u::ts), e⟩ :=
 do
   some x ← i_to_expr ``(%%(u.m) ≫ %%(t.m)) >>= as_morphism,
@@ -86,7 +87,7 @@ do
   some one ← apply_comm_lemma_at_aux (l.lhs.length) ⟨ms, elem⟩,
   let inner := as_expr ⟨list.drop (l.lhs.length) ms, elem⟩,
   two ← mk_app `tactic.chase.pseudo_congr [l.e, inner],
-  some three ← apply_comm_lemma_at_aux (l.lhs.length) goal,
+  some three ← apply_comm_lemma_at_aux (l.rhs.length) goal,
   three' ← mk_eq_symm three,
   onetwo ← mk_eq_trans one two,
   some <$> mk_eq_trans onetwo three'
@@ -142,13 +143,13 @@ list.filter_map (λ n, try_apply_elem_lemma_at l n t) $ iota t.ms.length
 
 meta def try_all_comm (t : diagram_term) : chase_tactic (list lemma_app) :=
 do
-  ⟨ms, cs, es⟩ ← get,
-  return $ list.join $ list.map (λ l, try_apply_comm_lemma l t) cs
+  l ← get,
+  return $ list.join $ list.map (λ l, try_apply_comm_lemma l t) l.comm_lemmas
 
 meta def try_all_elem (t : diagram_term) : chase_tactic (list lemma_app) :=
 do
-  ⟨ms, cs, es⟩ ← get,
-  return $ list.join $ list.map (λ l, try_apply_elem_lemma l t) es
+  l ← get,
+  return $ list.join $ list.map (λ l, try_apply_elem_lemma l t) l.elem_lemmas
 
 meta mutual def show_via_zero, find_proof_dfs
 with show_via_zero : diagram_term → diagram_term → chase_tactic (option expr)
@@ -194,30 +195,28 @@ do
       end) none cands
     end
 
-meta def find_proof (cur goal : diagram_term) : chase_tactic (option expr) :=
+meta def find_direct_proof (cur goal : diagram_term) : chase_tactic (option expr) :=
 find_proof_dfs cur goal []
 
-meta def inj_find_proof : diagram_term → diagram_term → chase_tactic (option expr)
+meta def find_proof : diagram_term → diagram_term → chase_tactic (option expr)
 | ⟨t, e⟩ ⟨t', e'⟩ := do
   mm ← diagram_term.type ⟨t, e⟩ >>= mono_with_domain,
   match mm with
-  | none := find_proof ⟨t, e⟩ ⟨t', e'⟩
+  | none := find_direct_proof ⟨t, e⟩ ⟨t', e'⟩
   | some m := do
-    ii ← inj_find_proof ⟨m::t, e⟩ ⟨m::t', e'⟩,
+    ii ← find_proof ⟨m::t, e⟩ ⟨m::t', e'⟩,
     match ii with
     | none := none
     | some i := some <$> mk_app `category_theory.abelian.pseudoelements.pseudo_injective_of_mono [i]
     end
   end
 
---meta def find_applicable_mono : chase_tactic (option morphism) :=
-
 meta def commutativity : chase_tactic unit :=
 do
   (_, l, r) ← target_lhs_rhs,
   some lhs ← as_diagram_term l,
   some rhs ← as_diagram_term r,
-  some p ← inj_find_proof lhs rhs,
+  some p ← find_proof lhs rhs,
   tactic.exact p
 
 end tactic.chase

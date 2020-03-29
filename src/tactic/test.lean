@@ -1,6 +1,7 @@
 import tactic.commutativity
 import category_theory.category
 import pseudoelements
+import tactic.diagram_chase
 
 open category_theory
 open category_theory.abelian
@@ -23,15 +24,19 @@ variables (fg : exact f g) (gh : exact g h) (fg' : exact f' g') (gh' : exact g' 
 variables (comm₁ : α ≫ f' = f ≫ β) (comm₂ : β ≫ g' = g ≫ γ) (comm₃ : γ ≫ h' = h ≫ δ)
 include fg gh fg' gh' comm₁ comm₂ comm₃
 
-set_option trace.app_builder true
+set_option profiler true
 
-
-lemma test (a : A) (b : B) (h₀ : β b = 0) (h₁ : f a = b) [mono f'] : α a = 0 :=
+lemma four (hα : epi α) (hβ : mono β) (hδ : mono δ) : mono γ :=
 begin
-  --to_zero (y (u (g (f a)))),
+  apply mono_of_zero_of_map_zero,
+  intros c hc,
+  chase c using [g, β, f', α] with b b' a' a,
+  have : f a = b, by commutativity,
   commutativity,
 end
-#print test
+
+#print four
+
 
 
 end four
