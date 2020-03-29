@@ -37,8 +37,17 @@ end
 
 #print four
 
-
-
 end four
+
+section
+variables {A B C D E : V} (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (α : A ⟶ E) (β : E ⟶ D)
+
+lemma l (c : f ≫ g ≫ h = α ≫ β) (a : A) : h (g (f a)) = β (α a) :=
+begin
+  commutativity,
+end
+
+
+end
 
 end

@@ -132,7 +132,7 @@ instance : abelian.{u} (Module.{u} R) :=
     g := f.ker.subtype,
     w := ker_comp f,
     is_colimit := begin
-      refine cokernel.transport' _ _ _ _,
+      refine cokernel.transport _ _ _ _,
       { haveI := e,
         exact up_equiv (equiv_range_of_range_top f (range_eq_top_of_epi f)), },
       { ext, refl }

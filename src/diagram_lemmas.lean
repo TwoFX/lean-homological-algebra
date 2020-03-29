@@ -9,6 +9,7 @@ import abelian
 import exact
 import hom_to_mathlib
 import pseudoelements
+import tactic.diagram_chase
 
 open category_theory
 open category_theory.limits
@@ -294,6 +295,42 @@ end cokernels
 
 end
 
+namespace kernels_full
+variables {V : Type u} [𝒱 : category.{v} V] [abelian.{v} V]
+include 𝒱
+
+variables {A B C D E F G H I : V}
+variables {γ : A ⟶ D} {δ : B ⟶ E} {ε : C ⟶ F} {θ : D ⟶ G} {l : E ⟶ H} {μ : F ⟶ I}
+variables {ζ : D ⟶ E} {η : E ⟶ F} {ν : G ⟶ H} {ξ : H ⟶ I}
+variables (comm₁ : ζ ≫ l = θ ≫ ν) (comm₂ : η ≫ μ = l ≫ ξ)
+variables (γθ : exact γ θ) (δl : exact δ l) (εμ : exact ε μ)
+variables (ζη : exact ζ η) (νξ : exact ν ξ)
+include comm₁ comm₂ γθ δl εμ ζη νξ
+
+def fill_left [mono δ] : { x : A ⟶ B // x ≫ δ = γ ≫ ζ } :=
+limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ δl) (γ ≫ ζ) $
+  by { rw category.assoc, ext, simp only [comp_apply], commutativity }
+
+def fill_right [mono ε] : { x : B ⟶ C // x ≫ ε = δ ≫ η } :=
+limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ εμ) (δ ≫ η) $
+  by { rw category.assoc, ext, simp only [comp_apply], commutativity }
+
+variables {α : A ⟶ B} {β : B ⟶ C}
+variables (comm₃ : α ≫ δ = γ ≫ ζ) (comm₄ : β ≫ ε = δ ≫ η)
+include comm₃ comm₄
+
+lemma kernels [mono δ] [mono ε] [mono ν] : exact α β :=
+begin
+  apply exact_of_pseudo_exact,
+  split,
+  { intro a,
+    commutativity },
+  { intros b hb,
+    chase b using [δ, ζ, γ] with e d a,
+    exact ⟨a, by commutativity⟩ }
+end
+
+end kernels_full
 section restricted_snake
 variables {c : Type u} [𝒞 : category.{v} c] [abelian.{v} c]
 include 𝒞
@@ -310,19 +347,54 @@ variables (θπ : exact θ π) (δκ : exact δ κ) (κρ : exact κ ρ) (εμ :
 include comm₁ comm₂ comm₃ comm₄ comm₅ comm₆
 include αβ ζη νξ τφ γθ θπ δκ κρ εμ μσ
 
-/-lemma restricted_snake [mono α] [mono ζ] [epi η] [mono ν] [epi ξ] [epi φ] [mono γ] [epi π] [mono δ]
+lemma restricted_snake [mono α] [mono ζ] [epi η] [mono ν] [epi ξ] [epi φ] [mono γ] [epi π] [mono δ]
   [epi ρ] [mono ε] [epi σ] : ∃ (ω : C ⟶ J), exact β ω ∧ exact ω τ :=
 begin
   let Z := pullback ε η,
   let Δ : Z ⟶ C := pullback.fst,
   let Γ : Z ⟶ E := pullback.snd,
+  have comm₇ : Δ ≫ ε = Γ ≫ η := pullback.condition,
 
   let Y := pushout π ν,
   let Ξ : J ⟶ Y := pushout.inl,
   let Λ : H ⟶ Y := pushout.inr,
+  have comm₈ : π ≫ Ξ = ν ≫ Λ := pushout.condition,
+
+  let X := kernel Δ,
+  let S : X ⟶ Z := kernel.ι Δ,
+
+  let W := cokernel Ξ,
+  let Υ := cokernel.π Ξ,
+
+  have SΔ : exact S Δ := kernel_exact _,
+  have ΞΥ : exact Ξ Υ := cokernel_exact _,
+
+  have : (S ≫ Γ) ≫ η = 0,
+  { rw category.assoc,
+    ext,
+    simp only [comp_apply],
+    commutativity, },
+  let HΨ := limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ ζη) (S ≫ Γ) this,
+  let Ψ : X ⟶ D := HΨ.1,
+  have hΨ : Ψ ≫ ζ = S ≫ Γ := HΨ.2,
+
+  have : ν ≫ Λ ≫ Υ = 0,
+  { ext,
+    simp only [comp_apply],
+    commutativity, },
+  let HΩ := colimit_cokernel_cofork.desc' _ (cokernel_of_epi_exact _ _ νξ) (Λ ≫ Υ) this,
+  let Ω : I ⟶ W := HΩ.1,
+  have hΩ : ξ ≫ Ω = Λ ≫ Υ := HΩ.2,
+
+  have : S ≫ Γ ≫ κ ≫ Λ = 0,
+  { ext, simp only [comp_apply], commutativity, },
+
+
+
+
 
   sorry,
-end-/
+end
 
 
 end restricted_snake

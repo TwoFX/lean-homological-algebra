@@ -83,17 +83,28 @@ def cokernel.desc' [has_colimit (parallel_pair f 0)]
   {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) : { d : cokernel f ⟶ Z // cokernel.π f ≫ d = g } :=
 ⟨cokernel.desc f g h, by erw colimit.ι_desc; refl⟩
 
+def kernel.transport' [has_limit (parallel_pair f 0)]
+  {Z : C} (l : X ⟶ Z) (i : Z ≅ Y) (h : l ≫ i.hom = f) :
+  is_limit (kernel_fork.of_ι (kernel.ι f) $ show kernel.ι f ≫ l = 0,
+    by rw [←(iso.comp_inv_eq i).2 h.symm, ←category.assoc,
+      kernel.condition, has_zero_morphisms.zero_comp]) :=
+fork.is_limit.mk _
+  (λ s, kernel.lift f (fork.ι s) $
+    by erw [←h, ←category.assoc, fork.condition, has_zero_morphisms.comp_zero,
+      has_zero_morphisms.zero_comp])
+  (λ s, by erw limit.lift_π; refl)
+  (λ s m h, by ext; rw limit.lift_π; exact h walking_parallel_pair.zero)
 
-def cokernel.transport [has_colimit (parallel_pair f 0)]
+def cokernel.transport' [has_colimit (parallel_pair f 0)]
   {Z : C} (l : Z ⟶ Y) (i : X ≅ Z) (h : i.hom ≫ l = f) :
   is_colimit (cokernel_cofork.of_π (cokernel.π f) $ show l ≫ cokernel.π f = 0,
   by rw [(iso.eq_inv_comp i).2 h, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]) :=
 cofork.is_colimit.mk _
   (λ s, cokernel.desc f (cofork.π s) $
     by erw [←h, category.assoc, cofork.condition,
-    has_zero_morphisms.zero_comp, has_zero_morphisms.comp_zero])
-   (λ s, by erw colimit.ι_desc; refl)
-   (λ s m h, by ext; rw colimit.ι_desc; exact h walking_parallel_pair.one)
+      has_zero_morphisms.zero_comp, has_zero_morphisms.comp_zero])
+  (λ s, by erw colimit.ι_desc; refl)
+  (λ s m h, by ext; rw colimit.ι_desc; exact h walking_parallel_pair.one)
 
 def kernel.transport [has_limit (parallel_pair f 0)]
   {Z : C} (l : Z ⟶ X) (i : Z ≅ kernel f) (h : i.hom ≫ kernel.ι f = l) :
@@ -115,7 +126,7 @@ fork.is_limit.mk _
     exact h' walking_parallel_pair.zero,
   end)
 
-def cokernel.transport' [has_colimit (parallel_pair f 0)]
+def cokernel.transport [has_colimit (parallel_pair f 0)]
   {Z : C} (l : Y ⟶ Z) (i : cokernel f ≅ Z) (h : cokernel.π f ≫ i.hom = l) :
   is_colimit (cokernel_cofork.of_π l $
     by rw [←h, ←category.assoc, cokernel.condition, has_zero_morphisms.zero_comp]) :=

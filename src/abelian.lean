@@ -207,7 +207,7 @@ begin
     functor.map_iso (cones.forget _) (is_limit.unique_up_to_iso (limit.is_limit _) h),
   have h : u.hom ≫ fork.ι s = kernel.ι f :=
     cone_morphism.w (is_limit.unique_up_to_iso (limit.is_limit _) h).hom walking_parallel_pair.zero,
-  have x := cokernel.transport (kernel.ι f) (fork.ι s) u h,
+  have x := cokernel.transport' (kernel.ι f) (fork.ι s) u h,
   apply is_colimit.of_iso_colimit x,
   ext1,
   swap,
@@ -215,6 +215,33 @@ begin
   { cases j,
     { simp only [cokernel_cofork.app_zero, has_zero_morphisms.zero_comp], refl },
     { exact coimage.fac f } }
+end
+
+/-- If `f` is a monomorphism is `s` is some colimit cokernel cocone on `f`, then `f` is a kernel
+    of `cofork.π s`. -/
+def mono_is_kernel_of_cokernel [mono f] (s : cofork f 0) (h : is_colimit s) :
+  is_limit (kernel_fork.of_ι f (cokernel_cofork.condition s)) :=
+begin
+  haveI : mono (factor_thru_image f) := mono_of_mono_fac (image.fac f),
+  haveI : is_iso (factor_thru_image f) := mono_epi_iso (factor_thru_image f),
+  let i : X ≅ kernel (cokernel.π f) := as_iso (factor_thru_image f),
+  let u : cokernel f ≅ s.X :=
+    functor.map_iso (cocones.forget _) (is_colimit.unique_up_to_iso (colimit.is_colimit _) h),
+  have h : cokernel.π f ≫ u.hom = cofork.π s :=
+    cocone_morphism.w (limits.is_colimit.unique_up_to_iso (colimit.is_colimit _) h).hom
+      walking_parallel_pair.one,
+  have x := kernel.transport' (cokernel.π f) (cofork.π s) u.symm begin
+    symmetry,
+    exact (iso.eq_comp_inv u).2 h,
+  end,
+  apply is_limit.of_iso_limit x,
+  ext1,
+  swap,
+  { exact i.symm, },
+  { cases j,
+    { apply (iso.eq_inv_comp i).2, exact image.fac f, },
+    { apply (iso.eq_inv_comp i).2,
+      erw [kernel_fork.app_one, kernel_fork.app_one, has_zero_morphisms.comp_zero], refl } }
 end
 
 end cokernel_of_kernel
