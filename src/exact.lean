@@ -129,7 +129,7 @@ begin
   haveI : epi (factor_thru_coimage g) := epi_of_epi_fac (coimage.fac g),
   haveI : is_iso (factor_thru_coimage g) := mono_epi_iso _,
   let j : I ≅ R := as_iso (factor_thru_coimage g),
-  apply cokernel.transport' _ _ (i ≪≫ j),
+  apply cokernel.transport _ _ (i ≪≫ j),
   erw [←category.assoc, h₀, coimage.fac],
 end
 

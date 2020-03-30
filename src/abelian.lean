@@ -281,7 +281,7 @@ biproduct.lift pullback.fst pullback.snd
     `biproduct X Y ⟶ Z` induced by `f` and `g`. A slightly more intuitive way to think of
     this may be that it induces an equalizer fork on the maps induced by `(f, 0)` and
     `(0, g)`. -/
-def pullback_to_biproduct_fork : fork (biproduct.desc f (-g)) 0 :=
+def pullback_to_biproduct_fork : kernel_fork (biproduct.desc f (-g)) :=
 kernel_fork.of_ι (pullback_to_biproduct f g) $
   by rw [biproduct.lift_desc, neg_right, pullback.condition, add_right_neg]
 
@@ -310,6 +310,40 @@ fork.is_limit.mk _
   end)
 
 end pullback_to_biproduct_is_kernel
+
+namespace biproduct_to_pushout_is_cokernel
+variables {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z)
+
+abbreviation biproduct_to_pushout : Y ⊞ Z ⟶ pushout f g :=
+biproduct.desc pushout.inl pushout.inr
+
+def biproduct_to_pushout_cofork : cokernel_cofork (biproduct.lift f (-g)) :=
+cokernel_cofork.of_π (biproduct_to_pushout f g) $
+  by rw [biproduct.lift_desc, neg_left, pushout.condition, add_right_neg]
+
+local attribute [irreducible] has_colimit_span_of_has_colimit_pair_of_has_colimit_parallel_pair
+
+def is_colimit_biproduct_to_pushout : is_colimit (biproduct_to_pushout_cofork f g) :=
+cofork.is_colimit.mk _
+  (λ s, pushout.desc (biproduct.inl ≫ cofork.π s) (biproduct.inr ≫ cofork.π s) $
+    sub_eq_zero.1 $ by erw [←category.assoc, ←category.assoc, ←sub_distrib_left, sub_eq_add_neg,
+      ←neg_left, cofork.condition s, has_zero_morphisms.zero_comp]; refl)
+  (λ s,
+  begin
+    ext,
+    { erw [←category.assoc, biproduct.inl_desc, colimit.ι_desc], refl },
+    { erw [←category.assoc, biproduct.inr_desc, colimit.ι_desc], refl }
+  end)
+  (λ s m h,
+  begin
+    ext; erw colimit.ι_desc,
+    { calc pushout.inl ≫ m = (biproduct.inl ≫ biproduct_to_pushout f g) ≫ m : by rw biproduct.inl_desc
+        ... = biproduct.inl ≫ cofork.π s : by erw [category.assoc, h walking_parallel_pair.one]; refl },
+    { calc pushout.inr ≫ m = (biproduct.inr ≫ biproduct_to_pushout f g) ≫ m : by rw biproduct.inr_desc
+        ... = biproduct.inr ≫ cofork.π s : by erw [category.assoc, h walking_parallel_pair.one]; refl }
+  end)
+
+end biproduct_to_pushout_is_cokernel
 
 section epi_pullback
 variables  {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
@@ -394,5 +428,66 @@ begin
 end
 
 end epi_pullback
+
+section mono_pushout
+variables {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z)
+
+instance mono_pushout_of_mono_f [mono f] : mono (pushout.inr : Z ⟶ pushout f g) :=
+(cancel_zero_iff_mono _).2 $ λ R e h,
+begin
+  let u := biproduct.lift (0 : R ⟶ Y) e,
+  have hu : u ≫ biproduct_to_pushout_is_cokernel.biproduct_to_pushout f g = 0 := by simpa,
+
+  have := mono_is_kernel_of_cokernel _
+    (biproduct_to_pushout_is_cokernel.is_colimit_biproduct_to_pushout f g),
+
+  obtain ⟨d, hd⟩ := limit_kernel_fork.lift' _ this u hu,
+  change R ⟶ X at d,
+  change d ≫ biproduct.lift f (-g) = u at hd,
+
+  have : d ≫ f = 0, calc
+    d ≫ f = d ≫ biproduct.lift f (-g) ≫ biproduct.fst : by rw biproduct.lift_fst
+    ... = u ≫ biproduct.fst : by erw [←category.assoc, hd]
+    ... = 0 : biproduct.lift_fst,
+
+  have : d = 0 := (cancel_mono f).1 (by simpa),
+
+  calc
+    e = u ≫ biproduct.snd : by rw biproduct.lift_snd
+    ... = (d ≫ biproduct.lift f (-g)) ≫ biproduct.snd : by rw ←hd
+    ... = (0 ≫ biproduct.lift f (-g)) ≫ biproduct.snd : by rw this
+    ... = 0 ≫ biproduct.lift f (-g) ≫ biproduct.snd : by rw category.assoc
+    ... = 0 : has_zero_morphisms.zero_comp _ _ _
+end
+
+instance mono_pushout_of_mono_g [mono g] : mono (pushout.inl : Y ⟶ pushout f g) :=
+(cancel_zero_iff_mono _).2 $ λ R e h,
+begin
+  let u := biproduct.lift e (0 : R ⟶ Z),
+  have hu : u ≫ biproduct_to_pushout_is_cokernel.biproduct_to_pushout f g = 0 := by simpa,
+
+  have := mono_is_kernel_of_cokernel _
+    (biproduct_to_pushout_is_cokernel.is_colimit_biproduct_to_pushout f g),
+
+  obtain ⟨d, hd⟩ := limit_kernel_fork.lift' _ this u hu,
+  change R ⟶ X at d,
+  change d ≫ biproduct.lift f (-g) = u at hd,
+
+  have : d ≫ (-g) = 0, calc
+    d ≫ (-g) = d ≫ biproduct.lift f (-g) ≫ biproduct.snd : by rw biproduct.lift_snd
+    ... = u ≫ biproduct.snd : by erw [←category.assoc, hd]
+    ... = 0 : biproduct.lift_snd,
+
+  have : d = 0 := (cancel_mono (-g)).1 (by simpa),
+
+  calc
+    e = u ≫ biproduct.fst : by rw biproduct.lift_fst
+    ... = (d ≫ biproduct.lift f (-g)) ≫ biproduct.fst : by rw ←hd
+    ... = (0 ≫ biproduct.lift f (-g)) ≫ biproduct.fst : by rw this
+    ... = 0 ≫ biproduct.lift f (-g) ≫ biproduct.fst : by rw category.assoc
+    ... = 0 : has_zero_morphisms.zero_comp _ _ _
+end
+
+end mono_pushout
 
 end category_theory.abelian

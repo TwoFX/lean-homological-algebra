@@ -62,7 +62,7 @@ lemma comm₈ : π ≫ Ξ = ν ≫ Λ := pushout.condition
 instance monoΞ : mono Ξ :=
 begin
   dunfold Ξ,
-  sorry,
+  apply_instance,
 end
 
 def X := kernel Δ
@@ -197,7 +197,6 @@ begin
     commutativity, }
 end
 
-#print ωτ
 end
 
 --end restricted_snake_internal
