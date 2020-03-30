@@ -11,6 +11,8 @@ import hom_to_mathlib
 import pseudoelements
 import tactic.diagram_chase
 
+
+--namespace restricted_snake_internal
 open category_theory
 open category_theory.limits
 open category_theory.abelian
@@ -19,8 +21,8 @@ open category_theory.abelian.pseudoelements
 local attribute [instance] object_to_sort
 local attribute [instance] hom_to_fun
 
+section
 universes v u
-section restricted_snake
 parameters {V : Type u} [𝒞 : category.{v} V] [abelian.{v} V]
 include 𝒞
 
@@ -33,9 +35,13 @@ parameters (comm₁ : α ≫ δ = γ ≫ ζ) (comm₂ : β ≫ ε = δ ≫ η) (
 parameters (comm₄ : η ≫ μ = κ ≫ ξ) (comm₅ : ν ≫ ρ = π ≫ τ) (comm₆ : ξ ≫ σ = ρ ≫ φ)
 parameters (αβ : exact α β) (ζη : exact ζ η) (νξ : exact ν ξ) (τφ : exact τ φ) (γθ : exact γ θ)
 parameters (θπ : exact θ π) (δκ : exact δ κ) (κρ : exact κ ρ) (εμ : exact ε μ) (μσ : exact μ σ)
-parameters [mono ζ] [epi ξ] [epi η] [mono ν]
+parameters [mono ζ] [epi ξ] [epi η] [mono ν] [mono ε] [epi π]
 include comm₁ comm₂ comm₃ comm₄ comm₅ comm₆
 include αβ ζη νξ τφ γθ θπ δκ κρ εμ μσ
+
+
+parameters {comm₁} {comm₂} {comm₃} {comm₄} {comm₅} {comm₆}
+parameters {αβ} {ζη} {νξ} {τφ} {γθ} {θπ} {δκ} {κρ} {εμ} {μσ}
 
 def Z : V := pullback ε η
 def Δ : Z ⟶ C := pullback.fst
@@ -74,7 +80,7 @@ begin
   ext,
   simp only [comp_apply],
   have := SΔ,
-  have := comm₇,
+  have : Δ ≫ ε = Γ ≫ η := comm₇,
   commutativity,
 end
 
@@ -143,32 +149,55 @@ begin
   commutativity,
 end
 
-lemma restricted_snake : ∃ (ω : C ⟶ J), exact β ω ∧ exact ω τ :=
+theorem βω : exact β ω :=
 begin
   have := hω,
   have := hχ,
   have := comm₇,
   have := comm₈,
-  use ω,
+  apply exact_of_pseudo_exact,
   split,
-  { split,
-    { ext b,
-      simp only [comp_apply],
-      chase b using [β] with c,
-      chase b using [δ] with e,
-      have h₁ : η e = ε c, by commutativity,
-      chase e using [κ, ν] with h g,
-      have : ν g = 0, by commutativity,
-      have : g = 0, -- This should be automatic!
-      { apply pseudo_injective_of_mono ν,
-        commutativity, },
-      have h₂ : ν g = κ e, by commutativity,
-      have := ω_char _ _ _ h₁ h₂,
-      commutativity,
-
-       },
-    }
+  { intro b,
+    chase b using [β] with c,
+    chase b using [δ] with e,
+    have h₁ : η e = ε c, by commutativity,
+    chase e using [κ, ν] with h g,
+    have : ν g = 0, by commutativity,
+    have : g = 0, -- This should be automatic!
+    { apply pseudo_injective_of_mono ν,
+      commutativity, },
+    have h₂ : ν g = κ e, by commutativity,
+    have := ω_char _ _ _ h₁ h₂,
+    commutativity, },
+  { intros c hc,
+    chase c using [ε, η, κ, ν] with f e h g,
+    have := ω_char c e g (by commutativity) (by commutativity),
+    chase g using [θ] with d,
+    have : κ (ζ d) = κ e, by commutativity,
+    obtain ⟨z, hz₁, hz₂⟩ := sub_of_eq_image _ _ _ this.symm,
+    chase z using [δ] with b,
+    have : η (ζ d) = 0, by commutativity,
+    have := hz₂ _ _ this,
+    use b,
+    commutativity, }
 end
 
+theorem ωτ : exact ω τ :=
+begin
+  apply exact_of_pseudo_exact,
+  split,
+  { intro c,
+    chase c using [ε, η, κ, ν] with f e h g,
+    have := ω_char c e g (by commutativity) (by commutativity),
+    commutativity, },
+  { intros j hj,
+    chase j using [π, ν, κ, η, ε] with g h e f c,
+    have := ω_char c e g (by commutativity) (by commutativity),
+    use c,
+    commutativity, }
+end
 
-end restricted_snake
+#print ωτ
+end
+
+--end restricted_snake_internal

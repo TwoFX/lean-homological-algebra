@@ -174,7 +174,10 @@ list.mfilter is_epi e
 meta def as_morphism (e : expr) : tactic (option morphism) :=
 do
   `(%%l ⟶ %%r) ← infer_type e | return none,
+  trace "A",
+  trace e,
   app ← mk_app `coe_fn [e],
+  trace "A'",
   return $ some ⟨e, l, r, app⟩
 
 /-- Try to parse `e` as a morphism chain. -/
@@ -202,7 +205,9 @@ do
 meta def as_diagram_term : expr → tactic (option diagram_term) := λ e,
 do
   `(coe_sort %%l) ← infer_type e | return none,
+  trace "B",
   expr.app `(coe_fn %%f) `(%%x) ← return e | return $ some ⟨[], e⟩,
+  trace "B'",
   some dt ← as_diagram_term x,
   some F ← as_morphism f,
   return $ some ⟨(F::diagram_term.ms dt), diagram_term.elem dt⟩
