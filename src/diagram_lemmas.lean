@@ -151,15 +151,40 @@ include comm₁ comm₂ γθ δl εμ ζη νξ
 
 def fill_left [mono δ] : { x : A ⟶ B // x ≫ δ = γ ≫ ζ } :=
 limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ δl) (γ ≫ ζ) $
-  by { rw category.assoc, ext, simp only [comp_apply], commutativity }
+  by rw [category.assoc, comm₁, ←category.assoc, γθ.1, has_zero_morphisms.zero_comp]
+
 
 def fill_right [mono ε] : { x : B ⟶ C // x ≫ ε = δ ≫ η } :=
 limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ εμ) (δ ≫ η) $
-  by { rw category.assoc, ext, simp only [comp_apply], commutativity }
+  by rw [category.assoc, comm₂, ←category.assoc, δl.1, has_zero_morphisms.zero_comp]
 
 variables {α : A ⟶ B} {β : B ⟶ C}
 variables (comm₃ : α ≫ δ = γ ≫ ζ) (comm₄ : β ≫ ε = δ ≫ η)
 include comm₃ comm₄
+
+lemma fill_left_unique [mono δ] : α = fill_left comm₁ comm₂ γθ δl εμ ζη νξ :=
+begin
+  apply (kernel_of_mono_exact _ _ δl).hom_ext,
+  intro j,
+  cases j,
+  { erw (fill_left comm₁ comm₂ γθ δl εμ ζη νξ).2,
+    erw comm₃ },
+  { simp only [kernel_fork.app_one],
+    erw has_zero_morphisms.comp_zero,
+    erw has_zero_morphisms.comp_zero }
+end
+
+lemma fill_right_unique [mono ε] : β = fill_right comm₁ comm₂ γθ δl εμ ζη νξ :=
+begin
+  apply (kernel_of_mono_exact _ _ εμ).hom_ext,
+  intro j,
+  cases j,
+  { erw (fill_right comm₁ comm₂ γθ δl εμ ζη νξ).2,
+    erw comm₄ },
+  { simp only [kernel_fork.app_one],
+    erw has_zero_morphisms.comp_zero,
+    erw has_zero_morphisms.comp_zero }
+end
 
 lemma kernels [mono δ] [mono ε] [mono ν] : exact α β :=
 begin
