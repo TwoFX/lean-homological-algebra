@@ -42,23 +42,25 @@ attribute [chase] exact_snake_diagram.μσ
 
 variable {V}
 
-@[chase] abbreviation myα (d : exact_snake_diagram.{v} V) := d.α
-@[chase] abbreviation myβ (d : exact_snake_diagram.{v} V) := d.β
-@[chase] abbreviation myγ (d : exact_snake_diagram.{v} V) := d.γ
-@[chase] abbreviation myδ (d : exact_snake_diagram.{v} V) := d.δ
-@[chase] abbreviation myε (d : exact_snake_diagram.{v} V) := d.ε
-@[chase] abbreviation myζ (d : exact_snake_diagram.{v} V) := d.ζ
-@[chase] abbreviation myη (d : exact_snake_diagram.{v} V) := d.η
-@[chase] abbreviation myθ (d : exact_snake_diagram.{v} V) := d.θ
-@[chase] abbreviation myκ (d : exact_snake_diagram.{v} V) := d.κ
-@[chase] abbreviation myμ (d : exact_snake_diagram.{v} V) := d.μ
-@[chase] abbreviation myν (d : exact_snake_diagram.{v} V) := d.ν
-@[chase] abbreviation myξ (d : exact_snake_diagram.{v} V) := d.ξ
-@[chase] abbreviation myπ (d : exact_snake_diagram.{v} V) := d.π
-@[chase] abbreviation myρ (d : exact_snake_diagram.{v} V) := d.ρ
-@[chase] abbreviation myσ (d : exact_snake_diagram.{v} V) := d.σ
-@[chase] abbreviation myτ (d : exact_snake_diagram.{v} V) := d.τ
-@[chase] abbreviation myφ (d : exact_snake_diagram.{v} V) := d.φ
+/- We need to do this instead of `attribute [chase] snake_digram.α` because the projection
+   has the wrong signature: It takes a `snake_diagram` instead of an `exact_snake_diagram`. -/
+@[chase] abbreviation exact_snake_α (d : exact_snake_diagram.{v} V) := d.α
+@[chase] abbreviation exact_snake_β (d : exact_snake_diagram.{v} V) := d.β
+@[chase] abbreviation exact_snake_γ (d : exact_snake_diagram.{v} V) := d.γ
+@[chase] abbreviation exact_snake_δ (d : exact_snake_diagram.{v} V) := d.δ
+@[chase] abbreviation exact_snake_ε (d : exact_snake_diagram.{v} V) := d.ε
+@[chase] abbreviation exact_snake_ζ (d : exact_snake_diagram.{v} V) := d.ζ
+@[chase] abbreviation exact_snake_η (d : exact_snake_diagram.{v} V) := d.η
+@[chase] abbreviation exact_snake_θ (d : exact_snake_diagram.{v} V) := d.θ
+@[chase] abbreviation exact_snake_κ (d : exact_snake_diagram.{v} V) := d.κ
+@[chase] abbreviation exact_snake_μ (d : exact_snake_diagram.{v} V) := d.μ
+@[chase] abbreviation exact_snake_ν (d : exact_snake_diagram.{v} V) := d.ν
+@[chase] abbreviation exact_snake_ξ (d : exact_snake_diagram.{v} V) := d.ξ
+@[chase] abbreviation exact_snake_π (d : exact_snake_diagram.{v} V) := d.π
+@[chase] abbreviation exact_snake_ρ (d : exact_snake_diagram.{v} V) := d.ρ
+@[chase] abbreviation exact_snake_σ (d : exact_snake_diagram.{v} V) := d.σ
+@[chase] abbreviation exact_snake_τ (d : exact_snake_diagram.{v} V) := d.τ
+@[chase] abbreviation exact_snake_φ (d : exact_snake_diagram.{v} V) := d.φ
 
 namespace restricted
 
