@@ -222,10 +222,15 @@ do
 end tactic.chase
 
 namespace tactic.interactive
-
 open interactive (parse)
+open lean.parser (tk pexpr)
 
-meta def commutativity : tactic unit :=
-chase.run_chase_tactic tactic.chase.commutativity
+meta def commutativity (loc : parse ((tk "at" *> some <$> pexpr) <|> return none)) : tactic unit :=
+do
+  l ← match loc with
+      | none := return none
+      | some m := some <$> to_expr m
+      end,
+  chase.run_chase_tactic l tactic.chase.commutativity
 
 end tactic.interactive

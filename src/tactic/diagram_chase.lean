@@ -72,15 +72,19 @@ end tactic.chase
 namespace tactic.interactive
 
 open interactive (parse)
-open lean.parser (tk)
+open lean.parser (tk pexpr)
 open interactive.types (texpr with_ident_list pexpr_list)
 
-meta def chase (s : parse lean.parser.pexpr) (maps : parse (tk "using" *> pexpr_list))
-  (ids : parse with_ident_list) : tactic unit :=
+meta def chase (s : parse pexpr) (maps : parse (tk "using" *> pexpr_list))
+  (ids : parse with_ident_list) (loc : parse ((tk "at" *> some <$> pexpr) <|> return none)) : tactic unit :=
 do
   e ← i_to_expr s,
+  l ← match loc with
+      | none := return none
+      | some m := some <$> to_expr m
+      end,
   mps ← list.mmap
     (λ p, do q ← i_to_expr p, some ch ← tactic.chase.as_morphism_chain q, return ch) maps,
-  tactic.chase.run_chase_tactic $ tactic.chase.chase e mps ids
+  tactic.chase.run_chase_tactic l $ tactic.chase.chase e mps ids
 
 end tactic.interactive

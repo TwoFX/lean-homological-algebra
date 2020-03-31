@@ -13,6 +13,17 @@ open tactic
 
 namespace tactic.chase
 
+meta def chase_attribute : user_attribute := {
+  name := `chase,
+  descr := "A lemma that can be used to chase."
+}
+
+meta def get_lemmas_from_attribute (f : expr) : tactic (list expr) :=
+attribute.get_instances `chase >>= (list.mfiltermap $ λ n,
+  (some <$> (do e ← resolve_name n, to_expr ``(%%e %%f) tt ff)) <|> return none)
+
+run_cmd attribute.register ``chase_attribute
+
 /-- A morphism in an abelian category. -/
 @[derive decidable_eq]
 meta structure morphism :=
@@ -236,21 +247,22 @@ do
   l ← get,
   return $ list.filter (λ lem, to_bool $ exactness_lemma.lhs lem = m) l.exact_lemmas
 
-meta def get_morphisms : tactic (list morphism) :=
-local_context >>= list.mfiltermap as_morphism
+meta def get_morphisms (ctx : list expr) : tactic (list morphism) :=
+list.mfiltermap as_morphism ctx
 
-meta def get_comm_lemmas : tactic (list commutativity_lemma) :=
-local_context >>= list.mfiltermap as_commutativity_lemma
+meta def get_comm_lemmas (ctx : list expr) : tactic (list commutativity_lemma) :=
+list.mfiltermap as_commutativity_lemma ctx
 
-meta def get_elem_lemmas : tactic (list element_lemma) :=
-local_context >>= list.mfiltermap as_element_lemma
+meta def get_elem_lemmas (ctx : list expr) : tactic (list element_lemma) :=
+list.mfiltermap as_element_lemma ctx
 
-meta def get_exact_lemmas : tactic (list exactness_lemma) :=
-local_context >>= list.mfiltermap as_exactness_lemma
+meta def get_exact_lemmas (ctx : list expr) : tactic (list exactness_lemma) :=
+list.mfiltermap as_exactness_lemma ctx
 
-meta def get_exact_lemmas_with_epi (ms : list morphism) : tactic (list exactness_lemma) :=
+meta def get_exact_lemmas_with_epi (ctx : list expr) (ms : list morphism) :
+  tactic (list exactness_lemma) :=
 do
-  found ← get_exact_lemmas,
+  found ← get_exact_lemmas ctx,
   ep ← epis_as_exact ms,
   return $ list.append found ep
 
@@ -265,13 +277,19 @@ do
   l ← list.mmap exact_lemma_to_comm_lemmas e,
   return $ list.join l
 
-meta def mk_chase_data : tactic chase_data :=
+meta def mk_chase_data (e : option expr) : tactic chase_data :=
 do
-  ms ← get_morphisms,
-  cs ← get_comm_lemmas,
-  es ← get_elem_lemmas,
+  ls ← match e with
+       | none := return []
+       | some e := get_lemmas_from_attribute e
+       end,
+  ctx ← local_context,
+  let src := list.append ctx ls,
+  ms ← get_morphisms src,
+  cs ← get_comm_lemmas src,
+  es ← get_elem_lemmas src,
   ess ← list.mmap element_lemma.symm es,
-  exs ← get_exact_lemmas_with_epi ms,
+  exs ← get_exact_lemmas_with_epi src ms,
   ecs ← exact_lemmas_to_comm_lemmas exs,
   let cs' := list.append cs ecs,
   css ← list.mmap commutativity_lemma.symm cs',
@@ -282,8 +300,9 @@ do
   (res, _) ← t.run d,
   return res
 
-meta def run_chase_tactic {α} (t : chase_tactic α) : tactic α :=
-mk_chase_data >>= run_chase_tactic_with_data t
+meta def run_chase_tactic {α} (e : option expr) (t : chase_tactic α) : tactic α :=
+do
+  mk_chase_data e >>= run_chase_tactic_with_data t
 
 meta def add_elem_lemma (l : element_lemma) : chase_tactic unit :=
 do
