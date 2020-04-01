@@ -62,6 +62,8 @@ variable {V}
 @[chase] abbreviation exact_snake_τ (d : exact_snake_diagram.{v} V) := d.τ
 @[chase] abbreviation exact_snake_φ (d : exact_snake_diagram.{v} V) := d.φ
 
+set_option profiler true
+
 namespace restricted
 
 namespace internal

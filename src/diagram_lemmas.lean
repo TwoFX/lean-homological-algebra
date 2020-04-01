@@ -153,7 +153,6 @@ def fill_left [mono δ] : { x : A ⟶ B // x ≫ δ = γ ≫ ζ } :=
 limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ δl) (γ ≫ ζ) $
   by rw [category.assoc, comm₁, ←category.assoc, γθ.1, has_zero_morphisms.zero_comp]
 
-
 def fill_right [mono ε] : { x : B ⟶ C // x ≫ ε = δ ≫ η } :=
 limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ εμ) (δ ≫ η) $
   by rw [category.assoc, comm₂, ←category.assoc, δl.1, has_zero_morphisms.zero_comp]

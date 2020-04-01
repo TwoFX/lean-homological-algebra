@@ -47,7 +47,7 @@ exactness_lemmas_for m >>= list.mfoldl (λ r l,
     match cond with
     | none := return none
     | some p := do
-      s ← i_to_expr ``(exists.elim ((pseudo_exact_of_exact %%l.e).2 %%e %%p)),
+      s ← i_to_expr ``(exists.elim ((pseudo_exact_of_exact %%l.ex).2 %%e %%p)),
       tactic.apply s,
       f ← tactic.intro n,
       hyp_name ← get_unused_name ("h" ++ n),

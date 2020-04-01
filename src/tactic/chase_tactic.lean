@@ -15,7 +15,7 @@ namespace tactic.chase
 
 meta def chase_attribute : user_attribute := {
   name := `chase,
-  descr := "A lemma that can be used to chase."
+  descr := "A definition or lemma that can be used in a diagram chase."
 }
 
 meta def get_lemmas_from_attribute (f : expr) : tactic (list expr) :=
@@ -27,7 +27,7 @@ run_cmd attribute.register ``chase_attribute
 /-- A morphism in an abelian category. -/
 @[derive decidable_eq]
 meta structure morphism :=
-(m : expr)
+(ex : expr)
 (domain : expr)
 (codomain : expr)
 (app : expr)
@@ -46,17 +46,17 @@ meta structure diagram_term :=
 /-- A commutativity lemma in a category. -/
 meta structure commutativity_lemma :=
 (lhs rhs : morphism_chain)
-(e : expr)
+(ex : expr)
 
 /-- A lemma of the form `f₁ (f₂ (... (fₙ a))) = g₁ (g₂ (... (gₘ a)))`, with `a` a pseudoelement. -/
 meta structure element_lemma :=
 (lhs rhs : diagram_term)
-(e : expr)
+(ex : expr)
 
 /-- An exactness statement. -/
 meta structure exactness_lemma :=
 (lhs rhs : morphism_chain)
-(e : expr)
+(ex : expr)
 
 /-- The morphisms and lemmas in the context. -/
 meta structure chase_data :=
@@ -66,7 +66,7 @@ meta structure chase_data :=
 (exact_lemmas : list exactness_lemma)
 
 meta instance format_morphism : has_to_format morphism :=
-{ to_format := λ m, format!"{morphism.m m}" }
+{ to_format := λ m, format!"{morphism.ex m}" }
 
 meta instance format_diagram_term : has_to_format diagram_term :=
 { to_format := λ t, format!"{t.ms} {t.elem}" }
@@ -100,13 +100,13 @@ meta def element_lemma.symm : element_lemma → tactic element_lemma
 
 meta def morphism.is_zero (m : morphism) : tactic bool :=
 do
-  d ← infer_type m.m,
+  d ← infer_type m.ex,
   z ← i_to_expr ``(0 : %%d),
 
   -- Why does the following not work?
   -- z ← mk_app `has_zero.zero [d],
 
-  (do is_def_eq m.m z,
+  (do is_def_eq m.ex z,
   return tt) <|> return ff
 
 meta def diagram_term.type : diagram_term → tactic expr
@@ -135,15 +135,15 @@ meta def diagram_term.to_zero : diagram_term → tactic (option expr)
     | none := return none
     | some i := do
       fs ← mk_app `congr_arg [t.app, i],
-      sn ← mk_app `category_theory.abelian.pseudoelements.apply_zero [t.m],
+      sn ← mk_app `category_theory.abelian.pseudoelements.apply_zero [t.ex],
       some <$> mk_eq_trans fs sn
     end
 
 meta def is_mono (m : morphism) : tactic bool :=
-(do i_to_expr ``(mono %%(m.m)) >>= mk_instance, return tt) <|> return ff
+(do i_to_expr ``(mono %%(m.ex)) >>= mk_instance, return tt) <|> return ff
 
 meta def is_epi (m : morphism) : tactic bool :=
-(do i_to_expr ``(epi %%(m.m)) >>= mk_instance, return tt) <|> return ff
+(do i_to_expr ``(epi %%(m.ex)) >>= mk_instance, return tt) <|> return ff
 
 meta def has_domain (e : expr) (m : morphism) : tactic bool :=
 (do is_def_eq m.domain e, return tt) <|> return ff
@@ -195,7 +195,7 @@ do
   match self with
   | none := return none
   | some s := do
-    `(%%l ≫ %%r) ← return s.m | return (some [s]),
+    `(%%l ≫ %%r) ← return s.ex | return (some [s]),
     some u ← as_morphism_chain r | return none,
     some r ← as_morphism l | return none,
     return $ some (list.append u [r])
@@ -237,7 +237,7 @@ do
 meta def epis_as_exact (e : list morphism) : tactic (list exactness_lemma) :=
 epis e >>= (list.mmap $ λ m,
 do
-  ep ← i_to_expr ``(epi %%(m.m)) >>= mk_instance,
+  ep ← i_to_expr ``(epi %%(m.ex)) >>= mk_instance,
   a ← mk_app `category_theory.abelian.exact_zero_of_epi' [ep],
   some l ← as_exactness_lemma a,
   return l)
@@ -268,8 +268,8 @@ do
 
 meta def exact_lemma_to_comm_lemmas (e : exactness_lemma) : tactic (list commutativity_lemma) :=
 do
-  some fi ← i_to_expr ``((%%e.e).1) >>= as_commutativity_lemma,
-  some se ← i_to_expr ``((%%e.e).2) >>= as_commutativity_lemma,
+  some fi ← i_to_expr ``((%%e.ex).1) >>= as_commutativity_lemma,
+  some se ← i_to_expr ``((%%e.ex).2) >>= as_commutativity_lemma,
   return [fi, se]
 
 meta def exact_lemmas_to_comm_lemmas (e : list exactness_lemma) : tactic (list commutativity_lemma) :=
@@ -296,13 +296,10 @@ do
   return ⟨ms, list.append cs' css, list.append es ess, exs⟩
 
 meta def run_chase_tactic_with_data {α} (t : chase_tactic α) (d : chase_data) : tactic α :=
-do
-  (res, _) ← t.run d,
-  return res
+do (res, _) ← t.run d, return res
 
 meta def run_chase_tactic {α} (e : option expr) (t : chase_tactic α) : tactic α :=
-do
-  mk_chase_data e >>= run_chase_tactic_with_data t
+mk_chase_data e >>= run_chase_tactic_with_data t
 
 meta def add_elem_lemma (l : element_lemma) : chase_tactic unit :=
 do

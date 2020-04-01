@@ -75,8 +75,8 @@ meta def apply_comm_lemma_at_aux : ℕ → diagram_term → tactic (option expr)
 | (n + 1) ⟨t::[], e⟩ := return none
 | (n + 1) ⟨t::(u::ts), e⟩ :=
 do
-  some x ← i_to_expr ``(%%(u.m) ≫ %%(t.m)) >>= as_morphism,
-  lhs ← mk_app `category_theory.abelian.pseudoelements.comp_apply [u.m, t.m, as_expr ⟨ts, e⟩] >>= mk_eq_symm,
+  some x ← i_to_expr ``(%%(u.ex) ≫ %%(t.ex)) >>= as_morphism,
+  lhs ← mk_app `category_theory.abelian.pseudoelements.comp_apply [u.ex, t.ex, as_expr ⟨ts, e⟩] >>= mk_eq_symm,
   some rhs ← apply_comm_lemma_at_aux n ⟨x::ts, e⟩,
   some <$> mk_eq_trans lhs rhs
 
@@ -86,7 +86,7 @@ meta def apply_comm_lemma_at (l : commutativity_lemma) :
 do
   some one ← apply_comm_lemma_at_aux (l.lhs.length - 1) ⟨ms, elem⟩,
   let inner := as_expr ⟨list.drop (l.lhs.length) ms, elem⟩,
-  two ← mk_app `tactic.chase.pseudo_congr [l.e, inner],
+  two ← mk_app `tactic.chase.pseudo_congr [l.ex, inner],
   some three ← apply_comm_lemma_at_aux (l.rhs.length - 1) goal,
   three' ← mk_eq_symm three,
   onetwo ← mk_eq_trans one two,
@@ -100,7 +100,7 @@ do
 
 meta def apply_elem_lemma_at (l : element_lemma) :
   ℕ → diagram_term → tactic (option expr)
-| 0 ⟨ms, elem⟩ := return $ some l.e
+| 0 ⟨ms, elem⟩ := return $ some l.ex
 | (n + 1) ⟨[], _⟩ := none
 | (n + 1) ⟨t::ts, e⟩ :=
 do
