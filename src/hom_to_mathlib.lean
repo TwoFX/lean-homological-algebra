@@ -60,6 +60,16 @@ def colimit_cokernel_cofork.desc' {s : cokernel_cofork f} (is_colim : is_colimit
 end
 
 section
+variables {X Y : C} (f g : X ⟶ Y)
+
+def colimit_cofork.desc' {s : cofork f g} (is_colim : is_colimit s)
+  {Z : C} (l : Y ⟶ Z) (h : f ≫ l = g ≫ l) :
+  { k : s.X ⟶ Z // cofork.π s ≫ k = l } :=
+⟨is_colimit.desc is_colim $ cofork.of_π l h, by erw is_colimit.fac; refl⟩
+
+end
+
+section
 variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
 
 def kernel.lift' [has_limit (parallel_pair f 0)]

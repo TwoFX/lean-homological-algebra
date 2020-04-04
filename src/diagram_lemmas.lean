@@ -185,6 +185,8 @@ begin
     erw has_zero_morphisms.comp_zero }
 end
 
+#print axioms parallel_pair
+
 lemma kernels [mono δ] [mono ε] [mono ν] : exact α β :=
 begin
   apply exact_of_pseudo_exact,

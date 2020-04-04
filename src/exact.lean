@@ -133,6 +133,42 @@ begin
   erw [←category.assoc, h₀, coimage.fac],
 end
 
+def image_exact {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : exact f g) :
+  exact (kernel.ι (cokernel.π f)) g :=
+⟨begin
+  apply (preadditive.cancel_zero_iff_epi (factor_thru_image f)).1 (by apply_instance),
+  rw ←category.assoc,
+  rw image.fac f,
+  exact h.1,
+end,
+begin
+  obtain ⟨l, hl⟩ := cokernel.desc' f (cokernel.π (kernel.ι (cokernel.π f)))
+    begin conv_lhs { congr, rw ←image.fac f, }, rw category.assoc, rw cokernel.condition,
+      rw has_zero_morphisms.comp_zero, end,
+  rw ←hl,
+  rw ←category.assoc,
+  rw h.2,
+  rw has_zero_morphisms.zero_comp,
+end⟩
+
+def exact_image {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : exact f g) :
+  exact f (factor_thru_image g) :=
+⟨begin
+  apply (preadditive.cancel_zero_iff_mono (kernel.ι (cokernel.π g))).1 (by apply_instance),
+  rw category.assoc,
+  rw image.fac g,
+  exact h.1,
+end,
+begin
+  obtain ⟨l, hl⟩ := kernel.lift' g (kernel.ι (factor_thru_image g))
+    begin conv_lhs { congr, skip, rw ←image.fac g, }, rw ←category.assoc, rw kernel.condition,
+      rw has_zero_morphisms.zero_comp, end,
+  rw ←hl,
+  rw category.assoc,
+  rw h.2,
+  rw has_zero_morphisms.comp_zero,
+end⟩
+
 end
 
 end category_theory.abelian

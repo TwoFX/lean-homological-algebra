@@ -6,6 +6,7 @@ Authors: Markus Himmel
 
 import category_theory.category
 import abelian
+import abelian_SEMF
 import exact
 import tactic.diagram_chase
 
@@ -62,7 +63,7 @@ variable {V}
 @[chase] abbreviation exact_snake_τ (d : exact_snake_diagram.{v} V) := d.τ
 @[chase] abbreviation exact_snake_φ (d : exact_snake_diagram.{v} V) := d.φ
 
-set_option profiler true
+--set_option profiler true
 
 namespace restricted
 
@@ -197,8 +198,7 @@ begin
   { intros j hj,
     chase j using [d.π, d.ν, d.κ, d.η, d.ε] with g h e f c at d,
     have := ω_char _ c e g (by commutativity) (by commutativity),
-    use c,
-    commutativity, }
+    exact ⟨c, by commutativity⟩ }
 end
 
 end internal
@@ -216,6 +216,199 @@ theorem exact₂ : exact (connecting_morphism d) d.τ :=
 internal.ωτ d
 
 end restricted
+
+namespace internal
+variable (d : exact_snake_diagram.{v} V)
+variables [mono d.ν] [epi d.η] [mono d.δ] [mono d.ε] [epi d.π] [epi d.ρ]
+
+local attribute [instance] object_to_sort
+local attribute [instance] hom_to_fun
+
+abbreviation Z : V := kernel (cokernel.π d.ζ)
+@[chase] abbreviation ζ₁ : d.D ⟶ (Z d) := factor_thru_image d.ζ
+@[chase] abbreviation ζ₂ : (Z d) ⟶ d.E := kernel.ι (cokernel.π d.ζ)
+
+instance strong_epi_ζ : lifting.strong_epi (ζ₁ d) :=
+strong_epi_of_epi _
+
+@[chase] abbreviation Γ : (Z d) ⟶ d.G := epi_mono.diagram.β $ show (ζ₁ d) ≫ (ζ₂ d) ≫ d.κ = d.θ ≫ 𝟙 d.G ≫ d.ν, from
+begin
+  rw ←category.assoc,
+  erw abelian.image.fac d.ζ,
+  rw category.id_comp,
+  exact d.comm₃,
+end
+
+@[chase] lemma hΓ₁ : (ζ₁ d) ≫ (Γ d) = d.θ :=
+begin
+  rw epi_mono.diagram.comm_left,
+  rw category.comp_id,
+end
+
+@[chase] lemma hΓ₂ : (ζ₂ d) ≫ d.κ = (Γ d) ≫ d.ν :=
+epi_mono.diagram.comm_right _
+
+abbreviation W : V := kernel (cokernel.π d.ξ)
+abbreviation ξ₁ : d.H ⟶ (W d) := factor_thru_image d.ξ
+abbreviation ξ₂ : (W d) ⟶ d.I := kernel.ι (cokernel.π d.ξ)
+
+instance strong_epi_ξ : lifting.strong_epi (ξ₁ d) :=
+strong_epi_of_epi _
+
+instance strong_epi_η : lifting.strong_epi d.to_snake_diagram.η :=
+strong_epi_of_epi _
+
+@[chase] def Δ : d.F ⟶ (W d) := epi_mono.diagram.β $ show d.η ≫ 𝟙 d.F ≫ d.μ = d.κ ≫ (ξ₁ d) ≫ (ξ₂ d), from
+begin
+  erw abelian.image.fac d.ξ,
+  rw category.id_comp,
+  exact d.comm₄,
+end
+
+@[chase] lemma hΔ₁ : d.η ≫ (Δ d) = d.κ ≫ (ξ₁ d) :=
+epi_mono.diagram.comm_left _
+
+@[chase] lemma hΔ₂ : d.μ = (Δ d) ≫ (ξ₂ d) :=
+begin
+  rw ←category.id_comp _ d.μ,
+  exact epi_mono.diagram.comm_right _,
+end
+
+abbreviation V' : V := kernel (Γ d)
+abbreviation Λ : (V' d) ⟶ (Z d) := kernel.ι (Γ d)
+
+abbreviation U : V := kernel (Δ d)
+abbreviation Ξ : (U d) ⟶ d.F := kernel.ι (Δ d)
+
+abbreviation T : V := cokernel (Γ d)
+abbreviation S : d.G ⟶ (T d) := cokernel.π (Γ d)
+
+abbreviation S' : V := cokernel (Δ d)
+abbreviation Υ : (W d) ⟶ (S' d) := cokernel.π (Δ d)
+
+set_option trace.app_builder true
+--set_option pp.all true
+
+abbreviation Hα₁ := kernel.lift' (Γ d) (d.γ ≫ (ζ₁ d)) $
+  by rw [category.assoc, hΓ₁, d.γθ.1]
+abbreviation α₁ : d.A ⟶ (V' d) := (Hα₁ d).1
+@[chase] lemma hα₁ : α₁ d ≫ Λ d = d.γ ≫ (ζ₁ d) := (Hα₁ d).2
+
+abbreviation Hα₂ := limit_kernel_fork.lift' d.κ (kernel_of_mono_exact _ _ d.δκ) (Λ d ≫ ζ₂ d) $
+  by rw [category.assoc, hΓ₂, ←category.assoc, kernel.condition, has_zero_morphisms.zero_comp]
+abbreviation α₂ : V' d ⟶ d.B := (Hα₂ d).1
+@[chase] lemma hα₂ : α₂ d ≫ d.δ = Λ d ≫ ζ₂ d := (Hα₂ d).2
+
+abbreviation Hβ₁ := kernel.lift' (Δ d) (d.δ ≫ d.η) $
+  by rw [category.assoc, hΔ₁, ←category.assoc, d.δκ.1, has_zero_morphisms.zero_comp]
+abbreviation β₁ : d.B ⟶ (U d) := (Hβ₁ d).1
+@[chase] lemma hβ₁ : β₁ d ≫ Ξ d = d.δ ≫ d.η := (Hβ₁ d).2
+
+abbreviation Hβ₂ := limit_kernel_fork.lift' d.μ (kernel_of_mono_exact _ _ d.εμ) (Ξ d) $
+  by rw [hΔ₂, ←category.assoc, kernel.condition, has_zero_morphisms.zero_comp]
+abbreviation β₂ : U d ⟶ d.C := (Hβ₂ d).1
+@[chase] lemma hβ₂ : β₂ d ≫ d.ε = Ξ d := (Hβ₂ d).2
+
+abbreviation Hτ₁ := colimit_cokernel_cofork.desc' d.θ (cokernel_of_epi_exact _ _ d.θπ) (S d) $
+  by rw [←hΓ₁, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]
+abbreviation τ₁ : d.J ⟶ (T d) := (Hτ₁ d).1
+@[chase] lemma hτ₁ : d.π ≫ (τ₁ d) = S d := (Hτ₁ d).2
+
+abbreviation Hτ₂ := cokernel.desc' (Γ d) (d.ν ≫ d.ρ) $
+  by rw [←category.assoc, ←hΓ₂, category.assoc, d.κρ.1, has_zero_morphisms.comp_zero]
+abbreviation τ₂ : T d ⟶ d.K := (Hτ₂ d).1
+@[chase] lemma hτ₂ : S d ≫ τ₂ d = d.ν ≫ d.ρ := (Hτ₂ d).2
+
+abbreviation Hφ₁ := colimit_cokernel_cofork.desc' d.κ (cokernel_of_epi_exact _ _ d.κρ) (ξ₁ d ≫ Υ d) $
+  by rw [←category.assoc, ←hΔ₁, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]
+abbreviation φ₁ : d.K ⟶ S' d := (Hφ₁ d).1
+@[chase] lemma hφ₁ : d.ρ ≫ φ₁ d = ξ₁ d ≫ Υ d := (Hφ₁ d).2
+
+@[chase] lemma ΞΔ : exact (Ξ d) (Δ d) := kernel_exact _
+@[chase] lemma ΓS : exact (Γ d) (S d) := cokernel_exact _
+
+instance β₂_mono : mono (β₂ d) :=
+mono_of_mono_fac $ hβ₂ d
+
+instance β₂_epi : epi (β₂ d) :=
+begin
+  apply epi_of_pseudo_surjective,
+  intro c,
+  chase c using [d.ε] with f,
+  have : (Δ d : _ ⟶ _) f = 0,
+  { apply pseudo_injective_of_mono (ξ₂ d),
+    rw ←comp_apply,
+    rw ←hΔ₂,
+    rw ←h.f,
+    rw ←comp_apply,
+    rw d.εμ.1,
+    rw zero_apply,
+    rw apply_zero, },
+  chase f using [Ξ d] with u at d,
+  use u,
+  apply pseudo_injective_of_mono d.ε,
+  commutativity at d,
+end
+
+instance β₂_iso : is_iso (β₂ d) :=
+mono_epi_iso _
+
+instance τ₁_epi : epi (τ₁ d) :=
+epi_of_epi_fac $ hτ₁ d
+
+instance τ₁_mono : mono (τ₁ d) :=
+begin
+  apply mono_of_zero_of_map_zero,
+  intros j hj,
+  chase j using [d.π] with g at d,
+  have : (S d : _ ⟶ _) g = 0,
+  { rw [←hτ₁, comp_apply, h.g, hj], },
+  chase g using [Γ d] with z at d,
+  obtain ⟨e, he⟩ := pseudo_surjective_of_epi (ζ₁ d) z,
+  rw [←h.g, ←h.z, ←he, ←comp_apply, ←comp_apply, ←category.assoc, hΓ₁, d.θπ.1, zero_apply],
+end
+
+instance τ₁_iso : is_iso (τ₁ d) :=
+mono_epi_iso _
+
+def inner_diagram : exact_snake_diagram.{v} V :=
+{ A := V' d, B := d.B, C := U d, D := Z d, E := d.E, F := d.F,
+  G := d.G, H := d.H, I := W d, J := T d, K := d.K, L := S' d,
+  α := α₂ d,
+  β := β₁ d,
+  γ := Λ d,
+  δ := d.δ,
+  ε := Ξ d,
+  ζ := ζ₂ d,
+  η := d.η,
+  θ := Γ d,
+  κ := d.κ,
+  μ := Δ d,
+  ν := d.ν,
+  ξ := ξ₁ d,
+  π := S d,
+  ρ := d.ρ,
+  σ := Υ d,
+  τ := τ₂ d,
+  φ := φ₁ d,
+  comm₁ := hα₂ d,
+  comm₂ := hβ₁ d,
+  comm₃ := hΓ₂ d,
+  comm₄ := hΔ₁ d,
+  comm₅ := (hτ₂ d).symm,
+  comm₆ := (hφ₁ d).symm,
+  αβ := _,
+  ζη := image_exact _ _ d.ζη,
+  νξ := exact_image _ _ d.νξ,
+  τφ := _,
+  γθ := kernel_exact _,
+  θπ := cokernel_exact _,
+  δκ := d.δκ,
+  κρ := d.κρ,
+  εμ := kernel_exact _,
+  μσ := cokernel_exact _ }
+
+end internal
 
 
 end category_theory.abelian.diagram_lemmas.snake
