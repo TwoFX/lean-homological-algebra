@@ -52,10 +52,20 @@ def limit_kernel_fork.lift' {s : kernel_fork f} (is_lim : is_limit s)
   { l : Z ⟶ s.X // l ≫ fork.ι s = g } :=
 ⟨is_limit.lift is_lim $ kernel_fork.of_ι g h, by erw is_limit.fac; refl⟩
 
+lemma limit_kernel_fork.uniq {s : kernel_fork f} (is_lim : is_limit s)
+  {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) (l m : Z ⟶ s.X) (hl : l ≫ fork.ι s = g)
+  (hm : m ≫ fork.ι s = g) : l = m :=
+is_lim.hom_ext $ cone_parallel_pair_ext _ $ by erw [hl, hm]
+
 def colimit_cokernel_cofork.desc' {s : cokernel_cofork f} (is_colim : is_colimit s)
   {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) :
   { l : s.X ⟶ Z // cofork.π s ≫ l = g } :=
 ⟨is_colimit.desc is_colim $ cokernel_cofork.of_π g h, by erw is_colimit.fac; refl⟩
+
+lemma colimit_cokernel_cofork.uniq {s : cokernel_cofork f} (is_colim : is_colimit s)
+  {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) (l m : s.X ⟶ Z) (hl : cofork.π s ≫ l = g)
+  (hm : cofork.π s ≫ m = g) : l = m :=
+is_colim.hom_ext $ cocone_parallel_pair_ext _ $ by erw [hl, hm]
 
 end
 
