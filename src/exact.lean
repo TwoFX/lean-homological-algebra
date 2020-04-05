@@ -133,7 +133,7 @@ begin
   erw [←category.assoc, h₀, coimage.fac],
 end
 
-def image_exact {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : exact f g) :
+lemma image_exact {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : exact f g) :
   exact (kernel.ι (cokernel.π f)) g :=
 ⟨begin
   apply (preadditive.cancel_zero_iff_epi (factor_thru_image f)).1 (by apply_instance),
@@ -151,7 +151,7 @@ begin
   rw has_zero_morphisms.zero_comp,
 end⟩
 
-def exact_image {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : exact f g) :
+lemma exact_image {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : exact f g) :
   exact f (factor_thru_image g) :=
 ⟨begin
   apply (preadditive.cancel_zero_iff_mono (kernel.ι (cokernel.π g))).1 (by apply_instance),
@@ -167,6 +167,51 @@ begin
   rw category.assoc,
   rw h.2,
   rw has_zero_morphisms.comp_zero,
+end⟩
+
+lemma exact_iso {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) {Q' : C} (i : Q ≅ Q') (h : exact f g) :
+  exact (f ≫ i.hom) (i.inv ≫ g) :=
+⟨by simpa using h.1,
+begin
+  obtain ⟨l, hl⟩ := kernel.lift' g (kernel.ι (i.inv ≫ g) ≫ i.inv)
+    (by rw [category.assoc, kernel.condition]),
+  obtain ⟨m, hm⟩ := cokernel.desc' f (i.hom ≫ cokernel.π (f ≫ i.hom))
+    (by rw [←category.assoc, cokernel.condition]),
+  calc kernel.ι (i.inv ≫ g) ≫ cokernel.π (f ≫ i.hom)
+        = kernel.ι (i.inv ≫ g) ≫ (i.inv ≫ i.hom) ≫ cokernel.π (f ≫ i.hom) : by rw [iso.inv_hom_id, category.id_comp]
+    ... = (kernel.ι (i.inv ≫ g) ≫ i.inv) ≫ i.hom ≫ cokernel.π (f ≫ i.hom) : by simp only [category.assoc]
+    ... = (l ≫ kernel.ι g) ≫ cokernel.π f ≫ m : by rw [←hl, ←hm]
+    ... = l ≫ (kernel.ι g ≫ cokernel.π f) ≫ m : by simp only [category.assoc]
+    ... = l ≫ 0 ≫ m : by rw h.2
+    ... = 0 : by rw [has_zero_morphisms.zero_comp, has_zero_morphisms.comp_zero]
+end⟩
+
+lemma exact_iso_right {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) {R' : C} (i : R ≅ R') (h : exact f g) :
+  exact f (g ≫ i.hom) :=
+⟨by rw [←category.assoc, h.1, has_zero_morphisms.zero_comp],
+begin
+  obtain ⟨l, hl⟩ := kernel.lift' g (kernel.ι (g ≫ i.hom))
+    (calc kernel.ι (g ≫ i.hom) ≫ g
+          = kernel.ι (g ≫ i.hom) ≫ g ≫ i.hom ≫ i.inv : by simp
+      ... = (kernel.ι (g ≫ i.hom) ≫ g ≫ i.hom) ≫ i.inv : by simp only [category.assoc]
+      ... = 0 ≫ i.inv : by rw kernel.condition
+      ... = 0 : by rw has_zero_morphisms.zero_comp),
+
+  rw [←hl, category.assoc, h.2, has_zero_morphisms.comp_zero],
+end⟩
+
+lemma exact_iso_left {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) {P' : C} (i : P' ≅ P) (h : exact f g) :
+  exact (i.hom ≫ f) g :=
+⟨by rw [category.assoc, h.1, has_zero_morphisms.comp_zero],
+begin
+  obtain ⟨l, hl⟩ := cokernel.desc' f (cokernel.π (i.hom ≫ f))
+    (calc f ≫ cokernel.π (i.hom ≫ f)
+          = (i.inv ≫ i.hom) ≫ f ≫ cokernel.π (i.hom ≫ f) : by simp
+      ... = i.inv ≫ (i.hom ≫ f) ≫ cokernel.π (i.hom ≫ f) : by simp only [category.assoc]
+      ... = i.inv ≫ 0 : by rw cokernel.condition
+      ... = 0 : by rw has_zero_morphisms.comp_zero),
+
+  rw [←hl, ←category.assoc, h.2, has_zero_morphisms.zero_comp],
 end⟩
 
 end

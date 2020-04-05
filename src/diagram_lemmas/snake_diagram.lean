@@ -31,13 +31,18 @@ structure snake_diagram :=
 structure exact_snake_diagram extends snake_diagram.{v} V :=
 (comm₁ : α ≫ δ = γ ≫ ζ) (comm₂ : β ≫ ε = δ ≫ η) (comm₃ : ζ ≫ κ = θ ≫ ν)
 (comm₄ : η ≫ μ = κ ≫ ξ) (comm₅ : ν ≫ ρ = π ≫ τ) (comm₆ : ξ ≫ σ = ρ ≫ φ)
-(αβ : exact α β) (ζη : exact ζ η) (νξ : exact ν ξ) (τφ : exact τ φ) (γθ : exact γ θ)
+--(αβ : exact α β)
+(ζη : exact ζ η) (νξ : exact ν ξ)
+--(τφ : exact τ φ)
+(γθ : exact γ θ)
 (θπ : exact θ π) (δκ : exact δ κ) (κρ : exact κ ρ) (εμ : exact ε μ) (μσ : exact μ σ)
 
 attribute [chase] exact_snake_diagram.comm₁ exact_snake_diagram.comm₂ exact_snake_diagram.comm₃
 attribute [chase] exact_snake_diagram.comm₄ exact_snake_diagram.comm₅ exact_snake_diagram.comm₆
-attribute [chase] exact_snake_diagram.αβ exact_snake_diagram.ζη exact_snake_diagram.νξ
-attribute [chase] exact_snake_diagram.τφ exact_snake_diagram.γθ exact_snake_diagram.θπ
+--attribute [chase] exact_snake_diagram.αβ
+attribute [chase] exact_snake_diagram.ζη exact_snake_diagram.νξ
+--attribute [chase] exact_snake_diagram.τφ
+attribute [chase] exact_snake_diagram.γθ exact_snake_diagram.θπ
 attribute [chase] exact_snake_diagram.δκ exact_snake_diagram.κρ exact_snake_diagram.εμ
 attribute [chase] exact_snake_diagram.μσ
 
@@ -309,6 +314,14 @@ abbreviation Hβ₂ := limit_kernel_fork.lift' d.μ (kernel_of_mono_exact _ _ d.
 abbreviation β₂ : U d ⟶ d.C := (Hβ₂ d).1
 @[chase] lemma hβ₂ : β₂ d ≫ d.ε = Ξ d := (Hβ₂ d).2
 
+lemma β₁β₂ : β₁ d ≫ β₂ d = d.β :=
+begin
+  apply limit_kernel_fork.uniq _ (kernel_of_mono_exact _ _ d.εμ) (d.δ ≫ d.η),
+  { rw [category.assoc, d.comm₄, ←category.assoc, d.δκ.1, has_zero_morphisms.zero_comp],  },
+  { erw [category.assoc, hβ₂, hβ₁], },
+  { exact d.comm₂ }
+end
+
 abbreviation Hτ₁ := colimit_cokernel_cofork.desc' d.θ (cokernel_of_epi_exact _ _ d.θπ) (S d) $
   by rw [←hΓ₁, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]
 abbreviation τ₁ : d.J ⟶ (T d) := (Hτ₁ d).1
@@ -318,6 +331,14 @@ abbreviation Hτ₂ := cokernel.desc' (Γ d) (d.ν ≫ d.ρ) $
   by rw [←category.assoc, ←hΓ₂, category.assoc, d.κρ.1, has_zero_morphisms.comp_zero]
 abbreviation τ₂ : T d ⟶ d.K := (Hτ₂ d).1
 @[chase] lemma hτ₂ : S d ≫ τ₂ d = d.ν ≫ d.ρ := (Hτ₂ d).2
+
+lemma τ₁τ₂ : τ₁ d ≫ τ₂ d = d.τ :=
+begin
+  apply colimit_cokernel_cofork.uniq _ (cokernel_of_epi_exact _ _ d.θπ) (d.ν ≫ d.ρ),
+  { rw [d.comm₅, ←category.assoc, d.θπ.1, has_zero_morphisms.zero_comp], },
+  { erw [←category.assoc, hτ₁, hτ₂], },
+  { exact d.comm₅.symm, }
+end
 
 abbreviation Hφ₁ := colimit_cokernel_cofork.desc' d.κ (cokernel_of_epi_exact _ _ d.κρ) (ξ₁ d ≫ Υ d) $
   by rw [←category.assoc, ←hΔ₁, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]
@@ -371,7 +392,7 @@ end
 instance τ₁_iso : is_iso (τ₁ d) :=
 mono_epi_iso _
 
-def inner_diagram : exact_snake_diagram.{v} V :=
+abbreviation inner_diagram : exact_snake_diagram.{v} V :=
 { A := V' d, B := d.B, C := U d, D := Z d, E := d.E, F := d.F,
   G := d.G, H := d.H, I := W d, J := T d, K := d.K, L := S' d,
   α := α₂ d,
@@ -397,10 +418,8 @@ def inner_diagram : exact_snake_diagram.{v} V :=
   comm₄ := hΔ₁ d,
   comm₅ := (hτ₂ d).symm,
   comm₆ := (hφ₁ d).symm,
-  αβ := _,
   ζη := image_exact _ _ d.ζη,
   νξ := exact_image _ _ d.νξ,
-  τφ := _,
   γθ := kernel_exact _,
   θπ := cokernel_exact _,
   δκ := d.δκ,
@@ -408,7 +427,40 @@ def inner_diagram : exact_snake_diagram.{v} V :=
   εμ := kernel_exact _,
   μσ := cokernel_exact _ }
 
+abbreviation ω' : U d ⟶ T d := restricted.connecting_morphism (inner_diagram d)
+
+abbreviation ω : d.C ⟶ d.J := inv (β₂ d) ≫ ω' d ≫ inv (τ₁ d)
+
+lemma βω : exact d.β (ω d) :=
+begin
+  have : exact (β₁ d) (ω' d) := restricted.exact₁ (inner_diagram d),
+  have := exact_iso_right _ _ (as_iso (inv (τ₁ d))) this,
+  have : exact (β₁ d ≫ β₂ d) (ω d) := exact_iso _ _ (as_iso (β₂ d)) this,
+  rw β₁β₂ at this,
+  exact this,
+end
+
+lemma ωτ : exact (ω d) (d.τ) :=
+begin
+  have := restricted.exact₂ (inner_diagram d),
+  have := exact_iso _ _ (as_iso (inv (τ₁ d))) this,
+  have : exact (ω d) (τ₁ d ≫ τ₂ d) := exact_iso_left _ _ (as_iso (inv (β₂ d))) this,
+  rw τ₁τ₂ at this,
+  exact this,
+end
+
 end internal
 
+variable (d : exact_snake_diagram.{v} V)
+variables [mono d.ν] [epi d.η] [mono d.δ] [mono d.ε] [epi d.π] [epi d.ρ]
+
+def connecting_morphism : d.C ⟶ d.J :=
+internal.ω d
+
+theorem exact₁ : exact d.β (connecting_morphism d) :=
+internal.βω d
+
+theorem exact₂ : exact (connecting_morphism d) d.τ :=
+internal.ωτ d
 
 end category_theory.abelian.diagram_lemmas.snake
