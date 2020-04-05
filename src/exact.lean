@@ -6,6 +6,7 @@ Authors: Markus Himmel
 
 import category_theory.category
 import abelian
+import abelian_SEMF
 
 open category_theory
 open category_theory.limits
@@ -213,6 +214,51 @@ begin
 
   rw [←hl, ←category.assoc, h.2, has_zero_morphisms.zero_comp],
 end⟩
+
+lemma epi_mono_exact_left {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ S)
+  (e : exact (f ≫ g) h) [epi f] [mono g] :
+  exact g h :=
+begin
+  let upper : epi_mono.SEMF (f ≫ g) :=
+  { I := _, p := f, i := g, fac := rfl,
+    i_mono := by apply_instance, p_strong_epi := strong_epi_of_epi _ },
+  let lower := image_SEMF (f ≫ g),
+  let s : Q ≅ kernel (cokernel.π (f ≫ g)) := epi_mono.SEMF.unique _ upper lower,
+  have : s.hom ≫ kernel.ι (cokernel.π (f ≫ g)) = g,
+  { erw epi_mono.SEMF.unique_fac_right, },
+  rw ←this,
+  apply exact_iso_left _ _ s,
+  exact image_exact _ _ e,
+end
+
+lemma epi_mono_exact_right {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ S)
+  (e : exact f (g ≫ h)) [epi g] [mono h] :
+  exact f g :=
+begin
+  let upper : epi_mono.SEMF (g ≫ h) :=
+  { I := _, p := g, i := h, fac := rfl,
+  i_mono := by apply_instance, p_strong_epi := strong_epi_of_epi _ },
+  let lower := image_SEMF (g ≫ h),
+  let s : kernel (cokernel.π (g ≫ h)) ≅ R := epi_mono.SEMF.unique _ lower upper,
+  have : factor_thru_image (g ≫ h) ≫ s.hom = g :=
+    epi_mono.SEMF.unique_fac_left _ lower upper,
+  rw ←this,
+  apply exact_iso_right _ _ s,
+  exact exact_image _ _ e,
+end
+
+lemma exact_left_epi {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ S) (e : exact g h) [epi f] :
+  exact (f ≫ g) h :=
+⟨by rw [category.assoc, e.1, has_zero_morphisms.comp_zero],
+begin
+  obtain ⟨l, hl⟩ := cokernel.desc' g (cokernel.π (f ≫ g))
+    begin
+      apply (preadditive.cancel_zero_iff_epi f).1 (by apply_instance),
+      rw [←category.assoc, cokernel.condition],
+    end,
+  rw [←hl, ←category.assoc, e.2, has_zero_morphisms.zero_comp],
+end⟩
+
 
 end
 
