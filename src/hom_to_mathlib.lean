@@ -19,15 +19,6 @@ variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
 
 section
-variables {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z)
-
-def pullback.lift' [has_limit (cospan f g)] {W : C} (f' : W ⟶ X) (g' : W ⟶ Y)
-  (h : f' ≫ f = g' ≫ g) :
-  {l : W ⟶ pullback f g // l ≫ pullback.fst = f' ∧ l ≫ pullback.snd = g' } :=
-⟨pullback.lift f' g' h, by erw limit.lift_π; refl, by erw limit.lift_π; refl⟩
-end
-
-section
 variables [has_zero_morphisms.{v} C] {X Y : C}
 
 /-- Any map that is zero when composed with `s.of` factors through `f`. -/
@@ -47,45 +38,6 @@ end
 section
 variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
 
-def limit_kernel_fork.lift' {s : kernel_fork f} (is_lim : is_limit s)
-  {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) :
-  { l : Z ⟶ s.X // l ≫ fork.ι s = g } :=
-⟨is_limit.lift is_lim $ kernel_fork.of_ι g h, by erw is_limit.fac; refl⟩
-
-lemma limit_kernel_fork.uniq {s : kernel_fork f} (is_lim : is_limit s)
-  {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) (l m : Z ⟶ s.X) (hl : l ≫ fork.ι s = g)
-  (hm : m ≫ fork.ι s = g) : l = m :=
-is_lim.hom_ext $ cone_parallel_pair_ext _ $ by erw [hl, hm]
-
-def colimit_cokernel_cofork.desc' {s : cokernel_cofork f} (is_colim : is_colimit s)
-  {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) :
-  { l : s.X ⟶ Z // cofork.π s ≫ l = g } :=
-⟨is_colimit.desc is_colim $ cokernel_cofork.of_π g h, by erw is_colimit.fac; refl⟩
-
-lemma colimit_cokernel_cofork.uniq {s : cokernel_cofork f} (is_colim : is_colimit s)
-  {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) (l m : s.X ⟶ Z) (hl : cofork.π s ≫ l = g)
-  (hm : cofork.π s ≫ m = g) : l = m :=
-is_colim.hom_ext $ cocone_parallel_pair_ext _ $ by erw [hl, hm]
-
-end
-
-section
-variables {X Y : C} (f g : X ⟶ Y)
-
-def colimit_cofork.desc' {s : cofork f g} (is_colim : is_colimit s)
-  {Z : C} (l : Y ⟶ Z) (h : f ≫ l = g ≫ l) :
-  { k : s.X ⟶ Z // cofork.π s ≫ k = l } :=
-⟨is_colimit.desc is_colim $ cofork.of_π l h, by erw is_colimit.fac; refl⟩
-
-end
-
-section
-variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
-
-def kernel.lift' [has_limit (parallel_pair f 0)]
-  {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) : { l : Z ⟶ kernel f // l ≫ kernel.ι f = g} :=
-⟨kernel.lift f g h, by erw limit.lift_π; refl⟩
-
 def kernel.lift'' [has_limit (parallel_pair f 0)]
   {Z : C} (g : Z ⟶ X) (h : g ≫ f = 0) : ∃! l, l ≫ kernel.ι f = g :=
 ⟨kernel.lift f g h, by erw limit.lift_π; refl, λ k hk, begin
@@ -93,15 +45,11 @@ def kernel.lift'' [has_limit (parallel_pair f 0)]
   intro j,
   cases j,
   exact hk,
-  rw ←cone_parallel_pair_left,
+  rw ←fork.app_zero_left,
   rw ←category.assoc,
   erw hk,
   refl,
 end⟩
-
-def cokernel.desc' [has_colimit (parallel_pair f 0)]
-  {Z : C} (g : Y ⟶ Z) (h : f ≫ g = 0) : { d : cokernel f ⟶ Z // cokernel.π f ≫ d = g } :=
-⟨cokernel.desc f g h, by erw colimit.ι_desc; refl⟩
 
 def kernel.transport' [has_limit (parallel_pair f 0)]
   {Z : C} (l : X ⟶ Z) (i : Z ≅ Y) (h : l ≫ i.hom = f) :

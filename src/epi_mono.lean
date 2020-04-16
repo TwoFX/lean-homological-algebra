@@ -8,7 +8,6 @@ import category_theory.category
 import strong
 
 open category_theory
-open category_theory.lifting
 
 universes v u
 
