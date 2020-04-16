@@ -115,8 +115,8 @@ lemma pseudo_equal_trans {P : C} : transitive (pseudo_equal P) :=
 λ f g h ⟨R, p, q, ep, eq, comm⟩ ⟨R', p', q', ep', eq', comm'⟩,
 begin
   refine ⟨pullback q p', pullback.fst ≫ p, pullback.snd ≫ q', _, _, _⟩,
-  { resetI, apply_instance },
-  { resetI, apply_instance },
+  { resetI, exact epi_comp _ _ },
+  { resetI, exact epi_comp _ _ },
   { rw [category.assoc, comm, ←category.assoc, pullback.condition,
       category.assoc, comm', category.assoc] }
 end
@@ -219,7 +219,7 @@ quotient.induction_on a $ λ a',
 
 /-- An existentionality lemma for being the zero arrow. -/
 @[ext] theorem zero_morphism_ext {P Q : C} (f : P ⟶ Q) : (∀ a, f a = 0) → f = 0 :=
-λ h, by { rw ←category.id_comp _ f,
+λ h, by { rw ←category.id_comp f,
   apply (pseudo_zero_iff ((𝟙 P ≫ f) : with_codomain Q)).1,
   exact h (𝟙 P) }
 
@@ -269,7 +269,7 @@ theorem pseudo_exact_of_exact {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (h : exact
     have hb' : b.2 ≫ g = 0, from (pseudo_zero_iff _).1 hb,
     begin
       -- By exactness, b factors through im f = ker g via some c
-      obtain ⟨c, hc⟩ := limit_kernel_fork.lift' _ (exact_ker _ _ h) _ hb',
+      obtain ⟨c, hc⟩ := kernel_fork.is_limit.lift' (exact_ker _ _ h) _ hb',
 
       -- We compute the pullback of the map into the image and c.
       -- The pseudoelement induced by the first pullback map will be our preimage.
@@ -284,7 +284,7 @@ theorem pseudo_exact_of_exact {P Q R : C} {f : P ⟶ Q} {g : Q ⟶ R} (h : exact
 
       -- Now we can verify that the diagram commutes.
       calc 𝟙 (pullback (factor_thru_image f) c) ≫ pullback.fst ≫ f = pullback.fst ≫ f
-                : category.id_comp _ _
+                : category.id_comp _
         ... = pullback.fst ≫ factor_thru_image f ≫ kernel.ι (cokernel.π f)
                 : by rw image.fac
         ... = (pullback.snd ≫ c) ≫ kernel.ι (cokernel.π f)
@@ -313,7 +313,7 @@ begin
   -- Consider the pullback of kernel.ι (cokernel.π f) and kernel.ι g.
   -- The commutative diagram given by the pseudo-equality f a = b induces
   -- a cone over this pullback, so we get a factorization z.
-  obtain ⟨z, hz₁, hz₂⟩ := pullback.lift' (kernel.ι (cokernel.π f)) (kernel.ι g)
+  obtain ⟨z, hz₁, hz₂⟩ := @pullback.lift' _ _ _ _ _ _ (kernel.ι (cokernel.π f)) (kernel.ι g) _
     (r ≫ a.2 ≫ factor_thru_image f) q (by simp only [category.assoc, image.fac]; exact comm),
 
   -- Let's give a name to the second pullback morphism.
@@ -372,7 +372,7 @@ quotient.induction_on₂ p q $ λ x y h,
 begin
   obtain ⟨Z, a, b, ea, eb, comm⟩ := quotient.exact h,
 
-  obtain ⟨l, hl₁, hl₂⟩ := pullback.lift' f g (a ≫ x.2) (b ≫ y.2)
+  obtain ⟨l, hl₁, hl₂⟩ := @pullback.lift' _ _ _ _ _ _ f g _ (a ≫ x.2) (b ≫ y.2)
     (by simp only [category.assoc]; exact comm),
 
   exact ⟨l, ⟨quotient.sound ⟨Z, 𝟙 Z, a, by apply_instance, ea, by rw category.id_comp; exact hl₁⟩,

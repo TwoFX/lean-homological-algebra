@@ -33,8 +33,8 @@ include gh fg' comm₁ comm₂ comm₃
 section
 include fg
 
-lemma four' (hα : α.range = ⊤) (hβ : β.ker = ⊥) (hδ : δ.ker = ⊥) : γ.ker = ⊥ :=
-ker_eq_bot_of_mono' (up γ) $ abelian_four' ((exact_is_exact (up f) (up g)).2 fg)
+lemma modfour' (hα : α.range = ⊤) (hβ : β.ker = ⊥) (hδ : δ.ker = ⊥) : γ.ker = ⊥ :=
+ker_eq_bot_of_mono' (up γ) $ four ((exact_is_exact (up f) (up g)).2 fg)
   ((exact_is_exact (up g) (up h)).2 gh)
   ((exact_is_exact (up f') (up g')).2 fg')
   ((exact_is_exact (up g') (up h')).2 gh')

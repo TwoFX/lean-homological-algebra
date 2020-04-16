@@ -150,11 +150,11 @@ variables (ζη : exact ζ η) (νξ : exact ν ξ)
 include comm₁ comm₂ γθ δl εμ ζη νξ
 
 def fill_left [mono δ] : { x : A ⟶ B // x ≫ δ = γ ≫ ζ } :=
-limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ δl) (γ ≫ ζ) $
+kernel_fork.is_limit.lift' (kernel_of_mono_exact _ _ δl) (γ ≫ ζ) $
   by rw [category.assoc, comm₁, ←category.assoc, γθ.1, has_zero_morphisms.zero_comp]
 
 def fill_right [mono ε] : { x : B ⟶ C // x ≫ ε = δ ≫ η } :=
-limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ εμ) (δ ≫ η) $
+kernel_fork.is_limit.lift' (kernel_of_mono_exact _ _ εμ) (δ ≫ η) $
   by rw [category.assoc, comm₂, ←category.assoc, δl.1, has_zero_morphisms.zero_comp]
 
 variables {α : A ⟶ B} {β : B ⟶ C}
@@ -184,8 +184,6 @@ begin
     erw has_zero_morphisms.comp_zero,
     erw has_zero_morphisms.comp_zero }
 end
-
-#print axioms parallel_pair
 
 lemma kernels [mono δ] [mono ε] [mono ν] : exact α β :=
 begin

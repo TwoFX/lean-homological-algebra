@@ -10,10 +10,8 @@ import category_theory.limits.shapes.kernels
 import category_theory.limits.shapes.binary_products
 import category_theory.limits.shapes.constructions.pullbacks
 import category_theory.limits.shapes.regular_mono
-import category_theory.limits.shapes.images
 import additive
 import biproduct
-import hom_to_mathlib
 
 open category_theory
 open category_theory.preadditive
@@ -27,8 +25,6 @@ namespace category_theory
 
 variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
-
-
 
 variables (C)
 
@@ -77,6 +73,7 @@ let I := kernel (cokernel.π f), p := factor_thru_image f, i := kernel.ι (coker
 begin
   -- Since C is abelian, u := ker g ≫ i is the kernel of some morphism h.
   let u := kernel.ι g ≫ i,
+  haveI : mono u := mono_comp _ _,
   have hu := abelian.mono_is_kernel u,
   let h := hu.g,
 
@@ -88,7 +85,7 @@ begin
        ... = ((t ≫ kernel.ι g) ≫ i) ≫ h : ht ▸ rfl
        ... = t ≫ u ≫ h : by simp only [category.assoc]; conv_lhs { congr, skip, rw ←category.assoc }
        ... = t ≫ 0 : hu.w ▸ rfl
-       ... = 0 : has_zero_morphisms.comp_zero _ _ _,
+       ... = 0 : has_zero_morphisms.comp_zero _ _,
 
   -- h factors through the cokernel of f via some l.
   obtain ⟨l, hl⟩ := cokernel.desc' f h fh,
@@ -96,7 +93,7 @@ begin
   have hih : i ≫ h = 0, calc
     i ≫ h = i ≫ cokernel.π f ≫ l : hl ▸ rfl
        ... = 0 ≫ l : by rw [←category.assoc, kernel.condition]
-       ... = 0 : has_zero_morphisms.zero_comp _ _ _,
+       ... = 0 : has_zero_morphisms.zero_comp _ _,
 
   -- i factors through u = ker h via some s.
   obtain ⟨s, hs⟩ := normal_mono.lift hu i hih,
@@ -124,6 +121,7 @@ let I := cokernel (kernel.ι f), i := factor_thru_coimage f, p := cokernel.π (k
 begin
   -- Since C is abelian, u := p ≫ coker g is the cokernel of some morphism h.
   let u := p ≫ cokernel.π g,
+  haveI : epi u := epi_comp _ _,
   have hu := abelian.epi_is_cokernel u,
   let h := hu.g,
 
@@ -135,7 +133,7 @@ begin
     ... = h ≫ (p ≫ (cokernel.π g ≫ t)) : ht ▸ rfl
     ... = h ≫ u ≫ t : by simp only [category.assoc]; conv_lhs { congr, skip, rw ←category.assoc }
     ... = 0 ≫ t : by rw [←category.assoc, hu.w]
-    ... = 0 : has_zero_morphisms.zero_comp _ _ _,
+    ... = 0 : has_zero_morphisms.zero_comp _ _,
 
   -- h factors through the kernel of f via some l.
   obtain ⟨l, hl⟩ := kernel.lift' f h hf,
@@ -143,7 +141,7 @@ begin
   have hhp : h ≫ p = 0, calc
     h ≫ p = (l ≫ kernel.ι f) ≫ p : hl ▸ rfl
     ... = l ≫ 0 : by rw [category.assoc, cokernel.condition]
-    ... = 0 : has_zero_morphisms.comp_zero _ _ _,
+    ... = 0 : has_zero_morphisms.comp_zero _ _,
 
   -- p factors through u = coker h via some s.
   obtain ⟨s, hs⟩ := normal_epi.desc hu p hhp,
@@ -157,25 +155,6 @@ begin
 end
 
 end factor
-
-section image
-
-/-- An abelian category has all images. -/
-instance : has_images.{v} C :=
-{ has_image := λ X Y f, { F :=
-  { I := cokernel (kernel.ι f),
-    m := factor_thru_coimage f,
-    m_mono := by apply_instance,
-    e := cokernel.π (kernel.ι f),
-    fac' := coimage.fac f },
-  is_image :=
-  { lift := λ F, cokernel.desc (kernel.ι f) F.e $
-      (cancel_zero_iff_mono _).1 F.m_mono _ (limits.kernel.ι f ≫ F.e) $
-        by rw [category.assoc, F.fac, kernel.condition],
-    lift_fac' := λ F, (cancel_epi (cokernel.π (kernel.ι f))).1 $
-      by erw [←category.assoc, colimit.ι_desc, coimage.fac, F.fac] } } }
-
-end image
 
 section mono_epi_iso
 variables {X Y : C} (f : X ⟶ Y)
@@ -213,7 +192,7 @@ begin
   swap,
   { exact i, },
   { cases j,
-    { simp only [cokernel_cofork.app_zero, has_zero_morphisms.zero_comp], refl },
+    { simp only [cokernel_cofork.app_zero, has_zero_morphisms.zero_comp] },
     { exact coimage.fac f } }
 end
 
@@ -241,7 +220,7 @@ begin
   { cases j,
     { apply (iso.eq_inv_comp i).2, exact image.fac f, },
     { apply (iso.eq_inv_comp i).2,
-      erw [kernel_fork.app_one, kernel_fork.app_one, has_zero_morphisms.comp_zero], refl } }
+      erw [kernel_fork.app_one, kernel_fork.app_one, has_zero_morphisms.comp_zero] } }
 end
 
 end cokernel_of_kernel
@@ -366,7 +345,7 @@ begin
     (pullback_to_biproduct_is_kernel.is_limit_pullback_to_biproduct f g),
 
   -- We use this fact to obtain a factorization of u through (f, -g) via some d : Z ⟶ R.
-  obtain ⟨d, hd⟩ := colimit_cokernel_cofork.desc' _ this u hu,
+  obtain ⟨d, hd⟩ := cokernel_cofork.is_colimit.desc' this u hu,
   change Z ⟶ R at d,
   change biproduct.desc f (-g) ≫ d = u at hd,
 
@@ -385,7 +364,7 @@ begin
     ... = biproduct.inr ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
     ... = biproduct.inr ≫ biproduct.desc f (-g) ≫ 0 : by rw this
     ... = (biproduct.inr ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
-    ... = 0 : has_zero_morphisms.comp_zero _ _ _
+    ... = 0 : has_zero_morphisms.comp_zero _ _
 end
 
 /-- In an abelian category, the pullback of an epimorphism is an epimorphism. -/
@@ -405,7 +384,7 @@ begin
     (pullback_to_biproduct_is_kernel.is_limit_pullback_to_biproduct f g),
 
   -- We use this fact to obtain a factorization of u through (f, -g) via some d : Z ⟶ R.
-  obtain ⟨d, hd⟩ := colimit_cokernel_cofork.desc' _ this u hu,
+  obtain ⟨d, hd⟩ := cokernel_cofork.is_colimit.desc' this u hu,
   change Z ⟶ R at d,
   change biproduct.desc f (-g) ≫ d = u at hd,
 
@@ -424,7 +403,7 @@ begin
     ... = biproduct.inl ≫ biproduct.desc f (-g) ≫ d : by rw ←hd
     ... = biproduct.inl ≫ biproduct.desc f (-g) ≫ 0 : by rw this
     ... = (biproduct.inl ≫ biproduct.desc f (-g)) ≫ 0 : by rw ←category.assoc
-    ... = 0 : has_zero_morphisms.comp_zero _ _ _
+    ... = 0 : has_zero_morphisms.comp_zero _ _
 end
 
 end epi_pullback
@@ -441,7 +420,7 @@ begin
   have := mono_is_kernel_of_cokernel _
     (biproduct_to_pushout_is_cokernel.is_colimit_biproduct_to_pushout f g),
 
-  obtain ⟨d, hd⟩ := limit_kernel_fork.lift' _ this u hu,
+  obtain ⟨d, hd⟩ := kernel_fork.is_limit.lift' this u hu,
   change R ⟶ X at d,
   change d ≫ biproduct.lift f (-g) = u at hd,
 
@@ -457,7 +436,7 @@ begin
     ... = (d ≫ biproduct.lift f (-g)) ≫ biproduct.snd : by rw ←hd
     ... = (0 ≫ biproduct.lift f (-g)) ≫ biproduct.snd : by rw this
     ... = 0 ≫ biproduct.lift f (-g) ≫ biproduct.snd : by rw category.assoc
-    ... = 0 : has_zero_morphisms.zero_comp _ _ _
+    ... = 0 : has_zero_morphisms.zero_comp _ _
 end
 
 instance mono_pushout_of_mono_g [mono g] : mono (pushout.inl : Y ⟶ pushout f g) :=
@@ -469,7 +448,7 @@ begin
   have := mono_is_kernel_of_cokernel _
     (biproduct_to_pushout_is_cokernel.is_colimit_biproduct_to_pushout f g),
 
-  obtain ⟨d, hd⟩ := limit_kernel_fork.lift' _ this u hu,
+  obtain ⟨d, hd⟩ := kernel_fork.is_limit.lift' this u hu,
   change R ⟶ X at d,
   change d ≫ biproduct.lift f (-g) = u at hd,
 
@@ -485,7 +464,7 @@ begin
     ... = (d ≫ biproduct.lift f (-g)) ≫ biproduct.fst : by rw ←hd
     ... = (0 ≫ biproduct.lift f (-g)) ≫ biproduct.fst : by rw this
     ... = 0 ≫ biproduct.lift f (-g) ≫ biproduct.fst : by rw category.assoc
-    ... = 0 : has_zero_morphisms.zero_comp _ _ _
+    ... = 0 : has_zero_morphisms.zero_comp _ _
 end
 
 end mono_pushout

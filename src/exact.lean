@@ -58,29 +58,29 @@ cofork.is_colimit.mk _
   (λ s m h, by ext; erw [h walking_parallel_pair.one, colimit.ι_desc]; refl)
 
 lemma exact_zero_of_mono (P : C) {Q R : C} (f : Q ⟶ R) [mono f] : exact (0 : P ⟶ Q) f :=
-⟨has_zero_morphisms.zero_comp _ _ _,
+⟨has_zero_morphisms.zero_comp _ _,
 begin
   rw (preadditive.cancel_zero_iff_mono f).1 (by apply_instance) _ (kernel.ι f) (kernel.condition _),
-  exact has_zero_morphisms.zero_comp _ _ _,
+  exact has_zero_morphisms.zero_comp _ _
 end⟩
 
 lemma mono_of_exact_zero (P : C) {Q R : C} (f : Q ⟶ R) (h : exact (0 : P ⟶ Q) f) : mono f :=
 (preadditive.cancel_zero_iff_mono f).2 $ λ Z g h₀,
 begin
-  obtain ⟨k, hk⟩ := limit_kernel_fork.lift' f (exact_ker _ _ h) g h₀,
+  obtain ⟨k, hk⟩ := kernel_fork.is_limit.lift' (exact_ker _ _ h) g h₀,
   have := (preadditive.cancel_zero_iff_epi (factor_thru_image (0 : P ⟶ Q))).1
     (by apply_instance) _ _ (image.fac (0 : P ⟶ Q)),
   change k ≫ kernel.ι (cokernel.π (0 : P ⟶ Q)) = g at hk,
   rw ←hk,
   conv_lhs { congr, skip, rw this },
-  exact has_zero_morphisms.comp_zero _ _ _,
+  exact has_zero_morphisms.comp_zero _ _
 end
 
 lemma exact_zero_of_epi {P Q : C} (f : P ⟶ Q) (R : C) [epi f] : exact f (0 : Q ⟶ R) :=
-⟨has_zero_morphisms.comp_zero _ _ _,
+⟨has_zero_morphisms.comp_zero _ _,
 begin
   rw (preadditive.cancel_zero_iff_epi f).1 (by apply_instance) _ (cokernel.π f) (cokernel.condition _),
-  exact has_zero_morphisms.comp_zero _ _ _,
+  exact has_zero_morphisms.comp_zero _ _
 end⟩
 
 lemma exact_zero_of_epi' {P Q : C} (f : P ⟶ Q) [epi f] : exact f (0 : Q ⟶ Q) :=
@@ -93,7 +93,7 @@ begin
   haveI : is_iso (kernel.ι (0 : Q ⟶ R)) := kernel.ι_of_zero _ _,
   apply (preadditive.cancel_zero_iff_epi (kernel.ι (0 : Q ⟶ R))).1 (by apply_instance) _ _,
   rw [←hk, ←category.assoc, h.2],
-  exact has_zero_morphisms.zero_comp _ _ _,
+  exact has_zero_morphisms.zero_comp _ _
 end
 
 lemma kernel_exact {P Q : C} (f : P ⟶ Q) : exact (kernel.ι f) f :=
@@ -216,32 +216,32 @@ begin
 end⟩
 
 lemma epi_mono_exact_left {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ S)
-  (e : exact (f ≫ g) h) [epi f] [mono g] :
-  exact g h :=
+  (e : exact (f ≫ g) h) [epi f] [mono g] : exact g h :=
 begin
-  let upper : epi_mono.SEMF (f ≫ g) :=
-  { I := _, p := f, i := g, fac := rfl,
-    i_mono := by apply_instance, p_strong_epi := strong_epi_of_epi _ },
+  let upper : strong_epi_mono_factorisation (f ≫ g) :=
+  { I := _, e := f, m := g, fac := rfl,
+    m_mono := by apply_instance, e_strong_epi := strong_epi_of_epi _ },
   let lower := image_SEMF (f ≫ g),
-  let s : Q ≅ kernel (cokernel.π (f ≫ g)) := epi_mono.SEMF.unique _ upper lower,
+  let s : Q ≅ kernel (cokernel.π (f ≫ g)) := is_image.iso_ext upper.to_mono_is_image
+    lower.to_mono_is_image,
   have : s.hom ≫ kernel.ι (cokernel.π (f ≫ g)) = g,
-  { erw epi_mono.SEMF.unique_fac_right, },
+  { erw is_image.lift_fac, refl, },
   rw ←this,
   apply exact_iso_left _ _ s,
   exact image_exact _ _ e,
 end
 
 lemma epi_mono_exact_right {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ S)
-  (e : exact f (g ≫ h)) [epi g] [mono h] :
-  exact f g :=
+  (e : exact f (g ≫ h)) [epi g] [mono h] : exact f g :=
 begin
-  let upper : epi_mono.SEMF (g ≫ h) :=
-  { I := _, p := g, i := h, fac := rfl,
-  i_mono := by apply_instance, p_strong_epi := strong_epi_of_epi _ },
+  let upper : strong_epi_mono_factorisation (g ≫ h) :=
+  { I := _, e := g, m := h, fac := rfl,
+  m_mono := by apply_instance, e_strong_epi := strong_epi_of_epi _ },
   let lower := image_SEMF (g ≫ h),
-  let s : kernel (cokernel.π (g ≫ h)) ≅ R := epi_mono.SEMF.unique _ lower upper,
-  have : factor_thru_image (g ≫ h) ≫ s.hom = g :=
-    epi_mono.SEMF.unique_fac_left _ lower upper,
+  let s : kernel (cokernel.π (g ≫ h)) ≅ R := is_image.iso_ext lower.to_mono_is_image
+    upper.to_mono_is_image,
+  have : factor_thru_image (g ≫ h) ≫ s.hom = g,
+  { erw is_image.fac_lift lower.to_mono_is_image upper.to_mono_factorisation, refl, },
   rw ←this,
   apply exact_iso_right _ _ s,
   exact exact_image _ _ e,

@@ -106,7 +106,7 @@ begin
   commutativity at d,
 end
 
-def HΨ := limit_kernel_fork.lift' _ (kernel_of_mono_exact _ _ d.ζη) (S d ≫ Γ d) (SΓη d)
+def HΨ := kernel_fork.is_limit.lift' (kernel_of_mono_exact _ _ d.ζη) (S d ≫ Γ d) (SΓη d)
 def Ψ : (X d) ⟶ d.D := (HΨ d).1
 @[chase] lemma hΨ : Ψ d ≫ d.ζ = S d ≫ Γ d := (HΨ d).2
 
@@ -117,7 +117,7 @@ begin
   commutativity at d,
 end
 
-def HΩ := colimit_cokernel_cofork.desc' _ (cokernel_of_epi_exact _ _ d.νξ) (Λ d ≫ Υ d) (νΛΥ d)
+def HΩ := cokernel_cofork.is_colimit.desc' (cokernel_of_epi_exact _ _ d.νξ) (Λ d ≫ Υ d) (νΛΥ d)
 def Ω : d.I ⟶ (W d) := (HΩ d).1
 @[chase] lemma hΩ : d.ξ ≫ (Ω d) = (Λ d) ≫ (Υ d) := (HΩ d).2
 
@@ -132,7 +132,7 @@ def Δcone : cokernel_cofork (S d) := cokernel_cofork.of_π (Δ d) $ kernel.cond
 def Δlim : is_colimit (Δcone d) := epi_is_cokernel_of_kernel
   (limit.cone (parallel_pair (Δ d) 0)) (limit.is_limit _)
 
-def Hχ := colimit_cokernel_cofork.desc' _ (Δlim d) _ (SΓκΛ d)
+def Hχ := cokernel_cofork.is_colimit.desc' (Δlim d) _ (SΓκΛ d)
 def χ : d.C ⟶ (Y d) := (Hχ d).1
 @[chase] lemma hχ : (Δ d) ≫ (χ d) = (Γ d) ≫ d.κ ≫ (Λ d) := (Hχ d).2
 
@@ -148,7 +148,7 @@ def Ξcone : kernel_fork (Υ d) := kernel_fork.of_ι (Ξ d) $ cokernel.condition
 def Ξlim : is_limit (Ξcone d) := mono_is_kernel_of_cokernel
   (colimit.cocone (parallel_pair (Ξ d) 0)) (colimit.is_colimit _)
 
-def Hω := limit_kernel_fork.lift' _ (Ξlim d) _ (Υχ d)
+def Hω := kernel_fork.is_limit.lift' (Ξlim d) _ (Υχ d)
 def ω : d.C ⟶ d.J := (Hω d).1
 @[chase] lemma hω : (ω d) ≫ (Ξ d) = (χ d) := (Hω d).2
 
@@ -233,50 +233,52 @@ abbreviation Z : V := kernel (cokernel.π d.ζ)
 @[chase] abbreviation ζ₁ : d.D ⟶ (Z d) := factor_thru_image d.ζ
 @[chase] abbreviation ζ₂ : (Z d) ⟶ d.E := kernel.ι (cokernel.π d.ζ)
 
-instance strong_epi_ζ : lifting.strong_epi (ζ₁ d) :=
+instance strong_epi_ζ : strong_epi (ζ₁ d) :=
 strong_epi_of_epi _
 
-@[chase] abbreviation Γ : (Z d) ⟶ d.G := epi_mono.diagram.β $ show (ζ₁ d) ≫ (ζ₂ d) ≫ d.κ = d.θ ≫ 𝟙 d.G ≫ d.ν, from
-begin
-  rw ←category.assoc,
-  erw abelian.image.fac d.ζ,
-  rw category.id_comp,
-  exact d.comm₃,
-end
+@[chase] abbreviation Γ : (Z d) ⟶ d.G := diag_lift $
+  show d.θ ≫ (𝟙 d.G ≫ d.ν) = (ζ₁ d ≫ ζ₂ d) ≫ d.κ, from
+  begin
+    rw abelian.image.fac,
+    rw category.id_comp,
+    exact d.comm₃.symm,
+  end
 
 @[chase] lemma hΓ₁ : (ζ₁ d) ≫ (Γ d) = d.θ :=
 begin
-  rw epi_mono.diagram.comm_left,
-  rw category.comp_id,
+  rw diag_lift_fac_left,
+  rw category.comp_id
 end
 
 @[chase] lemma hΓ₂ : (ζ₂ d) ≫ d.κ = (Γ d) ≫ d.ν :=
-epi_mono.diagram.comm_right _
+eq.symm $ diag_lift_fac_right _
 
 abbreviation W : V := kernel (cokernel.π d.ξ)
 abbreviation ξ₁ : d.H ⟶ (W d) := factor_thru_image d.ξ
 abbreviation ξ₂ : (W d) ⟶ d.I := kernel.ι (cokernel.π d.ξ)
 
-instance strong_epi_ξ : lifting.strong_epi (ξ₁ d) :=
+instance strong_epi_ξ : strong_epi (ξ₁ d) :=
 strong_epi_of_epi _
 
-instance strong_epi_η : lifting.strong_epi d.to_snake_diagram.η :=
+instance strong_epi_η : strong_epi d.to_snake_diagram.η :=
 strong_epi_of_epi _
 
-@[chase] def Δ : d.F ⟶ (W d) := epi_mono.diagram.β $ show d.η ≫ 𝟙 d.F ≫ d.μ = d.κ ≫ (ξ₁ d) ≫ (ξ₂ d), from
+@[chase] def Δ : d.F ⟶ (W d) :=
+diag_lift $ show d.κ ≫ (ξ₁ d ≫ ξ₂ d) = (d.η ≫ 𝟙 d.F) ≫ d.μ, from
 begin
   erw abelian.image.fac d.ξ,
+  rw category.assoc,
   rw category.id_comp,
-  exact d.comm₄,
+  exact d.comm₄.symm
 end
 
 @[chase] lemma hΔ₁ : d.η ≫ (Δ d) = d.κ ≫ (ξ₁ d) :=
-epi_mono.diagram.comm_left _
+diag_lift_fac_left _
 
 @[chase] lemma hΔ₂ : d.μ = (Δ d) ≫ (ξ₂ d) :=
 begin
-  rw ←category.id_comp _ d.μ,
-  exact epi_mono.diagram.comm_right _,
+  rw ←category.id_comp d.μ,
+  exact (diag_lift_fac_right _).symm
 end
 
 abbreviation V' : V := kernel (Γ d)
@@ -299,7 +301,7 @@ abbreviation Hα₁ := kernel.lift' (Γ d) (d.γ ≫ (ζ₁ d)) $
 abbreviation α₁ : d.A ⟶ (V' d) := (Hα₁ d).1
 @[chase] lemma hα₁ : α₁ d ≫ Λ d = d.γ ≫ (ζ₁ d) := (Hα₁ d).2
 
-abbreviation Hα₂ := limit_kernel_fork.lift' d.κ (kernel_of_mono_exact _ _ d.δκ) (Λ d ≫ ζ₂ d) $
+abbreviation Hα₂ := kernel_fork.is_limit.lift' (kernel_of_mono_exact _ _ d.δκ) (Λ d ≫ ζ₂ d) $
   by rw [category.assoc, hΓ₂, ←category.assoc, kernel.condition, has_zero_morphisms.zero_comp]
 abbreviation α₂ : V' d ⟶ d.B := (Hα₂ d).1
 @[chase] lemma hα₂ : α₂ d ≫ d.δ = Λ d ≫ ζ₂ d := (Hα₂ d).2
@@ -309,20 +311,18 @@ abbreviation Hβ₁ := kernel.lift' (Δ d) (d.δ ≫ d.η) $
 abbreviation β₁ : d.B ⟶ (U d) := (Hβ₁ d).1
 @[chase] lemma hβ₁ : β₁ d ≫ Ξ d = d.δ ≫ d.η := (Hβ₁ d).2
 
-abbreviation Hβ₂ := limit_kernel_fork.lift' d.μ (kernel_of_mono_exact _ _ d.εμ) (Ξ d) $
+abbreviation Hβ₂ := kernel_fork.is_limit.lift' (kernel_of_mono_exact _ _ d.εμ) (Ξ d) $
   by rw [hΔ₂, ←category.assoc, kernel.condition, has_zero_morphisms.zero_comp]
 abbreviation β₂ : U d ⟶ d.C := (Hβ₂ d).1
 @[chase] lemma hβ₂ : β₂ d ≫ d.ε = Ξ d := (Hβ₂ d).2
 
 lemma β₁β₂ : β₁ d ≫ β₂ d = d.β :=
 begin
-  apply limit_kernel_fork.uniq _ (kernel_of_mono_exact _ _ d.εμ) (d.δ ≫ d.η),
-  { rw [category.assoc, d.comm₄, ←category.assoc, d.δκ.1, has_zero_morphisms.zero_comp],  },
-  { erw [category.assoc, hβ₂, hβ₁], },
-  { exact d.comm₂ }
+  apply fork.is_limit.hom_ext (kernel_of_mono_exact _ _ d.εμ),
+  erw [category.assoc, hβ₂, hβ₁, d.comm₂]
 end
 
-abbreviation Hτ₁ := colimit_cokernel_cofork.desc' d.θ (cokernel_of_epi_exact _ _ d.θπ) (S d) $
+abbreviation Hτ₁ := cokernel_cofork.is_colimit.desc' (cokernel_of_epi_exact _ _ d.θπ) (S d) $
   by rw [←hΓ₁, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]
 abbreviation τ₁ : d.J ⟶ (T d) := (Hτ₁ d).1
 @[chase] lemma hτ₁ : d.π ≫ (τ₁ d) = S d := (Hτ₁ d).2
@@ -334,13 +334,11 @@ abbreviation τ₂ : T d ⟶ d.K := (Hτ₂ d).1
 
 lemma τ₁τ₂ : τ₁ d ≫ τ₂ d = d.τ :=
 begin
-  apply colimit_cokernel_cofork.uniq _ (cokernel_of_epi_exact _ _ d.θπ) (d.ν ≫ d.ρ),
-  { rw [d.comm₅, ←category.assoc, d.θπ.1, has_zero_morphisms.zero_comp], },
-  { erw [←category.assoc, hτ₁, hτ₂], },
-  { exact d.comm₅.symm, }
+  apply cofork.is_colimit.hom_ext (cokernel_of_epi_exact _ _ d.θπ),
+  erw [←category.assoc, hτ₁, hτ₂, ←d.comm₅]
 end
 
-abbreviation Hφ₁ := colimit_cokernel_cofork.desc' d.κ (cokernel_of_epi_exact _ _ d.κρ) (ξ₁ d ≫ Υ d) $
+abbreviation Hφ₁ := cokernel_cofork.is_colimit.desc' (cokernel_of_epi_exact _ _ d.κρ) (ξ₁ d ≫ Υ d) $
   by rw [←category.assoc, ←hΔ₁, category.assoc, cokernel.condition, has_zero_morphisms.comp_zero]
 abbreviation φ₁ : d.K ⟶ S' d := (Hφ₁ d).1
 @[chase] lemma hφ₁ : d.ρ ≫ φ₁ d = ξ₁ d ≫ Υ d := (Hφ₁ d).2

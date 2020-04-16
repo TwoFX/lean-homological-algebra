@@ -48,16 +48,16 @@ include 𝒞
 variables [preadditive.{v} C]
 
 def hom_right {P Q : C} (R : C) (f : P ⟶ Q) : (Q ⟶ R) →+ (P ⟶ R) :=
-mk' (λ g, f ≫ g) $ preadditive.distrib_right _ _ _ _ _
+mk' (λ g, f ≫ g) $ λ g g', by simp
 
 def hom_left (P : C) {Q R : C} (g : Q ⟶ R) : (P ⟶ Q) →+ (P ⟶ R) :=
-mk' (λ f, f ≫ g) $ λ f f', preadditive.distrib_left _ _ _ _ _ _ _
+mk' (λ f, f ≫ g) $ λ f f', by simp
 
 @[simp] lemma sub_distrib_left {P Q R : C} (f f' : P ⟶ Q) (g : Q ⟶ R) : (f - f') ≫ g = f ≫ g - f' ≫ g :=
-map_sub (hom_left _ _) _ _
+map_sub (hom_left P g) f f'
 
 @[simp] lemma sub_distrib_right {P Q R : C} (f : P ⟶ Q) (g g' : Q ⟶ R) : f ≫ (g - g') = f ≫ g - f ≫ g' :=
-map_sub (hom_right _ _) _ _
+map_sub (hom_right R f) g g'
 
 @[simp] lemma neg_left {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) : (-f) ≫ g = -(f ≫ g) :=
 map_neg (hom_left _ _) _
@@ -128,12 +128,8 @@ def has_colimit_parallel_pair [has_colimit (parallel_pair (f - g) 0)] :
   is_colimit :=
   { desc := λ s, cokernel.desc (f - g) (cofork.π s) $
       by rw sub_distrib_left; apply sub_eq_zero.2; exact cofork.condition _,
-    fac' := λ s j, begin cases j,
-      { simp, convert cocone.w s walking_parallel_pair_hom.left, },
-      { simp, refl, } end,
-    uniq' := λ s m h, begin
-      ext, convert h walking_parallel_pair.one, simp, refl,
-    end } }
+    fac' := λ s j, by { cases j; simp },
+    uniq' := λ s m h, by { ext, simpa using h walking_parallel_pair.one } } }
 
 end
 
@@ -141,8 +137,7 @@ section
 
 /-- If a preadditive category has all cokernels, then it also has all coequalizers. -/
 def has_coequalizers_of_has_cokernels [has_cokernels.{v} C] : has_coequalizers.{v} C :=
-@has_coequalizers_of_has_colimit_parallel_pair _ _
-  (λ _ _ f g, has_colimit_parallel_pair f g)
+@has_coequalizers_of_has_colimit_parallel_pair _ _ (λ _ _ f g, has_colimit_parallel_pair f g)
 
 end
 

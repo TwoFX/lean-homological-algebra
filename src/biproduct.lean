@@ -52,15 +52,17 @@ abbreviation biproduct := has_biproduct.P.{v} X Y
 notation X ` ⊞ `:20 Y:20 := biproduct X Y
 end
 
-abbreviation biproduct.fst := (has_biproduct.is_biproduct.{v} X Y).fst
-abbreviation biproduct.snd := (has_biproduct.is_biproduct.{v} X Y).snd
-abbreviation biproduct.inl := (has_biproduct.is_biproduct.{v} X Y).inl
-abbreviation biproduct.inr := (has_biproduct.is_biproduct.{v} X Y).inr
-abbreviation biproduct.inl_fst := is_biproduct.inl_fst.{v} X Y (biproduct X Y)
-abbreviation biproduct.inr_snd := is_biproduct.inr_snd.{v} X Y (biproduct X Y)
-abbreviation biproduct.inr_fst := is_biproduct.inr_fst.{v} X Y (biproduct X Y)
-abbreviation biproduct.inl_snd := is_biproduct.inl_snd.{v} X Y (biproduct X Y)
-abbreviation biproduct.total := is_biproduct.total.{v} X Y (biproduct X Y)
+abbreviation biproduct.fst : X ⊞ Y ⟶ X := has_biproduct.is_biproduct.fst
+abbreviation biproduct.snd : X ⊞ Y ⟶ Y := has_biproduct.is_biproduct.snd
+abbreviation biproduct.inl : X ⟶ X ⊞ Y := has_biproduct.is_biproduct.inl
+abbreviation biproduct.inr : Y ⟶ X ⊞ Y := has_biproduct.is_biproduct.inr
+lemma biproduct.inl_fst : (biproduct.inl : X ⟶ X ⊞ Y) ≫ biproduct.fst = 𝟙 X := by simp
+lemma biproduct.inr_snd : (biproduct.inr : Y ⟶ X ⊞ Y) ≫ biproduct.snd = 𝟙 Y := by simp
+lemma biproduct.inr_fst : (biproduct.inr : Y ⟶ X ⊞ Y) ≫ biproduct.fst = 0 := by simp
+lemma biproduct.inl_snd : (biproduct.inl : X ⟶ X ⊞ Y) ≫ biproduct.snd = 0 := by simp
+lemma biproduct.total :
+  (biproduct.fst : X ⊞ Y ⟶ X) ≫ biproduct.inl + biproduct.snd ≫ biproduct.inr = 𝟙 (X ⊞ Y) :=
+by simp
 
 instance fst_epi : epi (biproduct.fst : X ⊞ Y ⟶ X) :=
 epi_of_epi_fac biproduct.inl_fst
@@ -94,7 +96,7 @@ binary_fan.mk biproduct.fst biproduct.snd
 def biproduct.cone_is_limit : is_limit $ biproduct.cone X Y :=
 { lift := λ s, biproduct.lift (s.π.app walking_pair.left) (s.π.app walking_pair.right),
   fac' := λ s j, by { cases j, erw biproduct.lift_fst, erw biproduct.lift_snd },
-  uniq' := λ s m h, by erw [←category.comp_id _ m, ←biproduct.total, preadditive.distrib_right,
+  uniq' := λ s m h, by erw [←category.comp_id m, ←biproduct.total, preadditive.distrib_right,
     ←category.assoc, ←category.assoc, h walking_pair.left, h walking_pair.right]; refl }
 
 end
@@ -127,7 +129,7 @@ binary_cofan.mk biproduct.inl biproduct.inr
 def biproduct.cocone_is_colimit : is_colimit $ biproduct.cocone X Y :=
 { desc := λ s, biproduct.desc (s.ι.app walking_pair.left) (s.ι.app walking_pair.right),
   fac' := λ s j, by { cases j, erw biproduct.inl_desc, erw biproduct.inr_desc },
-  uniq' := λ s m h, by erw [←category.id_comp _ m, ←biproduct.total, preadditive.distrib_left,
+  uniq' := λ s m h, by erw [←category.id_comp m, ←biproduct.total, preadditive.distrib_left,
     category.assoc, category.assoc, h walking_pair.left, h walking_pair.right]; refl }
 
 end
@@ -178,8 +180,7 @@ def biproduct.of_prod (X Y : C) [has_limit.{v} (pair X Y)] : has_biproduct.{v} X
   { fst := prod.fst,
     snd := prod.snd,
     inl := prod.lift (𝟙 X) 0,
-    inr := prod.lift 0 (𝟙 Y),
-    total' := by ext j; cases j; simp; erw has_zero_morphisms.comp_zero } }
+    inr := prod.lift 0 (𝟙 Y) } }
 
 @[priority 100]
 instance [has_binary_products.{v} C] : has_biproducts.{v} C :=
