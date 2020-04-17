@@ -219,13 +219,13 @@ lemma epi_mono_exact_left {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ S
   (e : exact (f ≫ g) h) [epi f] [mono g] : exact g h :=
 begin
   let upper : strong_epi_mono_factorisation (f ≫ g) :=
-  { I := _, e := f, m := g, fac := rfl,
+  { I := _, e := f, m := g, fac' := rfl,
     m_mono := by apply_instance, e_strong_epi := strong_epi_of_epi _ },
   let lower := image_SEMF (f ≫ g),
   let s : Q ≅ kernel (cokernel.π (f ≫ g)) := is_image.iso_ext upper.to_mono_is_image
     lower.to_mono_is_image,
   have : s.hom ≫ kernel.ι (cokernel.π (f ≫ g)) = g,
-  { erw is_image.lift_fac, refl, },
+  { erw is_image.lift_fac },
   rw ←this,
   apply exact_iso_left _ _ s,
   exact image_exact _ _ e,
@@ -235,13 +235,13 @@ lemma epi_mono_exact_right {P Q R S : C} (f : P ⟶ Q) (g : Q ⟶ R) (h : R ⟶ 
   (e : exact f (g ≫ h)) [epi g] [mono h] : exact f g :=
 begin
   let upper : strong_epi_mono_factorisation (g ≫ h) :=
-  { I := _, e := g, m := h, fac := rfl,
+  { I := _, e := g, m := h, fac' := rfl,
   m_mono := by apply_instance, e_strong_epi := strong_epi_of_epi _ },
   let lower := image_SEMF (g ≫ h),
   let s : kernel (cokernel.π (g ≫ h)) ≅ R := is_image.iso_ext lower.to_mono_is_image
     upper.to_mono_is_image,
   have : factor_thru_image (g ≫ h) ≫ s.hom = g,
-  { erw is_image.fac_lift lower.to_mono_is_image upper.to_mono_factorisation, refl, },
+  { erw is_image.fac_lift lower.to_mono_is_image upper.to_mono_factorisation },
   rw ←this,
   apply exact_iso_right _ _ s,
   exact exact_image _ _ e,

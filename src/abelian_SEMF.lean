@@ -28,7 +28,7 @@ def image_SEMF : strong_epi_mono_factorisation f :=
 { I := kernel (cokernel.π f),
   e := factor_thru_image f,
   m := kernel.ι (cokernel.π f),
-  fac := image.fac f,
+  fac' := image.fac f,
   m_mono := by apply_instance,
   e_strong_epi := strong_epi_of_epi _ }
 
@@ -36,7 +36,7 @@ def coimage_SEMF : strong_epi_mono_factorisation f :=
 { I := _,
   e := cokernel.π (kernel.ι f),
   m := factor_thru_coimage f,
-  fac := coimage.fac f,
+  fac' := coimage.fac f,
   m_mono := by apply_instance,
   e_strong_epi := strong_epi_of_epi _ }
 
@@ -48,7 +48,7 @@ lemma full_image_fac :
 by erw [is_image.lift_fac, coimage.fac]
 
 instance : has_strong_epi_mono_factorisations.{v} C :=
-{ has_fact := λ X Y f, coimage_SEMF f }
+{ has_fac := λ X Y f, coimage_SEMF f }
 
 example : has_images.{v} C := by apply_instance
 example : has_image_maps.{v} C := by apply_instance
@@ -64,7 +64,7 @@ def upper : strong_epi_mono_factorisation (f₁ ≫ f₂) :=
 { I := I,
   e := f₁,
   m := f₂,
-  fac := rfl,
+  fac' := rfl,
   e_strong_epi := strong_epi_of_epi _,
   m_mono := by apply_instance }
 
@@ -72,7 +72,7 @@ def lower : strong_epi_mono_factorisation (g₁ ≫ g₂) :=
 { I := I',
   e := g₁,
   m := g₂,
-  fac := rfl,
+  fac' := rfl,
   e_strong_epi := strong_epi_of_epi _,
   m_mono := by apply_instance }
 
