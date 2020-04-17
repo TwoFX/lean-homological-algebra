@@ -19,23 +19,6 @@ variables {C : Type u} [𝒞 : category.{v} C]
 include 𝒞
 
 section
-variables [has_zero_morphisms.{v} C] {X Y : C}
-
-/-- Any map that is zero when composed with `s.of` factors through `f`. -/
-def normal_mono.lift {f : X ⟶ Y} (s : normal_mono f) {W : C} (g : W ⟶ Y) (h : g ≫ s.g = 0) :
-  { l : W ⟶ X // l ≫ f = g } :=
-{ val := is_limit.lift s.is_limit $ kernel_fork.of_ι g h,
-  property := is_limit.fac s.is_limit _ walking_parallel_pair.zero }
-
-/-- Any map that is zero when precomposed with `s.of` factors through `f`. -/
-def normal_epi.desc {f : X ⟶ Y} (s : normal_epi f) {W : C} (g : X ⟶ W) (h : s.g ≫ g = 0) :
-  { l : Y ⟶ W // f ≫ l = g } :=
-{ val := is_colimit.desc s.is_colimit $ cokernel_cofork.of_π g h,
-  property := is_colimit.fac s.is_colimit _ walking_parallel_pair.one }
-
-end
-
-section
 variables [has_zero_morphisms.{v} C] {X Y : C} (f : X ⟶ Y)
 
 def kernel.lift'' [has_limit (parallel_pair f 0)]

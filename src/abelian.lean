@@ -96,7 +96,7 @@ begin
        ... = 0 : has_zero_morphisms.zero_comp _ _,
 
   -- i factors through u = ker h via some s.
-  obtain ⟨s, hs⟩ := normal_mono.lift hu i hih,
+  obtain ⟨s, hs⟩ := normal_mono.lift' u i hih,
 
   have hs' : (s ≫ kernel.ι g) ≫ i = 𝟙 I ≫ i, by rw [category.assoc, hs, category.id_comp],
 
@@ -144,7 +144,7 @@ begin
     ... = 0 : has_zero_morphisms.comp_zero _ _,
 
   -- p factors through u = coker h via some s.
-  obtain ⟨s, hs⟩ := normal_epi.desc hu p hhp,
+  obtain ⟨s, hs⟩ := normal_epi.desc' u p hhp,
 
   have hs' : p ≫ cokernel.π g ≫ s = p ≫ 𝟙 I, by rw [←category.assoc, hs, category.comp_id],
 
