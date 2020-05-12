@@ -1,8 +1,8 @@
 [package]
 name = "homological_algebra"
 version = "0.1"
-lean_version = "leanprover-community/lean:3.8.0"
+lean_version = "leanprover-community/lean:3.11.0"
 path = "src"
 
 [dependencies]
-mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "0567b7faba5783ac4c272c3b6265a4513f69c47d"}
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "8c8872163e19b33c7ffdfe364b5f9efd1e964fe9"}

@@ -68,7 +68,7 @@ writing `g a` raises a "function expected" error. This error can be fixed by wri
 
 ## References
 
-* [F. Borceux, *Handbook of Categorical Algebra 1*][borceux-vol1]
+* [F. Borceux, *Handbook of Categorical Algebra 2*][borceux-vol2]
 -/
 
 open category_theory
@@ -171,8 +171,7 @@ rfl
 /-- Applying a pseudoelement to a composition of morphisms is the same as composing
     with each morphism. Sadly, this is not a definition equality, but at least it is
     true. -/
-theorem comp_apply {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (a : P) :
-  (f ≫ g) a = g (f a) :=
+theorem comp_apply {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (a : P) : (f ≫ g) a = g (f a) :=
 quotient.induction_on a $ λ x, quotient.sound $ by unfold app; rw category.assoc
 
 /-- Composition of functions on pseudoelements is composition of morphisms -/
@@ -255,8 +254,7 @@ theorem epi_of_pseudo_surjective {P Q : C} (f : P ⟶ Q) : function.surjective f
   match quotient.exists_rep pbar with ⟨p, hp⟩ :=
     have ⟦(p.2 ≫ f : with_codomain Q)⟧ = ⟦𝟙 Q⟧, by rw ←hp at hpbar; exact hpbar,
     match quotient.exact this with ⟨R, x, y, ex, ey, comm⟩ :=
-      @epi_of_epi_fac _ _ _ _ _ (x ≫ p.2) f y ey $
-        by erw [category.assoc, comm, category.comp_id]
+      @epi_of_epi_fac _ _ _ _ _ (x ≫ p.2) f y ey $ by erw [category.assoc, comm, category.comp_id]
     end
   end
 end
@@ -320,7 +318,7 @@ begin
   let j : pullback (kernel.ι (cokernel.π f)) (kernel.ι g) ⟶ kernel g := pullback.snd,
 
   -- Since q is an epimorphism, in particular this means that j is an epimorphism.
-  haveI pe : epi j := by resetI; exact epi_of_epi_fac hz₂,
+  haveI pe : epi j := by exactI epi_of_epi_fac hz₂,
 
   -- But is is also a monomorphism, because kernel.ι (cokernel.π f) is: A kernel is
   -- always a monomorphism and the pullback of a monomorphism is a monomorphism.

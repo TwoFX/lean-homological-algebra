@@ -159,6 +159,7 @@ end factor
 section mono_epi_iso
 variables {X Y : C} (f : X ⟶ Y)
 
+-- TODO There is a shorter proof using strong epis
 /-- In an abelian category, an monomorphism which is also an epimorphism is an isomorphism. -/
 def mono_epi_iso [mono f] [epi f] : is_iso f :=
 begin
@@ -166,7 +167,7 @@ begin
   let s := kernel_fork.of_ι f hf.w,
   haveI : epi (s.π.app walking_parallel_pair.zero) :=
     show epi f, by apply_instance,
-  exact epi_limit_cone_parallel_pair_is_iso _ _ s hf.is_limit
+  exact is_iso_limit_cone_parallel_pair_of_epi hf.is_limit
 end
 
 end mono_epi_iso

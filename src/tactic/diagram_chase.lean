@@ -84,7 +84,7 @@ do
       | some m := some <$> to_expr m
       end,
   mps ← list.mmap
-    (λ p, do q ← i_to_expr p, some ch ← tactic.chase.as_morphism_chain q, return ch) maps,
+    (λ p, do q ← i_to_expr p, some ch ← tactic.chase.as_morphism q, return [ch]) maps,
   tactic.chase.run_chase_tactic l $ tactic.chase.chase e mps ids
 
 end tactic.interactive
