@@ -5,7 +5,7 @@ Authors: Markus Himmel
 -/
 
 import category_theory.category
-import abelian
+import category_theory.abelian.basic
 import abelian_SEMF
 
 open category_theory
@@ -24,9 +24,7 @@ f ≫ g = 0 ∧ kernel.ι g ≫ cokernel.π f = 0
 
 def exact_fork {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (e : exact f g) : kernel_fork g :=
 kernel_fork.of_ι (kernel.ι (cokernel.π f)) $
-  (preadditive.cancel_zero_iff_epi (factor_thru_image f)).1
-    (by apply_instance) _ (kernel.ι (cokernel.π f) ≫ g) $
-    by rw [←category.assoc, image.fac f, e.1]
+  zero_of_epi_comp (abelian.factor_thru_image f) $ by rw [←category.assoc, image.fac f, e.1]
 
 def exact_ker {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (e : exact f g) : is_limit $ exact_fork f g e :=
 fork.is_limit.mk _
@@ -41,9 +39,7 @@ fork.is_limit.mk _
 
 def exact_cofork {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (e : exact f g) : cokernel_cofork f :=
 cokernel_cofork.of_π (cokernel.π (kernel.ι g)) $
-  (preadditive.cancel_zero_iff_mono (factor_thru_coimage g)).1
-    (by apply_instance) _ (f ≫ cokernel.π (kernel.ι g)) $
-    by rw [category.assoc, coimage.fac g, e.1]
+  zero_of_comp_mono (abelian.factor_thru_coimage g) $ by rw [category.assoc, coimage.fac g, e.1]
 
 def exact_coker {P Q R : C} (f : P ⟶ Q) (g : Q ⟶ R) (e : exact f g) :
   is_colimit $ exact_cofork f g e :=

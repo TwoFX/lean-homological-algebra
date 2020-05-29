@@ -86,7 +86,7 @@ lemma mono_of_ker_eq_bot (hf : f.ker = ⊥) : mono f :=
   ext,
   apply (linear_map.ker_eq_bot.1 hf),
   rw [←linear_map.comp_apply, ←linear_map.comp_apply],
-  apply linear_map.congr,
+  congr,
   exact h
 end⟩
 
@@ -95,7 +95,7 @@ lemma epi_of_range_eq_top (hf : f.range = ⊤) : epi f :=
   ext,
   cases linear_map.range_eq_top.1 hf x with y hy,
   rw [←hy, ←linear_map.comp_apply, ←linear_map.comp_apply],
-  apply linear_map.congr,
+  congr,
   exact h
 end⟩
 

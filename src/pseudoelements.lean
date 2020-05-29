@@ -5,9 +5,8 @@ Authors: Markus Himmel
 -/
 
 import category_theory.category
-import abelian
+import category_theory.abelian.basic
 import exact
-import hom_to_mathlib
 
 /-!
 # Pseudoelements in abelian categories

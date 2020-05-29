@@ -6,8 +6,8 @@ Authors: Markus Himmel
 
 import algebra.category.Module.basic
 import linear_algebra.basic
-import abelian
-import exact
+import category_theory.abelian.basic
+--import exact
 import modules.trivial_equivalence
 import modules.mono_epi
 import modules.to_mathlib
@@ -39,13 +39,10 @@ cofork.is_colimit.mk _
   (λ s, f.range.liftq_mkq (cofork.π s) _)
   (λ s m h,
   begin
-    ext,
-    cases range_eq_top.1 (submodule.range_mkq f.range) x with n hn,
-    rw ←hn,
-    conv_rhs { erw [←comp_apply, submodule.liftq_mkq] },
-    rw ←comp_apply,
-    apply linear_map.congr,
-    exact h walking_parallel_pair.one,
+    haveI : epi (up f.range.mkq) := epi_of_range_eq_top _ (submodule.range_mkq _),
+    apply (cancel_epi (up f.range.mkq)).1,
+    convert h walking_parallel_pair.one,
+    exact submodule.liftq_mkq _ _ _
   end)
 
 end cokernel
